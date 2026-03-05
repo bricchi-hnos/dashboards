@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablero Maquinaria — Bricchi Hnos SA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;600;700&display=swap');
+:root {
+  --bg:#0f1117; --surface:#181c27; --surface2:#1e2436; --border:#2a3048;
+  --text:#e2e8f4; --muted:#6b7a99; --accent:#4f8ef7;
+  --disponible:#22c55e; --pendiente:#f59e0b; --comprometida:#f97316;
+  --reservada:#a78bfa; --vta-pend:#ec4899; --ent-pend:#ef4444;
+  --ent-fac:#64748b; --consig:#06b6d4; --inconsistencia:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;transition:opacity .4s}
+#loader.hidden{opacity:0;pointer-events:none}
+.loader-logo{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.loader-logo span{color:var(--accent)}
+.loader-bar{width:200px;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.loader-fill{height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .3s}
+.loader-msg{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.logo span{color:var(--accent)}
+.sync-info{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--disponible);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TABS */
+.tabs-bar{display:flex;align-items:center;gap:4px;padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--border)}
+.tab-btn{padding:6px 18px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border:1px solid transparent;background:none;transition:all .15s}
+.tab-btn:hover{color:var(--text);background:var(--surface2)}
+.tab-btn.active{color:var(--text);background:var(--surface2);border-color:var(--border)}
+
+/* FILTROS */
+.filters-bar{display:flex;gap:8px;align-items:center;padding:9px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace}
+.filter-chip{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s;user-select:none}
+.filter-chip:hover{color:var(--text);border-color:var(--accent)}
+.filter-chip.active{border-color:var(--accent);background:rgba(79,142,247,.12);color:var(--accent)}
+.filter-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.divider{width:1px;height:22px;background:var(--border);margin:0 2px}
+select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:20px;cursor:pointer;outline:none}
+select:hover{border-color:var(--accent)}
+
+/* MAIN */
+main{padding:16px 24px;display:flex;flex-direction:column;gap:16px}
+.tab-page{display:none}
+.tab-page.active{display:flex;flex-direction:column;gap:16px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .1s}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi-card:hover{transform:translateY(-1px)}
+.kpi-card.selected{border-color:var(--accent)!important}
+.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace}
+.kpi-value{font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1}
+.kpi-sub{font-size:10px;color:var(--muted)}
+
+/* colores KPI */
+.k-disp::before{background:var(--disponible)} .k-disp .kpi-value{color:var(--disponible)}
+.k-pend::before{background:var(--pendiente)}  .k-pend .kpi-value{color:var(--pendiente)}
+.k-comp::before{background:var(--comprometida)} .k-comp .kpi-value{color:var(--comprometida)}
+.k-res::before{background:var(--reservada)}   .k-res .kpi-value{color:var(--reservada)}
+.k-vta::before{background:var(--vta-pend)}    .k-vta .kpi-value{color:var(--vta-pend)}
+.k-entpend::before{background:var(--ent-pend)} .k-entpend .kpi-value{color:var(--ent-pend)}
+.k-entfac::before{background:var(--ent-fac)}  .k-entfac .kpi-value{color:var(--ent-fac)}
+.k-consig::before{background:var(--consig)}   .k-consig .kpi-value{color:var(--consig)}
+
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:'DM Mono',monospace}
+.info-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:2px 6px}
+
+/* TABLA */
+.table-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(10 * 37px + 36px)}
+.table-wrap::-webkit-scrollbar{width:6px;height:6px}
+.table-wrap::-webkit-scrollbar-track{background:var(--surface2)}
+.table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.table-wrap::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--surface2);padding:8px 11px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:10}
+thead th:hover{color:var(--text)}
+thead th.sort-asc::after{content:' ↑'} thead th.sort-desc::after{content:' ↓'}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer;height:37px}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:7px 11px;white-space:nowrap}
+.td-m{color:var(--muted)} .td-mono{font-family:'DM Mono',monospace;font-size:11px}
+.td-green{color:var(--disponible)} .td-red{color:var(--ent-pend)} .td-yellow{color:var(--pendiente)}
+.no-data{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px}
+.table-footer{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-top:1px solid var(--border)}
+.export-btn{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:4px;cursor:pointer}
+.export-btn:hover{color:var(--text);border-color:var(--accent)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-dot{width:5px;height:5px;border-radius:50%}
+.b-disp{background:rgba(34,197,94,.12);color:#4ade80}
+.b-pend{background:rgba(245,158,11,.12);color:#fbbf24}
+.b-comp{background:rgba(249,115,22,.12);color:#fb923c}
+.b-res{background:rgba(167,139,250,.12);color:#a78bfa}
+.b-vta{background:rgba(236,72,153,.12);color:#f472b6}
+.b-entpend{background:rgba(239,68,68,.12);color:#f87171}
+.b-entfac{background:rgba(100,116,139,.12);color:#94a3b8}
+.b-consig{background:rgba(6,182,212,.12);color:#06b6d4}
+.b-incons{background:rgba(251,191,36,.12);color:#fbbf24}
+
+.orig-odoo{background:rgba(79,142,247,.1);color:var(--accent);font-size:9px;padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace}
+.orig-ant{background:rgba(107,122,153,.1);color:var(--muted);font-size:9px;padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace}
+
+/* MID ROW */
+.mid-row{display:grid;grid-template-columns:220px 1fr 240px;gap:14px;align-items:start}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px}
+.donut-legend{width:100%;display:flex;flex-direction:column;gap:3px}
+.legend-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.legend-row:last-child{border-bottom:none}
+.legend-left{display:flex;align-items:center;gap:7px}
+.legend-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.legend-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.bar-section{padding:12px;display:flex;flex-direction:column;gap:8px}
+.bar-stitle{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.bar-row-item{display:flex;flex-direction:column;gap:3px}
+.bar-meta{display:flex;justify-content:space-between;font-size:11px}
+.bar-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.bar-val{font-family:'DM Mono',monospace;color:var(--muted);font-size:10px;flex-shrink:0}
+.bar-track{height:4px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* FIN CARDS - Solapa 2 */
+.fin-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.fin-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden}
+.fin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent)}
+.fin-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em}
+.fin-value{font-size:24px;font-weight:700;letter-spacing:-1px;line-height:1}
+.fin-sub{font-size:10px;color:var(--muted)}
+.fin-card.red::before{background:var(--ent-pend)} .fin-card.red .fin-value{color:var(--ent-pend)}
+.fin-card.green::before{background:var(--disponible)} .fin-card.green .fin-value{color:var(--disponible)}
+.fin-card.yellow::before{background:var(--pendiente)} .fin-card.yellow .fin-value{color:var(--pendiente)}
+.fin-card.purple::before{background:var(--reservada)} .fin-card.purple .fin-value{color:var(--reservada)}
+
+/* FISCAL */
+.fiscal-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fiscal-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.fiscal-table{width:100%;border-collapse:collapse;font-size:12px}
+.fiscal-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.fiscal-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.fiscal-table tr:last-child td{border-bottom:none}
+.fiscal-total{background:var(--surface2);font-weight:700}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:640px;max-width:95vw;max-height:85vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px}
+.modal-close{cursor:pointer;color:var(--muted);font-size:20px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.modal-section{display:flex;flex-direction:column;gap:8px}
+.modal-section-title{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);padding-bottom:5px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-field{display:flex;flex-direction:column;gap:2px}
+.mf-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase}
+.mf-value{font-size:13px;color:var(--text)}
+.mf-value.mono{font-family:'DM Mono',monospace;font-size:11px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+  .grupo-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 12px;border-radius:16px;font-size:11px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .grupo-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .grupo-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .col-search{width:100%;border:none;border-top:1px solid var(--border);background:var(--bg);color:var(--text);font-size:10px;padding:3px 4px;outline:none;font-family:DM Mono,monospace}
+  .col-search:focus{background:rgba(99,102,241,.08);border-top-color:var(--accent)}
+  .col-search::placeholder{color:var(--muted)}
+  #search-row-op td{padding:0}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-logo">BRICCHI HNOS SA · <span>MAQUINARIA</span></div>
+  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+  <div class="loader-msg" id="loader-msg">Conectando a Supabase...</div>
+</div>
+
+<header>
+  <div class="logo">BRICCHI HNOS SA · <span>MAQUINARIA</span></div>
+  <div class="sync-info"><span class="sync-dot"></span><span id="sync-text">Cargando...</span></div>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('operativo',this)">📦 Operativo</button>
+  <button class="tab-btn" onclick="switchTab('valorizacion',this)">📊 Valorización</button>
+  <button class="tab-btn" onclick="switchTab('rentabilidad',this)">💰 Rentabilidad</button>
+</div>
+
+<div class="filters-bar">
+  <span class="filter-label">Estado</span>
+  <div class="filter-chip active" data-filter="estado" data-val="">Todos</div>
+  <div class="filter-chip" data-filter="estado" data-val="Disponible"><span class="filter-dot" style="background:var(--disponible)"></span>Disponible</div>
+  <div class="filter-chip" data-filter="estado" data-val="Comprometida"><span class="filter-dot" style="background:var(--comprometida)"></span>Comprometida</div>
+  <div class="filter-chip" data-filter="estado" data-val="Vendida - Pendiente Entregar"><span class="filter-dot" style="background:var(--vta-pend)"></span>Vta Pend</div>
+  <div class="filter-chip" data-filter="estado" data-val="Entregada Pendiente Facturar"><span class="filter-dot" style="background:var(--ent-pend)"></span>Ent Pend Fac</div>
+  <div class="filter-chip" data-filter="estado" data-val="Entregada y Facturada"><span class="filter-dot" style="background:var(--ent-fac)"></span>Ent y Fac</div>
+  <div class="filter-chip" data-filter="estado" data-val="Mercadería en Consignación"><span class="filter-dot" style="background:var(--consig)"></span>Consignación</div>
+  <div class="filter-chip" data-filter="estado" data-val="Inconsistencia - Entregado sin FC Compra"><span class="filter-dot" style="background:var(--inconsistencia)"></span>Inconsistencia</div>
+  <div class="divider"></div>
+  <div class="filter-chip active" data-filter="origen" data-val="">Todos</div>
+  <div class="filter-chip" data-filter="origen" data-val="Odoo Nativo">Odoo</div>
+  <div class="filter-chip" data-filter="origen" data-val="Sistema Anterior">Anterior</div>
+  <div class="divider"></div>
+  <select id="filter-vendedor"><option value="">Vendedor</option></select>
+  <select id="filter-marca"><option value="">Marca</option></select>
+  <select id="filter-deposito"><option value="">Depósito</option></select>
+</div>
+
+<div id="grupo-bar" style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center">
+  <span style="font-size:10px;color:var(--muted);margin-right:2px;letter-spacing:.05em">GRUPO</span>
+  <button class="grupo-btn active" onclick="setGrupo(null)" id="gb-todos">Todos</button>
+  <button class="grupo-btn" onclick="setGrupo('disponible')" id="gb-disponible">&#128230; Disponible p/Venta</button>
+  <button class="grupo-btn" onclick="setGrupo('por_recibir')" id="gb-por_recibir">&#128666; Por Recibir</button>
+  <button class="grupo-btn" onclick="setGrupo('comprometido')" id="gb-comprometido">&#128274; Comprometido</button>
+  <button class="grupo-btn" onclick="setGrupo('en_entrega')" id="gb-en_entrega">&#128228; En Entrega</button>
+  <button class="grupo-btn" onclick="setGrupo('pend_facturar')" id="gb-pend_facturar">&#129534; Pend. Facturar</button>
+  <button class="grupo-btn" onclick="setGrupo('cerrado')" id="gb-cerrado">&#9989; Cerrado</button>
+  <button class="grupo-btn" onclick="setGrupo('alerta')" id="gb-alerta">&#9888; Alertas</button>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════════
+     SOLAPA 1: OPERATIVO
+══════════════════════════════════════════════════════════ -->
+<div class="tab-page active" id="tab-operativo">
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <!-- Donut + Barras pequeños en fila -->
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:14px">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Por estado</span><span class="info-tag" id="donut-total">—</span></div>
+      <div class="donut-wrap">
+        <svg id="donut-svg" width="140" height="140" viewBox="0 0 140 140"></svg>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Stock disponible · por marca</span></div>
+      <div class="bar-section" id="bar-marca" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px"></div>
+    </div>
+  </div>
+
+  <!-- TABLA CIRCUITO — ancho completo -->
+  <div class="panel" style="width:100%">
+    <div class="panel-header">
+      <span class="panel-title">Circuito por máquina</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="info-tag" id="tabla-count">—</span>
+        <button class="export-btn" onclick="exportCSV()">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap" id="tabla-wrap-op">
+      <table id="tabla-operativo">
+        <thead><tr>
+          <th onclick="sortTable('numero_serie','op')" id="th-op-numero_serie">N° Serie</th>
+          <th onclick="sortTable('ref_interna','op')" id="th-op-ref_interna">Ref.</th>
+          <th onclick="sortTable('producto','op')" id="th-op-producto">Producto</th>
+          <th onclick="sortTable('marca','op')" id="th-op-marca">Marca</th>
+          <th onclick="sortTable('estado_mercaderia','op')" id="th-op-estado_mercaderia">Estado</th>
+          <th onclick="sortTable('tipo_operacion','op')" id="th-op-tipo_operacion">Tipo</th>
+          <th onclick="sortTable('origen_dato','op')" id="th-op-origen_dato">Origen</th>
+          <th onclick="sortTable('deposito','op')" id="th-op-deposito">Depósito</th>
+          <th onclick="sortTable('proveedor','op')" id="th-op-proveedor">Proveedor</th>
+          <th onclick="sortTable('nro_oc','op')" id="th-op-nro_oc">OC</th>
+          <th onclick="sortTable('fecha_oc','op')" id="th-op-fecha_oc">F.OC</th>
+          <th onclick="sortTable('estado_compra','op')" id="th-op-estado_compra">FC Cpra</th>
+          <th onclick="sortTable('nro_factura_compra','op')" id="th-op-nro_factura_compra">N°FC Cpra</th>
+          <th onclick="sortTable('fecha_fc_compra_real','op')" id="th-op-fecha_fc_compra_real">F.FC Cpra</th>
+          <th onclick="sortTable('nro_recepcion','op')" id="th-op-nro_recepcion">Remito Rec.</th>
+          <th onclick="sortTable('fecha_recepcion','op')" id="th-op-fecha_recepcion">F.Rec.</th>
+          <th onclick="sortTable('nro_ov','op')" id="th-op-nro_ov">OV</th>
+          <th onclick="sortTable('fecha_ov','op')" id="th-op-fecha_ov">F.OV</th>
+          <th onclick="sortTable('cliente','op')" id="th-op-cliente">Cliente</th>
+          <th onclick="sortTable('vendedor','op')" id="th-op-vendedor">Vendedor</th>
+          <th onclick="sortTable('estado_venta','op')" id="th-op-estado_venta">FC Vta</th>
+          <th onclick="sortTable('nro_factura_venta','op')" id="th-op-nro_factura_venta">N°FC Vta</th>
+          <th onclick="sortTable('fecha_factura_venta','op')" id="th-op-fecha_factura_venta">F.FC Vta</th>
+          <th onclick="sortTable('nro_remito_entrega','op')" id="th-op-nro_remito_entrega">Rem.Ent.</th>
+          <th onclick="sortTable('fecha_entrega_real','op')" id="th-op-fecha_entrega_real">F.Entrega</th>
+        </tr>
+        <tr id="search-row-op" style="background:var(--surface)">
+          <td><input class="col-search" placeholder="serie/oc..." oninput="colSearch(this,0,'op')" /></td>
+          <td><input class="col-search" placeholder="ref..." oninput="colSearch(this,1,'op')" /></td>
+          <td><input class="col-search" placeholder="producto..." oninput="colSearch(this,2,'op')" /></td>
+          <td><input class="col-search" placeholder="marca..." oninput="colSearch(this,3,'op')" /></td>
+          <td><input class="col-search" placeholder="estado..." oninput="colSearch(this,4,'op')" /></td>
+          <td></td><td></td>
+          <td><input class="col-search" placeholder="depósito..." oninput="colSearch(this,7,'op')" /></td>
+          <td><input class="col-search" placeholder="proveedor..." oninput="colSearch(this,8,'op')" /></td>
+          <td><input class="col-search" placeholder="OC..." oninput="colSearch(this,9,'op')" /></td>
+          <td></td><td></td><td></td><td></td>
+          <td><input class="col-search" placeholder="recepción..." oninput="colSearch(this,14,'op')" /></td>
+          <td></td>
+          <td><input class="col-search" placeholder="OV..." oninput="colSearch(this,16,'op')" /></td>
+          <td></td>
+          <td><input class="col-search" placeholder="cliente..." oninput="colSearch(this,18,'op')" /></td>
+          <td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+        </thead>
+        <tbody id="tbody-operativo"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span class="info-tag" id="tabla-count-footer">—</span>
+      <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">↕ scroll vertical · ↔ scroll horizontal</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SOLAPA 2: FINANCIERO
+══════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════
+     SOLAPA 3: VALORIZACIÓN
+══════════════════════════════════════════════════════════ -->
+<div class="tab-page" id="tab-valorizacion">
+
+  <!-- KPIs valorización -->
+  <div class="kpi-row" id="val-kpi-row" style="grid-template-columns:repeat(5,1fr)"></div>
+
+  <!-- Filtros -->
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:4px 0">
+    <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em">Estado</span>
+    <div id="val-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+    <select id="val-filter-marca" onchange="renderValorizacion()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:20px;cursor:pointer;outline:none">
+      <option value="">Marca</option>
+    </select>
+    <input id="val-search" oninput="renderValorizacion()" placeholder="Buscar serie, producto, cliente..." 
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:20px;outline:none;width:240px">
+    <span id="val-count" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto"></span>
+  </div>
+
+  <!-- TABLA STOCK / PENDIENTES -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title" id="val-tabla-titulo">Inventario valorizado</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="val-tabla-count" class="info-tag">—</span>
+        <button class="export-btn" onclick="exportValCSV()">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortVal('numero_serie')">N° Serie</th>
+            <th onclick="sortVal('marca')">Marca</th>
+            <th onclick="sortVal('producto')">Producto</th>
+            <th onclick="sortVal('estado_mercaderia')">Estado</th>
+            <th onclick="sortVal('deposito')">Depósito</th>
+            <th onclick="sortVal('fecha_fc_compra_real')">FC Compra</th>
+            <th onclick="sortVal('tc_amb_compra')" style="text-align:right">TC AMB</th>
+            <th onclick="sortVal('costo_total_pesos')" style="text-align:right">Costo $</th>
+            <th onclick="sortVal('costo_total_usd')" style="text-align:right">Costo USD</th>
+            <th onclick="sortVal('fuente_costo')">Fuente</th>
+            <th onclick="sortVal('nro_ov')">OV / Cliente</th>
+          </tr>
+        </thead>
+        <tbody id="val-tbody-stock"></tbody>
+        <tfoot id="val-tfoot-stock"></tfoot>
+      </table>
+    </div>
+  </div>
+
+
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SOLAPA: RENTABILIDAD
+══════════════════════════════════════════════════════════ -->
+<div class="tab-page" id="tab-rentabilidad">
+
+  <!-- KPIs rentabilidad -->
+  <div id="rent-kpi-row" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div>
+
+  <!-- Filtros + Período -->
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+    <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em">Período FC Venta</span>
+    <input type="date" id="rent-desde" onchange="renderRentabilidad()"
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:4px 8px;border-radius:6px;outline:none">
+    <span style="color:var(--muted);font-size:11px">→</span>
+    <input type="date" id="rent-hasta" onchange="renderRentabilidad()"
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:4px 8px;border-radius:6px;outline:none">
+    <div style="width:1px;height:20px;background:var(--border)"></div>
+    <select id="rent-filter-marca" onchange="renderRentabilidad()"
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:20px;cursor:pointer;outline:none">
+      <option value="">Marca</option>
+    </select>
+    <select id="rent-filter-vendedor" onchange="renderRentabilidad()"
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 10px;border-radius:20px;cursor:pointer;outline:none">
+      <option value="">Vendedor</option>
+    </select>
+    <input id="rent-search" oninput="renderRentabilidad()" placeholder="Buscar serie, cliente, OV..."
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:4px 12px;border-radius:20px;outline:none;width:210px">
+    <button onclick="rentLimpiarFiltros()" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:4px;cursor:pointer">✕ Limpiar</button>
+    <span id="rent-count" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto"></span>
+  </div>
+
+  <!-- TABLA RENTABILIDAD — Facturadas -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Rentabilidad por operación — Entregadas y Facturadas</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="rent-tabla-count" class="info-tag">—</span>
+        <button class="export-btn" onclick="exportRentCSV()">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortRent('numero_serie')">N° Serie</th>
+          <th onclick="sortRent('marca')">Marca</th>
+          <th onclick="sortRent('producto')">Producto</th>
+          <th onclick="sortRent('nro_ov')">OV</th>
+          <th onclick="sortRent('cliente')">Cliente</th>
+          <th onclick="sortRent('vendedor')">Vendedor</th>
+          <th onclick="sortRent('fecha_fc_compra_real')">FC Compra</th>
+          <th onclick="sortRent('fecha_factura_venta')">FC Venta</th>
+          <th style="text-align:right" onclick="sortRent('costo_total_pesos')">Costo $ (BI)</th>
+          <th style="text-align:right" onclick="sortRent('ingreso_total_pesos')">Ingreso $ (BI)</th>
+          <th style="text-align:right" onclick="sortRent('spread_pesos')">Spread $</th>
+          <th style="text-align:right" onclick="sortRent('mgb_pct')">MgB %</th>
+          <th style="text-align:right" onclick="sortRent('costo_total_usd')">Costo USD</th>
+          <th style="text-align:right" onclick="sortRent('ingreso_total_usd')">Ingreso USD</th>
+          <th style="text-align:right" onclick="sortRent('spread_usd')">Spread USD</th>
+          <th style="text-align:right" onclick="sortRent('mgb_usd_pct')">MgB USD%</th>
+        </tr></thead>
+        <tbody id="rent-tbody"></tbody>
+        <tfoot id="rent-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- TABLA Impuestos proyectados sobre SPREAD -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Impuestos proyectados sobre spread — Entregadas Pendientes de Facturar</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">Base: Spread · IVA DF (por producto) · IIBB 5% · IIGG 30%</span>
+        <span id="imp-count" class="info-tag">—</span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortImp('numero_serie')">N° Serie</th>
+          <th>Producto</th>
+          <th onclick="sortImp('nro_ov')">OV</th>
+          <th>Cliente</th>
+          <th onclick="sortImp('costo_total_pesos')" style="text-align:right">Costo $ (BI)</th>
+          <th onclick="sortImp('ingreso_total_pesos')" style="text-align:right">Ingreso $ (BI)</th>
+          <th onclick="sortImp('spread_pesos')" style="text-align:right">Spread $ (Base)</th>
+          <th style="text-align:right">IVA DF</th>
+          <th style="text-align:right">IIBB (5%)</th>
+          <th style="text-align:right">IIGG (30%)</th>
+        </tr></thead>
+        <tbody id="imp-tbody"></tbody>
+        <tfoot id="imp-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Detalle</div>
+      <div class="modal-close" onclick="closeModal()">×</div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://rvumvnslydaobvvsywtu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dW12bnNseWRhb2J2dnN5d3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzM3NDksImV4cCI6MjA4NzQ0OTc0OX0.rE06TXMzBhvX0Uwzh2UquSFJs6CP18d81xrCC7MmX3c';
+
+let allData = [], filteredData = [];
+let sortCol = 'numero_serie', sortAsc = true, sortScope = 'op';
+let activeEstado = '', activeOrigen = '', activeGrupo = null;
+let colFilters = {};
+
+// Grupos: qué estados_mercaderia incluye cada grupo
+const GRUPOS = {
+  disponible:    ['Disponible','Mercadería en Consignación','Pendiente Recibir'],
+  por_recibir:   ['Pendiente Recibir','Comprometida Sin Asignar','Reservada Sin Asignar'],
+  comprometido:  ['Comprometida','Comprometida Sin Asignar','Reservada','Reservada Sin Asignar'],
+  en_entrega:    ['Vendida - Pendiente Entregar'],
+  pend_facturar: ['Entregada Pendiente Facturar','Entregada Sin Asignar Pendiente Facturar','Entregada Pendiente Facturar'],
+  cerrado:       ['Entregada y Facturada'],
+  alerta:        ['Inconsistencia - Entregado sin FC Compra','Inconsistencia - FC Venta sin FC Compra'],
+};
+
+function setGrupo(g) {
+  activeGrupo = g;
+  activeEstado = '';  // limpiar filtro KPI al cambiar grupo
+  document.querySelectorAll('.grupo-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('gb-' + (g || 'todos')).classList.add('active');
+  applyFilters();
+}
+
+function colSearch(inp, idx, scope) {
+  if (!colFilters[scope]) colFilters[scope] = {};
+  const v = inp.value.toLowerCase().trim();
+  if (v) colFilters[scope][idx] = v;
+  else delete colFilters[scope][idx];
+  applyFilters();
+}
+let currentTab = 'operativo';
+
+const estadoConfig = {
+  'Disponible':                               {color:'#22c55e',cls:'b-disp'},
+  'Pendiente Recibir':                        {color:'#f59e0b',cls:'b-pend'},
+  'Comprometida':                             {color:'#f97316',cls:'b-comp'},
+  'Comprometida Sin Asignar':                 {color:'#f97316',cls:'b-comp'},
+  'Reservada':                                {color:'#a78bfa',cls:'b-res'},
+  'Reservada Sin Asignar':                    {color:'#a78bfa',cls:'b-res'},
+  'Vendida - Pendiente Entregar':             {color:'#ec4899',cls:'b-vta'},
+  'Entregada Pendiente Facturar':             {color:'#ef4444',cls:'b-entpend'},
+  'Entregada Sin Asignar Pendiente Facturar': {color:'#ef4444',cls:'b-entpend'},
+  'Entregada y Facturada':                    {color:'#64748b',cls:'b-entfac'},
+  'Mercadería en Consignación':               {color:'#06b6d4',cls:'b-consig'},
+  'Inconsistencia - Entregado sin FC Compra': {color:'#fbbf24',cls:'b-incons'},
+  'Inconsistencia - FC Venta sin FC Compra':  {color:'#fbbf24',cls:'b-incons'},
+};
+
+const kpiDef = [
+  {estado:'Disponible',           cls:'k-disp',    sub:'En stock sin venta'},
+  {estado:'Pendiente Recibir',    cls:'k-pend',    sub:'En depósito proveedor'},
+  {estado:'Comprometida',         cls:'k-comp',    sub:'OV sin factura'},
+  {estado:'Reservada',            cls:'k-res',     sub:'Anticipo cobrado'},
+  {estado:'Vendida - Pendiente Entregar', cls:'k-vta', sub:'Facturada, sin remito'},
+  {estado:'Entregada Pendiente Facturar',cls:'k-entpend',sub:'Entregada sin FC'},
+  {estado:'Entregada y Facturada',cls:'k-entfac',  sub:'Ciclo completo ✓'},
+  {estado:'Mercadería en Consignación',cls:'k-consig',sub:'Owner externo'},
+  {estado:'Inconsistencia - Entregado sin FC Compra',cls:'k-incons',sub:'Revisar'},
+];
+
+// ── LOADER ────────────────────────────────────────────────
+function setLoader(pct,msg){
+  document.getElementById('loader-fill').style.width=pct+'%';
+  document.getElementById('loader-msg').textContent=msg;
+}
+
+// ── FETCH ─────────────────────────────────────────────────
+async function fetchData(){
+  const headers={'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`};
+
+  // Vista principal
+  const r1 = await fetch(`${SUPABASE_URL}/rest/v1/vista_maquinaria?select=*&order=numero_serie.asc`,{headers});
+  if(!r1.ok) throw new Error(`vista_maquinaria HTTP ${r1.status}`);
+  const main = await r1.json();
+
+  // Vista OC sin serie — columnas explícitas para evitar bug Supabase con SELECT * y NULLs
+  const cols = [
+    'nro_oc','numero_serie','producto','ref_interna','categoria','chasis','motor',
+    'marca','modelo','anio_fabricacion','origen','tipo_vehiculo','deposito',
+    'tipo_operacion','propietario','origen_dato','proveedor','nro_recepcion',
+    'remito_compra','fecha_oc','fecha_recepcion','fecha_factura_compra',
+    'nro_factura_compra','fecha_fc_compra_real','subtotal_compra','tc_compra',
+    'faltante_compra','estado_oc','estado_facturacion_oc','nro_ov','cliente',
+    'vendedor','nro_remito_entrega','nro_factura_venta','fecha_ov',
+    'fecha_entrega_real','fecha_programada_entrega','fecha_factura_venta',
+    'subtotal_venta','tc_venta','faltante_venta','estado_ov','estado_facturacion_ov',
+    'estado_entrega_ov','estado_pago_venta','margen','margen_pct',
+    'estado_compra','estado_fisico','estado_venta','estado_mercaderia','generado_at'
+  ].join(',');
+  const r2 = await fetch(`${SUPABASE_URL}/rest/v1/vista_oc_sin_serie?select=${cols}&order=nro_oc.asc`,{headers});
+  if(!r2.ok) throw new Error(`vista_oc_sin_serie HTTP ${r2.status}`);
+  const sinSerie = await r2.json();
+
+  // Combinar: primero con serie (ordenados), luego sin serie al final
+  return [...main, ...sinSerie];
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init(){
+  try{
+    setLoader(10,'Conectando a Supabase...');
+    setLoader(20,'Cargando operativo...');
+    allData = await fetchData();
+    setLoader(55,'Cargando valorización...');
+    valData = await fetchValData();
+    setLoader(85,'Procesando datos...');
+    populateSelects();
+    applyFilters();
+    initValorizacion();
+    initRentabilidad();
+    setLoader(100,'Listo');
+    setTimeout(()=>document.getElementById('loader').classList.add('hidden'),400);
+    const now=new Date();
+    const conSerie=allData.filter(r=>r.numero_serie).length;
+    const sinSerie=allData.filter(r=>!r.numero_serie).length;
+    document.getElementById('sync-text').textContent=
+      `Actualizado ${now.toLocaleDateString('es-AR')} ${now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})} · ${conSerie} con serie · ${sinSerie} sin serie · ${valData.length} fin.`;
+  }catch(e){
+    setLoader(100,'Error: '+e.message);
+    document.getElementById('loader-msg').style.color='#ef4444';
+  }
+}
+
+function populateSelects(){
+  const sel=(id,arr)=>{const s=document.getElementById(id);arr.forEach(v=>s.innerHTML+=`<option value="${v}">${v}</option>`);};
+  sel('filter-vendedor',[...new Set(allData.map(r=>r.vendedor).filter(Boolean))].sort());
+  sel('filter-marca',[...new Set(allData.map(r=>r.marca).filter(Boolean))].sort());
+  sel('filter-deposito',[...new Set(allData.map(r=>r.deposito).filter(Boolean))].sort());
+}
+
+function applyFilters(){
+  const v=document.getElementById('filter-vendedor').value;
+  const m=document.getElementById('filter-marca').value;
+  const d=document.getElementById('filter-deposito').value;
+  filteredData=allData.filter(r=>{
+    // Filtro grupo
+    if(activeGrupo && GRUPOS[activeGrupo] && !GRUPOS[activeGrupo].includes(r.estado_mercaderia)) return false;
+    if(activeEstado && r.estado_mercaderia!==activeEstado) return false;
+    if(activeOrigen && r.origen_dato!==activeOrigen) return false;
+    if(v && r.vendedor!==v) return false;
+    if(m && r.marca!==m) return false;
+    if(d && r.deposito!==d) return false;
+    return true;
+  });
+  // Filtro por columna (search row)
+  const cf = colFilters['op'] || {};
+  if (Object.keys(cf).length > 0) {
+    filteredData = filteredData.filter(r => {
+      // Columnas en orden: 0=serie/oc, 1=ref, 2=producto, 3=marca, 4=estado, 5=tipo_op, 6=origen,
+      //                    7=deposito, 8=proveedor, 9=nro_oc, 10=nro_rec, 11=remito,
+      //                    12=f_oc, 13=f_rec, 14=nro_rec2, 15=nro_fc_c, 16=nro_ov, 17=cliente, 18=vendedor
+      const cells = [
+        r.numero_serie || r.nro_oc || '',
+        r.ref_interna || '',
+        r.producto || '',
+        r.marca || '',
+        r.estado_mercaderia || '',
+        r.tipo_operacion || '',
+        r.origen_dato || '',
+        r.deposito || '',
+        r.proveedor || '',
+        r.nro_oc || '',
+        r.nro_recepcion || '',
+        r.remito_compra || '',
+        r.fecha_oc || '',
+        r.fecha_recepcion || '',
+        r.nro_recepcion || '',
+        r.nro_factura_compra || '',
+        r.nro_ov || '',
+        r.cliente || '',
+        r.vendedor || '',
+      ];
+      return Object.entries(cf).every(([i, v]) => (cells[+i] || '').toLowerCase().includes(v));
+    });
+  }
+  renderKPIs(); renderDonut(); renderBarMarca();
+  renderTablaOperativo();
+}
+
+// ── TAB SWITCH ────────────────────────────────────────────
+function switchTab(name,btn){
+  currentTab=name;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── KPIs ──────────────────────────────────────────────────
+function renderKPIs(){
+  const counts={};
+  allData.forEach(r=>{counts[r.estado_mercaderia]=(counts[r.estado_mercaderia]||0)+1;});
+  const row=document.getElementById('kpi-row');
+  row.innerHTML='';
+  kpiDef.forEach(({estado,cls,sub})=>{
+    const n=counts[estado]||0;
+    const short=estado.replace('Entregada Pendiente Facturar','Ent.Pend.Fac.')
+      .replace('Vendida - Pendiente Entregar','Vta.Pend.Ent.')
+      .replace('Entregada y Facturada','Ent.y Fac.')
+      .replace('Mercadería en Consignación','Consignación')
+      .replace('Inconsistencia - Entregado sin FC Compra','Inconsistencia');
+    const card=document.createElement('div');
+    card.className=`kpi-card ${cls}`+(activeEstado===estado?' selected':'');
+    card.innerHTML=`<div class="kpi-label">${short}</div><div class="kpi-value">${n}</div><div class="kpi-sub">${sub}</div>`;
+    card.addEventListener('click',()=>{
+      activeEstado=activeEstado===estado?'':estado;
+      document.querySelectorAll('[data-filter="estado"]').forEach(c=>c.classList.remove('active'));
+      document.querySelector('[data-filter="estado"][data-val=""]').classList.add('active');
+      applyFilters();
+    });
+    row.appendChild(card);
+  });
+  updateGrupoCounters();
+}
+
+function updateGrupoCounters() {
+  const counts = {};
+  allData.forEach(r => { counts[r.estado_mercaderia] = (counts[r.estado_mercaderia] || 0) + 1; });
+
+  const grupoCount = (key) => {
+    if (!GRUPOS[key]) return allData.length;
+    return allData.filter(r => GRUPOS[key].includes(r.estado_mercaderia)).length;
+  };
+
+  const labels = {
+    'todos':        `Todos (${allData.length})`,
+    'disponible':   `📦 Disponible (${grupoCount('disponible')})`,
+    'por_recibir':  `🚛 Por Recibir (${grupoCount('por_recibir')})`,
+    'comprometido': `🔒 Comprometido (${grupoCount('comprometido')})`,
+    'en_entrega':   `📤 En Entrega (${grupoCount('en_entrega')})`,
+    'pend_facturar':`🧾 Pend. Facturar (${grupoCount('pend_facturar')})`,
+    'cerrado':      `✅ Cerrado (${grupoCount('cerrado')})`,
+    'alerta':       `⚠️ Alertas (${grupoCount('alerta')})`,
+  };
+  Object.entries(labels).forEach(([key, label]) => {
+    const btn = document.getElementById('gb-' + key);
+    if (btn) btn.textContent = label;
+    if (btn && activeGrupo === (key === 'todos' ? null : key)) btn.classList.add('active');
+  });
+}
+
+// ── DONUT ─────────────────────────────────────────────────
+function renderDonut(){
+  const counts={};
+  filteredData.forEach(r=>{counts[r.estado_mercaderia]=(counts[r.estado_mercaderia]||0)+1;});
+  const total=filteredData.length;
+  document.getElementById('donut-total').textContent=total+' total';
+  const cx=70,cy=70,r=50,stroke=18,circ=2*Math.PI*r;
+  let offset=0;
+  const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  let paths=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e2436" stroke-width="${stroke}"/>`;
+  entries.forEach(([estado,n])=>{
+    const pct=n/total, dash=pct*circ;
+    const color=(estadoConfig[estado]||{color:'#666'}).color;
+    paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
+      stroke-dasharray="${dash} ${circ-dash}"
+      stroke-dashoffset="${circ*0.25-offset}"
+      transform="rotate(-90 ${cx} ${cy})"/>`;
+    offset+=dash;
+  });
+  paths+=`<text x="${cx}" y="${cy-3}" text-anchor="middle" fill="#e2e8f4" font-size="18" font-weight="700" font-family="DM Sans">${total}</text>
+    <text x="${cx}" y="${cy+12}" text-anchor="middle" fill="#6b7a99" font-size="8" font-family="DM Mono">TOTAL</text>`;
+  document.getElementById('donut-svg').innerHTML=paths;
+  const leg=document.getElementById('donut-legend');
+  leg.innerHTML='';
+  entries.forEach(([estado,n])=>{
+    const color=(estadoConfig[estado]||{color:'#666'}).color;
+    const short=estado.replace('Entregada Pendiente Facturar','Ent.Pend.Fac.')
+      .replace('Vendida - Pendiente Entregar','Vta.Pend.')
+      .replace('Mercadería en Consignación','Consignación')
+      .replace('Inconsistencia - Entregado sin FC Compra','Inconsistencia');
+    leg.innerHTML+=`<div class="legend-row">
+      <div class="legend-left"><div class="legend-dot" style="background:${color}"></div><span style="font-size:10px">${short}</span></div>
+      <span class="legend-val">${n}·${Math.round(n/total*100)}%</span>
+    </div>`;
+  });
+}
+
+// ── BAR MARCA ─────────────────────────────────────────────
+function renderBarMarca(){
+  const counts={};
+  filteredData.filter(r=>r.estado_mercaderia==='Disponible').forEach(r=>{
+    const m=r.marca||'Sin marca'; counts[m]=(counts[m]||0)+1;
+  });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?.[1]||1;
+  const wrap=document.getElementById('bar-marca');
+  wrap.innerHTML='<div class="bar-stitle">Disponibles por marca</div>';
+  sorted.forEach(([name,n])=>{
+    wrap.innerHTML+=`<div class="bar-row-item">
+      <div class="bar-meta"><span class="bar-name">${name}</span><span class="bar-val">${n}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${n/max*100}%;background:var(--disponible)"></div></div>
+    </div>`;
+  });
+}
+
+// ── TABLA OPERATIVO ───────────────────────────────────────
+function renderTablaOperativo(){
+  const data=sortedData('op');
+  const count=filteredData.length;
+  document.getElementById('tabla-count').textContent=count+' registros';
+  document.getElementById('tabla-count-footer').textContent=count+' registros · mostrando primeros 10 visibles';
+
+  // Actualizar indicadores de sort en headers
+  document.querySelectorAll('[id^="th-op-"]').forEach(th=>{
+    th.classList.remove('sort-asc','sort-desc');
+    const col=th.id.replace('th-op-','');
+    if(sortScope==='op'&&sortCol===col) th.classList.add(sortAsc?'sort-asc':'sort-desc');
+  });
+
+  const tbody=document.getElementById('tbody-operativo');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="25" class="no-data">Sin resultados para los filtros seleccionados</td></tr>`;return;}
+  tbody.innerHTML=data.map(r=>{
+    const cfg=estadoConfig[r.estado_mercaderia]||{color:'#666',cls:'b-incons'};
+    const origCls=r.origen_dato==='Odoo Nativo'?'orig-odoo':'orig-ant';
+    const origLbl=r.origen_dato==='Odoo Nativo'?'Odoo':'Anterior';
+    const tipoFC_cpra=r.nro_factura_compra?'FC Compra':r.estado_compra==='FAC Ant.Cpra'?'Anticipo':'Sin FC';
+    const tipoFC_vta=r.tipo_fc_venta==='Anticipo'?'FC Anticipo':r.nro_factura_venta?'FC Venta':r.estado_venta==='FAC Ant.Vta'?'Anticipo':'Sin FC';
+    const esConsig=r.tipo_operacion==='En Consignación';
+    const tipoBadge=esConsig?'<span style="font-size:9px;background:rgba(6,182,212,.1);color:#06b6d4;padding:1px 5px;border-radius:3px;font-family:DM Mono,monospace">Consig.</span>':'';
+    const prod=(r.producto||'').replace(/^MARCA:\s*/i,'');
+    return `<tr onclick="showModal('${(r.numero_serie||r.nro_oc)?.replace(/'/g,"\\'")}')">
+      <td class="td-mono" style="font-weight:600">${r.numero_serie||'<span style="font-size:9px;background:rgba(245,158,11,.12);color:#fbbf24;padding:2px 6px;border-radius:3px;font-family:DM Mono,monospace">Sin serie · '+r.nro_oc+'</span>'}</td>
+      <td class="td-mono td-m">${r.ref_interna||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${prod}">${prod.length>28?prod.substring(0,28)+'…':prod||'—'}</td>
+      <td class="td-m">${r.marca||'—'}</td>
+      <td><span class="badge ${cfg.cls}"><span class="badge-dot" style="background:${cfg.color}"></span>${shortEstado(r.estado_mercaderia)}</span></td>
+      <td>${tipoBadge||'<span style="font-size:9px;color:var(--muted)">Propia</span>'}</td>
+      <td><span class="${origCls}">${origLbl}</span></td>
+      <td class="td-m" title="${r.deposito||''}">${shortDep(r.deposito)}</td>
+      <td class="td-m" style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${r.proveedor||''}">${(r.proveedor||'—').substring(0,18)}</td>
+      <td class="td-mono td-m">${r.nro_oc||'—'}</td>
+      <td class="td-mono td-m">${fd(r.fecha_oc)}</td>
+      <td class="td-m" style="font-size:10px;color:${r.nro_factura_compra?'var(--disponible)':r.estado_compra==='FAC Ant.Cpra'?'var(--pendiente)':'var(--muted)'}">${tipoFC_cpra}</td>
+      <td class="td-mono td-m">${r.nro_factura_compra||'—'}</td>
+      <td class="td-mono td-m">${fd(r.fecha_fc_compra_real)}</td>
+      <td class="td-mono td-m">${r.nro_recepcion||'—'}</td>
+      <td class="td-mono td-m">${fd(r.fecha_recepcion)}</td>
+      <td class="td-mono" style="font-weight:600">${r.nro_ov||'—'}</td>
+      <td class="td-mono td-m">${fd(r.fecha_ov)}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${r.cliente||''}">${(r.cliente||'—').substring(0,18)}</td>
+      <td class="td-m">${r.vendedor?(r.vendedor.split(' ')[0]):'—'}</td>
+      <td class="td-m" style="font-size:10px;color:${r.nro_factura_venta?'var(--disponible)':r.estado_venta==='FAC Ant.Vta'?'var(--pendiente)':'var(--muted)'}">${tipoFC_vta}</td>
+      <td class="td-mono td-m">${r.nro_factura_venta||'—'}</td>
+      <td class="td-mono td-m">${fd(r.fecha_factura_venta)}</td>
+      <td class="td-mono td-m">${r.nro_remito_entrega||'—'}</td>
+      <td class="td-mono td-m">${fd(r.fecha_entrega_real)}</td>
+    </tr>`;
+  }).join('');
+}
+
+
+
+
+// ── SORT ──────────────────────────────────────────────────
+function sortedData(scope){
+  if(sortScope!==scope) return filteredData;
+  return [...filteredData].sort((a,b)=>{
+    let va=a[sortCol]??'', vb=b[sortCol]??'';
+    if(typeof va==='string') va=va.toLowerCase();
+    if(typeof vb==='string') vb=vb.toLowerCase();
+    if(va<vb) return sortAsc?-1:1;
+    if(va>vb) return sortAsc?1:-1;
+    return 0;
+  });
+}
+function sortTable(col,scope){
+  if(sortCol===col&&sortScope===scope) sortAsc=!sortAsc;
+  else{sortCol=col;sortAsc=true;sortScope=scope;}
+  renderTablaOperativo();
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function showModal(id){
+  const r=allData.find(x=>(x.numero_serie||x.nro_oc)==id); if(!r) return;
+  const cfg=estadoConfig[r.estado_mercaderia]||{color:'#666',cls:'b-incons'};
+  document.getElementById('modal-title').innerHTML=
+    `<span class="td-mono">${r.numero_serie}</span>
+     <span class="badge ${cfg.cls}" style="margin-left:8px"><span class="badge-dot" style="background:${cfg.color}"></span>${shortEstado(r.estado_mercaderia)}</span>`;
+  const f=(label,val,mono=false)=>`<div class="modal-field"><div class="mf-label">${label}</div><div class="mf-value ${mono?'mono':''}">${val||'—'}</div></div>`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-section"><div class="modal-section-title">Producto</div>
+      <div class="modal-grid">
+        ${f('Producto',r.producto)} ${f('Ref. Interna',r.ref_interna,true)}
+        ${f('Marca',r.marca)} ${f('Modelo',r.modelo)}
+        ${f('Chasis',r.chasis,true)} ${f('Motor',r.motor,true)}
+        ${f('Año',r.anio_fabricacion)} ${f('Origen',r.origen)}
+        ${f('Tipo',r.tipo_vehiculo)} ${f('Depósito',r.deposito)}
+        ${f('Tipo operación',r.tipo_operacion)} ${f('Propietario',r.propietario)}
+      </div></div>
+    <div class="modal-section"><div class="modal-section-title">Circuito Compra</div>
+      <div class="modal-grid">
+        ${f('Proveedor',r.proveedor)} ${f('N° OC',r.nro_oc,true)}
+        ${f('Fecha OC',fd(r.fecha_oc))} ${f('Remito Recepción',r.nro_recepcion,true)}
+        ${f('Fecha Recepción',fd(r.fecha_recepcion))} ${f('N° FC Compra',r.nro_factura_compra,true)}
+        ${f('Fecha FC Compra',fd(r.fecha_fc_compra_real))} ${f('Estado Compra',r.estado_compra,true)}
+        ${f('Subtotal Compra',r.subtotal_compra?fmt(r.subtotal_compra):null)} ${f('TC Compra',r.tc_compra?'$'+Number(r.tc_compra).toLocaleString('es-AR'):null)}
+        ${f('Faltante Compra',r.faltante_compra?fmt(r.faltante_compra):'$0')} ${f('Est. Facturación OC',r.estado_facturacion_oc,true)}
+      </div></div>
+    <div class="modal-section"><div class="modal-section-title">Circuito Venta</div>
+      <div class="modal-grid">
+        ${f('Cliente',r.cliente)} ${f('Vendedor',r.vendedor)}
+        ${f('N° OV',r.nro_ov,true)} ${f('Fecha OV',fd(r.fecha_ov))}
+        ${f('Remito Entrega',r.nro_remito_entrega,true)} ${f('Fecha Entrega',fd(r.fecha_entrega_real))}
+        ${f('Fecha Prog. Entrega',fd(r.fecha_programada_entrega))} ${f('N° FC Venta',r.nro_factura_venta,true)}
+        ${f('Fecha FC Venta',fd(r.fecha_factura_venta))} ${f('Estado Venta',r.estado_venta,true)}
+        ${f('Subtotal Venta',r.subtotal_venta?fmt(r.subtotal_venta):null)} ${f('TC Venta',r.tc_venta?'$'+Number(r.tc_venta).toLocaleString('es-AR'):null)}
+        ${f('Faltante Venta',r.faltante_venta?fmt(r.faltante_venta):'$0')} ${f('Estado Pago',r.estado_pago_venta,true)}
+        ${f('Margen $',r.margen?fmt(r.margen):null)} ${f('Margen %',r.margen_pct?(r.margen_pct*100).toFixed(2)+'%':null)}
+      </div></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function fmt(n){
+  if(!n||n===0) return '$0';
+  if(Math.abs(n)>=1e9) return '$'+(n/1e9).toFixed(1)+'B';
+  if(Math.abs(n)>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(Math.abs(n)>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+Math.round(n).toLocaleString('es-AR');
+}
+function fd(d){
+  if(!d) return '—';
+  try{return new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});}catch{return d;}
+}
+function shortEstado(e){
+  return (e||'').replace('Entregada Pendiente Facturar','Ent.Pend.Fac.')
+    .replace('Vendida - Pendiente Entregar','Vta.Pend.')
+    .replace('Mercadería en Consignación','Consignación')
+    .replace('Inconsistencia - Entregado sin FC Compra','Inconsistencia')
+    .replace('Entregada y Facturada','Ent.y Fac.');
+}
+function shortDep(d){return (d||'').replace('/Existencias','').replace('Depósito ','');}
+
+// ── FILTROS ───────────────────────────────────────────────
+document.querySelectorAll('[data-filter]').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    const filter=chip.dataset.filter, val=chip.dataset.val;
+    document.querySelectorAll(`[data-filter="${filter}"]`).forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    if(filter==='estado') activeEstado=val;
+    if(filter==='origen') activeOrigen=val;
+    applyFilters();
+  });
+});
+['filter-vendedor','filter-marca','filter-deposito'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',applyFilters);
+});
+
+// ══════════════════════════════════════════════════════════
+// VALORIZACIÓN — datos desde vista_financiero_maquinaria
+// ══════════════════════════════════════════════════════════
+let valData = [];        // todos los registros financieros
+let valFiltered = [];    // filtrados
+let valEstado = '';      // filtro estado activo
+let valSortCol = 'costo_total_pesos', valSortAsc = false;
+
+async function fetchValData() {
+  const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
+  const cols = [
+    'numero_serie','producto','ref_interna','marca','estado_mercaderia','deposito',
+    'fecha_fc_compra_real','fecha_factura_venta',
+    'costo_total_pesos','costo_total_usd','tc_amb_compra','tc_amb_venta',
+    'faltante_compra','dist_financiero_cpra','dist_agencia_cpra','fuente_costo',
+    'ingreso_total_pesos','ingreso_total_usd','faltante_venta',
+    'dist_financiero_vta','dist_comision_vta',
+    'spread_pesos','mgb_pct','spread_usd','mgb_usd_pct','alicuota_iva','alicuota_iva',
+    'nro_ov','nro_factura_venta','cliente','vendedor'
+  ].join(',');
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/vista_financiero_maquinaria?select=${cols}&order=costo_total_pesos.desc.nullslast`, { headers });
+  if (!r.ok) throw new Error(`vista_financiero_maquinaria HTTP ${r.status}`);
+  return await r.json();
+}
+
+function initValorizacion() {
+  // Chips de estado
+  const estados = [...new Set(valData.map(r => r.estado_mercaderia).filter(Boolean))].sort();
+  const chips = document.getElementById('val-chips');
+  chips.innerHTML = `<div class="filter-chip active" data-vest="" onclick="setValEstado(this,'')">Todos</div>`;
+  estados.forEach(e => {
+    const cfg = estadoConfig[e] || { color: '#666' };
+    const short = shortEstado(e);
+    chips.innerHTML += `<div class="filter-chip" data-vest="${e}" onclick="setValEstado(this,'${e.replace(/'/g,"\'")}')">
+      <span style="width:7px;height:7px;border-radius:50%;background:${cfg.color};display:inline-block;flex-shrink:0"></span>${short}</div>`;
+  });
+
+  // Filtro marcas
+  const marcas = [...new Set(valData.map(r => r.marca).filter(Boolean))].sort();
+  const sel = document.getElementById('val-filter-marca');
+  marcas.forEach(m => { sel.innerHTML += `<option value="${m}">${m}</option>`; });
+
+  renderValorizacion();
+}
+
+function setValEstado(chip, est) {
+  document.querySelectorAll('#val-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  valEstado = est;
+  renderValorizacion();
+}
+
+function sortVal(col) {
+  if (valSortCol === col) valSortAsc = !valSortAsc;
+  else { valSortCol = col; valSortAsc = false; }
+  renderValorizacion();
+}
+
+function renderValorizacion() {
+  const marca = document.getElementById('val-filter-marca').value;
+  const bus = (document.getElementById('val-search').value || '').toLowerCase();
+
+  valFiltered = valData.filter(r => {
+    if (valEstado && r.estado_mercaderia !== valEstado) return false;
+    if (marca && r.marca !== marca) return false;
+    if (bus && !JSON.stringify(r).toLowerCase().includes(bus)) return false;
+    return true;
+  });
+
+  document.getElementById('val-count').textContent = `${valFiltered.length} / ${valData.length} registros`;
+
+  // KPIs
+  renderValKPIs();
+
+  // Separar stock (no facturado aun) de rentabilidad (facturados)
+  const stock = valFiltered.filter(r => r.estado_mercaderia !== 'Entregada y Facturada');
+  const rent  = valFiltered.filter(r => r.estado_mercaderia === 'Entregada y Facturada');
+
+  // --- TABLA STOCK ---
+  const stockSorted = [...stock].sort((a, b) => {
+    let va = a[valSortCol] ?? '', vb = b[valSortCol] ?? '';
+    const d = typeof va === 'number' ? (va - vb) : String(va).localeCompare(String(vb), 'es');
+    return valSortAsc ? d : -d;
+  });
+
+  const fmtP = n => n != null ? '$' + Math.round(n).toLocaleString('es-AR') : '—';
+  const fmtU = n => n != null ? 'USD ' + Math.round(n).toLocaleString('es-AR') : '—';
+
+  document.getElementById('val-tabla-count').textContent = stock.length + ' unidades';
+
+  document.getElementById('val-tbody-stock').innerHTML = stockSorted.map(r => {
+    const cfg = estadoConfig[r.estado_mercaderia] || { color: '#666', cls: 'b-incons' };
+    const prod = (r.producto || '').replace(/^MARCA:\s*/i, '');
+    return `<tr>
+      <td class="td-mono" style="font-weight:600">${r.numero_serie || '—'}</td>
+      <td class="td-m">${r.marca || '—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${prod}">${prod.length > 40 ? prod.substring(0, 40) + '…' : prod}</td>
+      <td><span class="badge ${cfg.cls}"><span class="badge-dot" style="background:${cfg.color}"></span>${shortEstado(r.estado_mercaderia)}</span></td>
+      <td class="td-m">${shortDep(r.deposito)}</td>
+      <td class="td-mono td-m">${fd(r.fecha_fc_compra_real)}</td>
+      <td class="td-mono" style="text-align:right">${r.tc_amb_compra ? Number(r.tc_amb_compra).toLocaleString('es-AR') : '—'}</td>
+      <td class="td-mono" style="text-align:right">${fmtP(r.costo_total_pesos)}</td>
+      <td class="td-mono" style="text-align:right">${fmtU(r.costo_total_usd)}</td>
+      <td class="td-m" style="font-size:10px">${r.fuente_costo || '—'}</td>
+      <td class="td-m" style="font-size:11px">${r.nro_ov ? r.nro_ov + (r.cliente ? ' · ' + r.cliente.substring(0, 18) : '') : '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="11" class="no-data">Sin resultados</td></tr>';
+
+  // Totales stock
+  const tp = stock.reduce((s, r) => s + (r.costo_total_pesos || 0), 0);
+  const tu = stock.filter(r => r.costo_total_usd).reduce((s, r) => s + r.costo_total_usd, 0);
+  document.getElementById('val-tfoot-stock').innerHTML = `<tr style="background:var(--surface2);font-weight:700;font-family:'DM Mono',monospace;font-size:11px">
+    <td colspan="7">TOTAL — ${stock.length} unidades</td>
+    <td style="text-align:right">${fmtP(tp)}</td>
+    <td style="text-align:right">${fmtU(tu)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+
+}
+
+function renderValKPIs() {
+  const fmtU = n => n != null ? 'USD ' + Math.round(n).toLocaleString('es-AR') : '—';
+  const fmtP = n => n != null ? '$' + Math.round(n).toLocaleString('es-AR') : '—';
+
+  const estados_stock = [
+    { key: 'Disponible',                    label: 'Disponible',       color: 'var(--disponible)' },
+    { key: 'Mercadería en Consignación',    label: 'Consignación',     color: 'var(--consig)' },
+    { key: 'Comprometida',                  label: 'Comprometida',     color: 'var(--comprometida)' },
+    { key: 'Entregada Pendiente Facturar',  label: 'Pend. Facturar',   color: 'var(--ent-pend)' },
+    { key: 'Entregada y Facturada',         label: 'Facturadas',       color: 'var(--ent-fac)' },
+  ];
+
+  const row = document.getElementById('val-kpi-row');
+  row.innerHTML = estados_stock.map(({ key, label, color }) => {
+    const rows = valData.filter(r => r.estado_mercaderia === key);
+    const usd = rows.filter(r => r.costo_total_usd).reduce((s, r) => s + Number(r.costo_total_usd), 0);
+    const n = rows.length;
+    return `<div class="kpi-card" style="cursor:default">
+      <div class="kpi-card" style="position:absolute;top:0;left:0;right:0;height:2px;background:${color}"></div>
+      <div class="kpi-label">${label}</div>
+      <div class="kpi-value" style="font-size:20px;color:${color}">${fmtU(usd || 0)}</div>
+      <div class="kpi-sub">${n} unidad${n !== 1 ? 'es' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function exportValCSV() {
+  const fmtP = n => n != null ? Math.round(n) : '';
+  const rows = [
+    ['N° Serie','Marca','Producto','Estado','Depósito','FC Compra','TC AMB','Costo $','Costo USD','Fuente','OV','Cliente'],
+    ...valFiltered.map(r => [
+      r.numero_serie, r.marca, r.producto, r.estado_mercaderia, r.deposito,
+      r.fecha_fc_compra_real, r.tc_amb_compra, fmtP(r.costo_total_pesos),
+      fmtP(r.costo_total_usd), r.fuente_costo, r.nro_ov, r.cliente
+    ])
+  ];
+  const csv = rows.map(r => r.map(v => `"${(v ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv);
+  a.download = 'valorizacion_maquinaria.csv';
+  a.click();
+}
+
+// exportCSV operativo (implementación faltante en v3_2)
+function exportCSV() {
+  const cols = ['numero_serie','ref_interna','producto','marca','estado_mercaderia','tipo_operacion',
+    'origen_dato','deposito','proveedor','nro_oc','fecha_oc','estado_compra','nro_factura_compra',
+    'fecha_fc_compra_real','nro_recepcion','fecha_recepcion','nro_ov','fecha_ov','cliente',
+    'vendedor','estado_venta','nro_factura_venta','fecha_factura_venta','nro_remito_entrega','fecha_entrega_real'];
+  const header = cols.map(c => `"${c}"`).join(',');
+  const rows = filteredData.map(r => cols.map(c => `"${(r[c] ?? '').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [header, ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv);
+  a.download = 'operativo_maquinaria.csv';
+  a.click();
+}
+
+
+
+// ══════════════════════════════════════════════════════════
+// RENTABILIDAD
+// ══════════════════════════════════════════════════════════
+let rentSortCol = 'fecha_factura_venta', rentSortAsc = false;
+let impSortCol  = 'spread_pesos',        impSortAsc  = false;
+const IVA_RATE  = 0.21;
+const IIBB_RATE = 0.05;
+const IIGG_RATE = 0.30;
+
+function initRentabilidad() {
+  const marcas = [...new Set(valData.map(r => r.marca).filter(Boolean))].sort();
+  const sm = document.getElementById('rent-filter-marca');
+  marcas.forEach(m => { sm.innerHTML += `<option value="${m}">${m}</option>`; });
+  const vends = [...new Set(valData.map(r => r.vendedor).filter(Boolean))].sort();
+  const sv = document.getElementById('rent-filter-vendedor');
+  vends.forEach(v => { sv.innerHTML += `<option value="${v}">${v}</option>`; });
+  renderRentabilidad();
+}
+
+function rentLimpiarFiltros() {
+  document.getElementById('rent-desde').value = '';
+  document.getElementById('rent-hasta').value = '';
+  document.getElementById('rent-filter-marca').value = '';
+  document.getElementById('rent-filter-vendedor').value = '';
+  document.getElementById('rent-search').value = '';
+  renderRentabilidad();
+}
+
+function sortRent(col) {
+  if (rentSortCol === col) rentSortAsc = !rentSortAsc;
+  else { rentSortCol = col; rentSortAsc = false; }
+  renderRentabilidad();
+}
+function sortImp(col) {
+  if (impSortCol === col) impSortAsc = !impSortAsc;
+  else { impSortCol = col; impSortAsc = false; }
+  renderRentabilidad();
+}
+
+function renderRentabilidad() {
+  const desde = document.getElementById('rent-desde').value;
+  const hasta  = document.getElementById('rent-hasta').value;
+  const marca  = document.getElementById('rent-filter-marca').value;
+  const vend   = document.getElementById('rent-filter-vendedor').value;
+  const bus    = (document.getElementById('rent-search').value || '').toLowerCase();
+
+  const fmtFull = n => {
+    const v = Number(n) || 0;
+    const abs = Math.abs(v);
+    const sign = v < 0 ? '-' : '';
+    if (abs >= 1e9) return sign + '$' + (abs/1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return sign + '$' + (abs/1e6).toFixed(2) + 'M';
+    return sign + '$' + Math.round(abs).toLocaleString('es-AR');
+  };
+  const fmtU = n => {
+    if (n == null) return '—';
+    const v = Number(n);
+    return (v < 0 ? '-' : '') + 'USD ' + Math.round(Math.abs(v)).toLocaleString('es-AR');
+  };
+  const colN = n => Number(n) >= 0 ? 'var(--disponible)' : 'var(--ent-pend)';
+
+  // ── TABLA 1: Facturadas ──────────────────────────────────
+  // Spread = ingreso_total_pesos - costo_total_pesos (ya calculado correctamente en la vista)
+  let facturadas = valData.filter(r => r.estado_mercaderia === 'Entregada y Facturada');
+  if (desde) facturadas = facturadas.filter(r => r.fecha_factura_venta >= desde);
+  if (hasta) facturadas = facturadas.filter(r => r.fecha_factura_venta <= hasta);
+  if (marca) facturadas = facturadas.filter(r => r.marca === marca);
+  if (vend)  facturadas = facturadas.filter(r => r.vendedor === vend);
+  if (bus)   facturadas = facturadas.filter(r => JSON.stringify(r).toLowerCase().includes(bus));
+
+  facturadas = [...facturadas].sort((a, b) => {
+    let va = a[rentSortCol] ?? '', vb = b[rentSortCol] ?? '';
+    const d = (typeof va === 'number' || !isNaN(Number(va))) ? Number(va) - Number(vb) : String(va).localeCompare(String(vb), 'es');
+    return rentSortAsc ? d : -d;
+  });
+
+  document.getElementById('rent-count').textContent = `${facturadas.length} facturadas`;
+  document.getElementById('rent-tabla-count').textContent = facturadas.length + ' operaciones';
+
+  // KPIs
+  const tCosto  = facturadas.reduce((s,r) => s + (Number(r.costo_total_pesos)||0), 0);
+  const tIngreso= facturadas.reduce((s,r) => s + (Number(r.ingreso_total_pesos)||0), 0);
+  const tSpread = facturadas.reduce((s,r) => s + (Number(r.spread_pesos)||0), 0);
+  const tSpUSD  = facturadas.reduce((s,r) => s + (Number(r.spread_usd)||0), 0);
+  const mgbT    = tCosto > 0 ? (tSpread / tCosto * 100) : 0;
+  const posN    = facturadas.filter(r => Number(r.spread_pesos) >= 0).length;
+  const negN    = facturadas.filter(r => Number(r.spread_pesos) < 0).length;
+
+  document.getElementById('rent-kpi-row').innerHTML = [
+    { label:'Operaciones',   val: facturadas.length,   sub:'facturadas',          color:'var(--accent)' },
+    { label:'Ingreso $',     val: fmtFull(tIngreso),   sub:'subtotal BI venta',   color:'var(--disponible)' },
+    { label:'Costo $',       val: fmtFull(tCosto),     sub:'subtotal BI compra',  color:'var(--pendiente)' },
+    { label:'Spread $',      val: fmtFull(tSpread),    sub: mgbT.toFixed(1)+'% MgB', color:colN(tSpread) },
+    { label:'Spread USD',    val: fmtU(tSpUSD),        sub:'AMB histórico',       color:colN(tSpUSD) },
+    { label:'✓ / ✗',        val: `${posN} / ${negN}`, sub:'ganancia / pérdida',  color:'var(--muted)' },
+  ].map(({label,val,sub,color}) =>
+    `<div class="kpi-card" style="cursor:default;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color}"></div>
+      <div class="kpi-label">${label}</div>
+      <div class="kpi-value" style="font-size:18px;color:${color}">${val}</div>
+      <div class="kpi-sub">${sub}</div>
+    </div>`
+  ).join('');
+
+  // Tabla facturadas
+  const tBody = document.getElementById('rent-tbody');
+  if (!facturadas.length) {
+    tBody.innerHTML = `<tr><td colspan="14" class="no-data">Sin operaciones para los filtros seleccionados</td></tr>`;
+  } else {
+    tBody.innerHTML = facturadas.map(r => {
+      const prod = (r.producto||'').replace(/^MARCA:\s*/i,'');
+      const sp   = Number(r.spread_pesos) || 0;
+      const spU  = Number(r.spread_usd) || 0;
+      const mgb  = Number(r.mgb_pct) || 0;
+      const mgbU = Number(r.mgb_usd_pct) || 0;
+      return `<tr>
+        <td class="td-mono" style="font-weight:600">${r.numero_serie||'—'}</td>
+        <td class="td-m">${r.marca||'—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${prod}">${prod.length>30?prod.substring(0,30)+'…':prod}</td>
+        <td class="td-mono td-m">${r.nro_ov||'—'}</td>
+        <td class="td-m" title="${r.cliente||''}">${(r.cliente||'—').substring(0,18)}</td>
+        <td class="td-m">${r.vendedor?(r.vendedor.split(' ')[0]):'—'}</td>
+        <td class="td-mono td-m">${fd(r.fecha_fc_compra_real)}</td>
+        <td class="td-mono td-m">${fd(r.fecha_factura_venta)}</td>
+        <td class="td-mono" style="text-align:right">${fmtFull(r.costo_total_pesos)}</td>
+        <td class="td-mono" style="text-align:right">${fmtFull(r.ingreso_total_pesos)}</td>
+        <td class="td-mono" style="text-align:right;font-weight:700;color:${colN(sp)}">${fmtFull(sp)}</td>
+        <td class="td-mono" style="text-align:right;font-weight:700;color:${colN(mgb)}">${mgb.toFixed(1)}%</td>
+        <td class="td-mono td-m" style="text-align:right">${fmtU(r.costo_total_usd)}</td>
+        <td class="td-mono td-m" style="text-align:right">${fmtU(r.ingreso_total_usd)}</td>
+        <td class="td-mono" style="text-align:right;font-weight:700;color:${colN(spU)}">${fmtU(spU)}</td>
+        <td class="td-mono" style="text-align:right;font-weight:700;color:${colN(mgbU)}">${mgbU.toFixed(1)}%</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Tfoot facturadas
+  const tCostU = facturadas.reduce((s,r) => s + (Number(r.costo_total_usd)||0), 0);
+  const tIngU  = facturadas.reduce((s,r) => s + (Number(r.ingreso_total_usd)||0), 0);
+  const mgbTU  = tCostU > 0 ? (tSpUSD / tCostU * 100) : 0;
+  document.getElementById('rent-tfoot').innerHTML = `<tr style="background:var(--surface2);font-weight:700;font-family:'DM Mono',monospace;font-size:11px">
+    <td colspan="8">TOTAL — ${facturadas.length} operaciones</td>
+    <td style="text-align:right">${fmtFull(tCosto)}</td>
+    <td style="text-align:right">${fmtFull(tIngreso)}</td>
+    <td style="text-align:right;color:${colN(tSpread)}">${fmtFull(tSpread)}</td>
+    <td style="text-align:right;color:${colN(mgbT)}">${mgbT.toFixed(1)}%</td>
+    <td style="text-align:right">${fmtU(tCostU)}</td>
+    <td style="text-align:right">${fmtU(tIngU)}</td>
+    <td style="text-align:right;color:${colN(tSpUSD)}">${fmtU(tSpUSD)}</td>
+    <td style="text-align:right;color:${colN(mgbTU)}">${mgbTU.toFixed(1)}%</td>
+  </tr>`;
+
+  // ── TABLA 2: Impuestos proyectados sobre spread ─────────
+  // Entregadas Pend. Facturar — base = spread = subtotal_venta_ov - costo_compra
+  // (ingreso_total_pesos ya tiene el subtotal de la OV por producto cuando no hay FC)
+  let pendFac = valData.filter(r =>
+    r.estado_mercaderia === 'Entregada Pendiente Facturar' &&
+    (Number(r.ingreso_total_pesos) || 0) > 0
+  );
+  if (marca) pendFac = pendFac.filter(r => r.marca === marca);
+
+  pendFac = [...pendFac].sort((a, b) => {
+    let va = a[impSortCol] ?? '', vb = b[impSortCol] ?? '';
+    const d = !isNaN(Number(va)) ? Number(va) - Number(vb) : String(va).localeCompare(String(vb),'es');
+    return impSortAsc ? d : -d;
+  });
+
+  document.getElementById('imp-count').textContent = pendFac.length + ' unidades';
+
+  let tSubImp=0, tSpImp=0, tIVA=0, tIIBB=0, tIIGG=0;
+  document.getElementById('imp-tbody').innerHTML = pendFac.map(r => {
+    const costo  = Number(r.costo_total_pesos) || 0;
+    const ingreso= Number(r.ingreso_total_pesos) || 0;
+    const spread = ingreso - costo;   // BI impositiva = spread bruto
+    const ivaRate = (Number(r.alicuota_iva) || 10.5) / 100;
+    const iva    = spread > 0 ? spread * ivaRate   : 0;
+    const iibb   = spread > 0 ? spread * IIBB_RATE : 0;
+    const iigg   = spread > 0 ? spread * IIGG_RATE : 0;
+    tSubImp += ingreso; tSpImp += spread;
+    tIVA += iva; tIIBB += iibb; tIIGG += iigg;
+    const prod = (r.producto||'').replace(/^MARCA:\s*/i,'');
+    const colSp = colN(spread);
+    return `<tr>
+      <td class="td-mono" style="font-weight:600">${r.numero_serie||'—'}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis" title="${prod}">${prod.length>28?prod.substring(0,28)+'…':prod}</td>
+      <td class="td-mono td-m">${r.nro_ov||'—'}</td>
+      <td class="td-m" title="${r.cliente||''}">${(r.cliente||'—').substring(0,18)}</td>
+      <td class="td-mono" style="text-align:right">${fmtFull(costo)}</td>
+      <td class="td-mono" style="text-align:right">${fmtFull(ingreso)}</td>
+      <td class="td-mono" style="text-align:right;font-weight:700;color:${colSp}">${fmtFull(spread)}</td>
+      <td class="td-mono" style="text-align:right;color:var(--pendiente)" title="${(Number(r.alicuota_iva)||10.5).toFixed(1)}%">${spread>0?fmtFull(iva):'—'}</td>
+      <td class="td-mono" style="text-align:right;color:var(--reservada)">${spread>0?fmtFull(iibb):'—'}</td>
+      <td class="td-mono" style="text-align:right;color:var(--accent)">${spread>0?fmtFull(iigg):'—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" class="no-data">Sin unidades pendientes de facturar</td></tr>';
+
+  const tTotalImp = tSubImp + tIVA + tIIBB + tIIGG;
+  document.getElementById('imp-tfoot').innerHTML = `<tr style="background:var(--surface2);font-weight:700;font-family:'DM Mono',monospace;font-size:11px">
+    <td colspan="4">TOTAL — ${pendFac.length} unidades</td>
+    <td style="text-align:right">${fmtFull(tSubImp)}</td>
+    <td></td>
+    <td style="text-align:right;color:${colN(tSpImp)}">${fmtFull(tSpImp)}</td>
+    <td style="text-align:right;color:var(--pendiente)">${fmtFull(tIVA)}</td>
+    <td style="text-align:right;color:var(--reservada)">${fmtFull(tIIBB)}</td>
+    <td style="text-align:right;color:var(--accent)">${fmtFull(tIIGG)}</td>
+  </tr>`;
+}
+
+function exportRentCSV() {
+  const desde = document.getElementById('rent-desde').value;
+  const hasta  = document.getElementById('rent-hasta').value;
+  const marca  = document.getElementById('rent-filter-marca').value;
+  const vend   = document.getElementById('rent-filter-vendedor').value;
+  let rows = valData.filter(r => r.estado_mercaderia === 'Entregada y Facturada');
+  if (desde) rows = rows.filter(r => r.fecha_factura_venta >= desde);
+  if (hasta) rows = rows.filter(r => r.fecha_factura_venta <= hasta);
+  if (marca) rows = rows.filter(r => r.marca === marca);
+  if (vend)  rows = rows.filter(r => r.vendedor === vend);
+  const header = ['N° Serie','Marca','Producto','OV','Cliente','Vendedor','FC Compra','FC Venta',
+    'Costo $','Ingreso $','Spread $','MgB%','Costo USD','Ingreso USD','Spread USD','MgB USD%'];
+  const csv = [header, ...rows.map(r => [
+    r.numero_serie, r.marca, r.producto, r.nro_ov, r.cliente, r.vendedor,
+    r.fecha_fc_compra_real, r.fecha_factura_venta,
+    Math.round(r.costo_total_pesos||0), Math.round(r.ingreso_total_pesos||0),
+    Math.round(r.spread_pesos||0), Number(r.mgb_pct||0).toFixed(2),
+    Math.round(r.costo_total_usd||0), Math.round(r.ingreso_total_usd||0),
+    Math.round(r.spread_usd||0), Number(r.mgb_usd_pct||0).toFixed(2)
+  ])].map(row => row.map(v => `"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv);
+  a.download = 'rentabilidad_maquinaria.csv';
+  a.click();
+}
+
+
+init();
+</script>
+</body>
+</html>
