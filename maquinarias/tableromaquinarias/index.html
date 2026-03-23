@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo Maquinaria — Bricchi Hnos SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252b3b;--border2:#2e3650;--text:#d4daf0;--muted:#5a6480;--accent:#3b82f6;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+#loader{position:fixed;inset:0;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;transition:opacity .5s}
+#loader.out{opacity:0;pointer-events:none}
+.l-logo{display:flex;flex-direction:column;align-items:center;gap:12px}
+.l-logo img{height:48px;width:auto}
+.l-logo span{font-family:var(--sans);font-size:12px;color:#666;letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+.l-logo span b{color:#D42B2B;font-weight:700}
+.l-bar{width:280px;height:2px;background:#e5e7eb;overflow:hidden;border-radius:2px}
+.l-fill{height:100%;width:0;background:#D42B2B;transition:width .4s}
+.l-msg{font-family:var(--mono);font-size:10px;color:#999;letter-spacing:.05em}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
+.h-logo{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.h-logo b{color:var(--text)}
+.h-meta{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;gap:14px}
+.h-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;padding:8px 20px 0;background:var(--surface);border-bottom:1px solid var(--border)}
+.tab{padding:7px 18px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;background:none;border-top:none;border-left:none;border-right:none;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.toolbar{display:flex;gap:6px;align-items:center;padding:7px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.search{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:3px;outline:none;width:200px}
+.search:focus{border-color:var(--accent)}
+.fsel{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:11px;padding:4px 7px;border-radius:3px;outline:none;cursor:pointer}
+.btn{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border2);padding:4px 10px;border-radius:3px;cursor:pointer;transition:.15s}
+.btn:hover{color:var(--text);border-color:var(--accent)}
+.cnt{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
+.col-bar{display:flex;gap:5px;align-items:center;padding:5px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ctg{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;border:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;user-select:none;transition:.12s}
+.ctg:hover{border-color:var(--accent);color:var(--accent)}
+.ctg.on{border-color:var(--accent);background:rgba(59,130,246,.1);color:var(--accent)}
+.ctg-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+main{height:calc(100vh - 160px);overflow:hidden;display:flex;flex-direction:column}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+.tscroll{flex:1;overflow:auto}
+table{border-collapse:collapse;font-size:11px;white-space:nowrap}
+thead th{position:sticky;top:0;background:var(--surface2);border-bottom:1px solid var(--border2);border-right:1px solid var(--border);padding:6px 9px;font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}
+thead th.asc::after{content:' ↑'}thead th.desc::after{content:' ↓'}
+thead th.gh{background:var(--surface3);font-size:8px;text-align:center;border-bottom:1px solid var(--border2);letter-spacing:.07em;cursor:default}
+tbody tr{border-bottom:1px solid rgba(37,43,59,.5)}
+tbody tr:hover td{background:rgba(59,130,246,.04)}
+tbody td{padding:4px 9px;border-right:1px solid rgba(37,43,59,.3);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.m{font-family:var(--mono);font-size:10px}
+.nu{color:var(--muted);font-style:italic;font-size:9px}
+.nm{text-align:right;font-family:var(--mono);font-size:10px}
+.bt{color:#22c55e;font-family:var(--mono);font-size:10px;text-align:center}
+.bf{color:var(--muted);font-family:var(--mono);font-size:10px;text-align:center}
+.di{color:var(--muted);font-family:var(--mono);font-size:9px}
+.sep-ids{border-left:2px solid #3b82f6!important}
+.sep-serie{border-left:2px solid #22c55e!important}
+.sep-prod{border-left:2px solid #a78bfa!important}
+.sep-stock{border-left:2px solid #06b6d4!important}
+.sep-oc{border-left:2px solid #f59e0b!important}
+.sep-rec{border-left:2px solid #f97316!important}
+.sep-fcc{border-left:2px solid #ef4444!important}
+.sep-ov{border-left:2px solid #8b5cf6!important}
+.sep-ent{border-left:2px solid #ec4899!important}
+.sep-fcv{border-left:2px solid #64748b!important}
+.sep-tc{border-left:2px solid #84cc16!important}
+.sep-meta{border-left:2px solid #475569!important}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:500;white-space:nowrap}
+.bdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+/* estados page */
+.ew{flex:1;overflow:auto;padding:14px 16px}
+.eg{margin-bottom:18px}
+.egl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:7px}
+.ecg{display:flex;flex-wrap:wrap;gap:5px}
+.ec{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:9px 12px;min-width:175px;flex:0 0 auto;position:relative;overflow:hidden}
+.ec::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ecn{font-size:11px;font-weight:500;margin-bottom:2px}
+.ecs{font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:6px}
+.ecv{font-family:var(--mono);font-size:20px;font-weight:600;line-height:1;margin-bottom:5px}
+.ecd{font-family:var(--mono);font-size:9px;color:var(--muted);display:flex;flex-direction:column;gap:1px}
+.ecd span{display:flex;gap:4px}
+.ecd b{min-width:78px;color:var(--muted)}
+.ecd i{color:var(--text);font-style:normal}
+.ecf{display:flex;gap:3px;margin-top:5px}
+.flag{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:2px;font-weight:600}
+.fc{background:rgba(34,197,94,.12);color:#22c55e}
+.fa{background:rgba(239,68,68,.12);color:#ef4444}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+<style>
+@media print {
+  body { background: #fff !important; color: #000 !important; font-size: 10px; }
+  #loader, nav, .toolbar, #col-bar, .tab, button, select, input,
+  #e-drill, #e-matrix, #ex-s-oc, #ex-s-sol { display: none !important; }
+  .page { display: block !important; height: auto !important; overflow: visible !important; }
+  .page:not(.active) { display: none !important; }
+  table { border-collapse: collapse; width: 100%; font-size: 9px; }
+  th, td { border: 1px solid #ccc !important; padding: 3px 5px !important;
+            color: #000 !important; background: #fff !important; }
+  th { background: #1B3A6B !important; color: #fff !important; font-weight: bold; }
+  tr:nth-child(even) td { background: #f5f7fa !important; }
+  .badge { border: 1px solid #ccc !important; color: #000 !important;
+           background: #eee !important; font-size: 8px !important; }
+  span[style*="color"] { color: #000 !important; }
+  #print-header { display: block !important; }
+  @page { margin: 1cm; size: landscape; }
+}
+#print-header { display: none; font-size: 12px; font-weight: bold;
+                margin-bottom: 8px; color: #1B3A6B; }
+</style>
+</head>
+<body>
+<div id="print-header">BRICCHI HNOS. SA — Modelo Maquinaria &nbsp;|&nbsp;
+  <span id="ph-seccion"></span> &nbsp;|&nbsp;
+  <span id="ph-fecha"></span>
+</div>
+<div id="loader">
+  <div class="l-logo">
+    <img src="https://www.bricchihnos.com/assets/bricchi-hnos-logotype.png" alt="Bricchi Hnos SA" onerror="this.style.display='none'">
+    <span>BRICCHI HNOS SA · <b>Maquinaria</b></span>
+  </div>
+  <div class="l-bar"><div class="l-fill" id="lfill"></div></div>
+  <div class="l-msg" id="lmsg">Inicializando...</div>
+</div>
+
+<header>
+  <div class="h-logo">BRICCHI HNOS SA · <b>Maquinaria</b></div>
+  <div class="h-meta">
+    <span><span class="h-dot"></span><span id="h-ts">—</span></span>
+    <span id="h-tot">—</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('estados',this)">📋 Estados</button>
+  <button class="tab" onclick="sw('flat',this)">🔢 Flat — Con Serie</button>
+  <button class="tab" onclick="sw('oc',this)">📦 OC — Líneas de Compra</button>
+  <button class="tab" onclick="sw('sol',this)">⚡ OV — Sin Asignar</button>
+  <button class="tab" onclick="sw('historial',this)">📜 Historial FC/NC</button>
+  <button class="tab" onclick="sw('explorer',this)">🔍 Explorer</button>
+</div>
+
+<main>
+
+<div class="page active" id="page-estados">
+  <div class="toolbar">
+    <button class="btn" id="btn-vw" onclick="toggleVw()">Vista: Tarjetas</button>
+    <span class="cnt" id="e-cnt">—</span>
+  </div>
+  <div id="e-cards" class="ew"></div>
+  <div id="e-matrix" class="ew" style="display:none;padding:0"></div>
+  <!-- Panel drill-down -->
+  <div id="e-drill" style="display:none;margin-top:12px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border2)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="drill-dot" style="width:10px;height:10px;border-radius:50%;background:#64748b"></div>
+        <span id="drill-title" style="font-weight:600;font-size:13px"></span>
+        <span id="drill-cnt" style="font-size:11px;color:var(--muted)"></span>
+      </div>
+      <button class="btn" onclick="closeDrill()" style="font-size:11px;padding:4px 10px">✕ Cerrar</button>
+    </div>
+    <div style="overflow:auto;max-height:420px">
+      <table style="width:100%;min-width:900px">
+        <thead id="drill-head"></thead>
+        <tbody id="drill-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-flat">
+  <div class="toolbar">
+    <input class="search" id="fs" placeholder="Buscar cualquier campo..." oninput="rFlat()">
+    <select class="fsel" id="f-est" onchange="rFlat()"><option value="">Estado</option></select>
+    <select class="fsel" id="f-ma" onchange="rFlat()"><option value="">Marca</option></select>
+    <select class="fsel" id="f-ca" onchange="rFlat()"><option value="">Categoría</option></select>
+    <select class="fsel" id="f-de" onchange="rFlat()"><option value="">Depósito</option></select>
+    <select class="fsel" id="f-or" onchange="rFlat()"><option value="">Origen dato</option></select>
+    <button class="btn" onclick="xFlat()">⬇ CSV</button>
+    <button class="btn" onclick="imprimirSolapa('Flat — Con Serie')">🖨 Imprimir</button>
+    <span class="cnt" id="f-cnt">—</span>
+  </div>
+  <div class="col-bar" id="col-bar"></div>
+  <div class="tscroll">
+    <table><thead id="fh"></thead><tbody id="fb"></tbody></table>
+  </div>
+</div>
+
+<div class="page" id="page-oc">
+  <div class="toolbar">
+    <input class="search" id="os" placeholder="Buscar OC, producto, serie..." oninput="rOC()">
+    <select class="fsel" id="o-ti" onchange="rOC()"><option value="">Tipo OC</option></select>
+    <select class="fsel" id="o-fa" onchange="rOC()"><option value="">Facturación</option></select>
+    <select class="fsel" id="o-doc" onchange="rOC()"><option value="">Tipo doc.</option><option value="Orden de Compra">Orden</option><option value="Cotización">Cotización</option></select>
+    <select class="fsel" id="o-rec" onchange="rOC()"><option value="">Recepción</option></select>
+    <select class="fsel" id="o-ser" onchange="rOC()"><option value="">Series</option><option value="sin">Sin asignar</option><option value="con">Con serie</option></select>
+    <select class="fsel" id="o-top" onchange="rOC()"><option value="">Operación</option><option value="En Consignación">Consignación</option><option value="Propia">Propia</option></select>
+    <button class="btn" onclick="xOC()">⬇ CSV</button>
+    <button class="btn" onclick="imprimirSolapa('OC — Líneas de Compra')">🖨 Imprimir</button>
+    <span class="cnt" id="o-cnt">—</span>
+  </div>
+  <div class="tscroll"><table><thead><tr>
+    <th onclick="sT('oc','nro_oc')" id="th-oc-nro_oc">N° OC</th>
+    <th onclick="sT('oc','estado_oc_label')" id="th-oc-estado_oc_label">Tipo Doc.</th>
+    <th onclick="sT('oc','tipo_oc')" id="th-oc-tipo_oc">Tipo OC</th>
+    <th onclick="sT('oc','estado_facturacion')" id="th-oc-estado_facturacion">Fac. OC</th>
+    <th onclick="sT('oc','estado_recepcion')" id="th-oc-estado_recepcion">Recepción</th>
+    <th onclick="sT('oc','fecha_oc')" id="th-oc-fecha_oc">Fecha OC</th>
+    <th onclick="sT('oc','proveedor')" id="th-oc-proveedor">Proveedor</th>
+    <th onclick="sT('oc','producto')" id="th-oc-producto">Producto</th>
+    <th>Moneda</th>
+    <th onclick="sT('oc','price_unit')" id="th-oc-price_unit" style="text-align:right">Precio Unit.</th>
+    <th onclick="sT('oc','subtotal_linea')" id="th-oc-subtotal_linea" style="text-align:right">Subtotal Línea</th>
+    <th onclick="sT('oc','total_linea')" id="th-oc-total_linea" style="text-align:right">Total Línea</th>
+    <th onclick="sT('oc','serie_asignada')" id="th-oc-serie_asignada">Serie</th>
+    <th>Depósito</th>
+    <th onclick="sT('oc','tipo_operacion')" id="th-oc-tipo_operacion">Tipo Op.</th>
+    <th onclick="sT('oc','propietario')" id="th-oc-propietario">Propietario</th>
+    <th onclick="sT('oc','nro_factura_compra')" id="th-oc-nro_factura_compra">FC Compra</th>
+    <th onclick="sT('oc','subtotal_fc_compra')" id="th-oc-subtotal_fc_compra" style="text-align:right">Subtotal FC</th>
+    <th onclick="sT('oc','nro_ov_vinculada')" id="th-oc-nro_ov_vinculada">OV Vinculada</th>
+    <th onclick="sT('oc','cliente_ov')" id="th-oc-cliente_ov">Cliente</th>
+    <th onclick="sT('oc','cliente_ov')" id="th-oc-cliente_ov">Cliente OV</th>
+  </tr></thead><tbody id="ob"></tbody></table></div>
+</div>
+
+<div class="page" id="page-sol">
+  <div class="toolbar">
+    <input class="search" id="ss" placeholder="Buscar OV, producto, cliente..." oninput="rSOL()">
+    <select class="fsel" id="s-est" onchange="rSOL()"><option value="">Estado OV</option></select>
+    <button class="btn" onclick="xSOL()">⬇ CSV</button>
+    <button class="btn" onclick="imprimirSolapa('OV — Sin Asignar')">🖨 Imprimir</button>
+    <span class="cnt" id="s-cnt">—</span>
+  </div>
+  <div class="tscroll"><table><thead><tr>
+    <th onclick="sT('sol','nro_ov')" id="th-sol-nro_ov">N° OV</th>
+    <th onclick="sT('sol','estado_ov_label')" id="th-sol-estado_ov_label">Estado OV</th>
+    <th onclick="sT('sol','fecha_ov')" id="th-sol-fecha_ov">Fecha OV</th>
+    <th onclick="sT('sol','cliente')" id="th-sol-cliente">Cliente</th>
+    <th onclick="sT('sol','vendedor')" id="th-sol-vendedor">Vendedor</th>
+    <th onclick="sT('sol','producto')" id="th-sol-producto">Producto sin asignar</th>
+    <th>Moneda</th>
+    <th onclick="sT('sol','price_unit')" id="th-sol-price_unit" style="text-align:right">Precio Unit.</th>
+    <th onclick="sT('sol','subtotal_linea')" id="th-sol-subtotal_linea" style="text-align:right">Subtotal línea</th>
+    <th onclick="sT('sol','estado_facturacion_linea')" id="th-sol-estado_facturacion_linea">Fac. línea</th>
+    <th onclick="sT('sol','oc_vinculada')" id="th-sol-oc_vinculada">OC Vinculada</th>
+    <th style="text-align:center">Anticipo OV</th>
+    <th style="text-align:center">Lista entregar</th>
+  </tr></thead><tbody id="sb"></tbody></table></div>
+</div>
+
+<div class="page" id="page-historial">
+  <div class="toolbar">
+    <input class="search" id="hs" placeholder="Buscar OV, N° FC, cliente, serie..." oninput="rHist()">
+    <select class="fsel" id="h-emp" onchange="rHist()"><option value="">Empresa</option><option value="BRICCHI HNOS SA">Bricchi</option><option value="Empresa NF">NF</option></select>
+    <select class="fsel" id="h-vig" onchange="rHist()"><option value="">Vigencia</option><option value="true">Vigente</option><option value="false">Anulada</option></select>
+    <select class="fsel" id="h-ant" onchange="rHist()"><option value="">Tipo</option><option value="true">Solo anticipos</option><option value="false">Sin anticipos</option></select>
+    <button class="btn" onclick="xHist()">⬇ CSV</button>
+    <button class="btn" onclick="imprimirSolapa('Historial FC/NC')">🖨 Imprimir</button>
+    <span class="cnt" id="h-cnt">—</span>
+  </div>
+  <div class="tscroll"><table><thead><tr>
+    <th onclick="sT('hist','fecha')" id="th-hist-fecha">Fecha FC</th>
+    <th onclick="sT('hist','nro_ov')" id="th-hist-nro_ov">OV</th>
+    <th onclick="sT('hist','nro_documento')" id="th-hist-nro_documento">N° FC</th>
+    <th>Ant.</th>
+    <th onclick="sT('hist','empresa')" id="th-hist-empresa">Empresa</th>
+    <th onclick="sT('hist','cliente')" id="th-hist-cliente">Cliente</th>
+    <th onclick="sT('hist','cuit_cliente')" id="th-hist-cuit_cliente">CUIT Cliente</th>
+    <th onclick="sT('hist','payment_state')" id="th-hist-payment_state">Pago</th>
+    <th style="text-align:center">Vig.</th>
+    <th onclick="sT('hist','nro_nc_asociada')" id="th-hist-nro_nc_asociada">NC Asociada</th>
+    <th onclick="sT('hist','fecha_nc')" id="th-hist-fecha_nc">Fecha NC</th>
+    <th>Mon.</th>
+    <th onclick="sT('hist','subtotal')" id="th-hist-subtotal" style="text-align:right">Subtotal</th>
+    <th onclick="sT('hist','iva')" id="th-hist-iva" style="text-align:right">IVA</th>
+    <th onclick="sT('hist','total')" id="th-hist-total" style="text-align:right">Total</th>
+    <th onclick="sT('hist','numero_serie')" id="th-hist-numero_serie">N° Serie</th>
+    <th onclick="sT('hist','numero_serie_previsto')" id="th-hist-numero_serie_previsto" title="Serie reservada en OC pendiente de recepción" style="color:#f59e0b">N° Serie Prev.</th>
+    <th onclick="sT('hist','ref_interna')" id="th-hist-ref_interna">Ref.</th>
+    <th onclick="sT('hist','producto')" id="th-hist-producto">Producto</th>
+    <th onclick="sT('hist','nro_factura_compra')" id="th-hist-nro_factura_compra">FC Compra</th>
+    <th onclick="sT('hist','fecha_fc_compra')" id="th-hist-fecha_fc_compra">Fecha Cpra</th>
+    <th>Mon.Cpra</th>
+    <th onclick="sT('hist','subtotal_fc_compra')" id="th-hist-subtotal_fc_compra" style="text-align:right">Subtotal Cpra</th>
+    <th onclick="sT('hist','proveedor_fc')" id="th-hist-proveedor_fc">Proveedor</th>
+    <th onclick="sT('hist','cuit_proveedor')" id="th-hist-cuit_proveedor">CUIT Prov.</th>
+  </tr></thead><tbody id="hb"></tbody></table></div>
+</div>
+
+<div class="page" id="page-explorer">
+  <!-- Filtros Explorer -->
+  <div class="toolbar" style="flex-wrap:wrap;gap:6px;padding:8px 12px">
+    <select class="fsel" id="ex-cat" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Categoría — Todas</option>
+    </select>
+    <select class="fsel" id="ex-grp" onchange="rExplorer()" style="min-width:180px">
+      <option value="">Grupo Estado — Todos</option>
+    </select>
+    <select class="fsel" id="ex-est" onchange="rExplorer()" style="min-width:200px">
+      <option value="">Estado — Todos</option>
+    </select>
+    <select class="fsel" id="ex-dep" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Depósito — Todos</option>
+    </select>
+    <select class="fsel" id="ex-top" onchange="rExplorer()" style="min-width:150px">
+      <option value="">Operación — Todas</option>
+      <option value="Propia">Propia</option>
+      <option value="En Consignación">Consignación</option>
+    </select>
+    <select class="fsel" id="ex-pro" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Proveedor — Todos</option>
+    </select>
+    <select class="fsel" id="ex-cli" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Cliente — Todos</option>
+    </select>
+    <input class="search" id="ex-bus" placeholder="Buscar..." oninput="rExplorer()" style="min-width:160px">
+    <button class="btn" onclick="resetExplorer()" style="font-size:11px">✕ Limpiar</button>
+    <button class="btn" onclick="xExplorer()">⬇ CSV</button>
+    <button class="btn" onclick="imprimirSolapa('Explorer')">🖨 Imprimir</button>
+    <span class="cnt" id="ex-cnt" style="margin-left:auto">—</span>
+  </div>
+  <!-- Filtros específicos OC -->
+  <div style="display:flex;gap:6px;padding:4px 12px 6px;border-bottom:1px solid var(--border2);background:var(--surface3);flex-wrap:wrap;align-items:center">
+    <span style="font-size:10px;color:#3b82f6;font-weight:600;text-transform:uppercase;letter-spacing:.06em">🔢 Filtros Flat:</span>
+    <select class="fsel" id="ex-flat-mov" onchange="rExplorer()" style="min-width:180px">
+      <option value="">Mov. Salida — Todos</option>
+      <option value="assigned">Lista para Entregar (assigned)</option>
+      <option value="done">Entregada (done)</option>
+    </select>
+    <span style="font-size:10px;color:#f59e0b;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-left:12px">📦 Filtros OC:</span>
+    <select class="fsel" id="ex-oc-rec" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Recepción — Todas</option>
+      <option value="pending">Pendiente de Recibir</option>
+      <option value="full">Recibida Completa</option>
+    </select>
+    <select class="fsel" id="ex-oc-fac" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Facturación — Todas</option>
+      <option value="invoiced">Facturada</option>
+      <option value="to invoice">A Facturar</option>
+      <option value="nothing">Sin Factura</option>
+    </select>
+    <!-- Filtros específicos OV -->
+    <span style="font-size:10px;color:#8b5cf6;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-left:12px">⚡ Filtros OV:</span>
+    <select class="fsel" id="ex-sol-est" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Estado OV — Todos</option>
+      <option value="sale">Confirmada</option>
+      <option value="draft">Cotización</option>
+    </select>
+    <select class="fsel" id="ex-sol-fac" onchange="rExplorer()" style="min-width:160px">
+      <option value="">Facturación OV — Todas</option>
+      <option value="to invoice">A Facturar</option>
+      <option value="invoiced">Facturada</option>
+      <option value="nothing">Sin Factura</option>
+    </select>
+  </div>
+
+  <!-- Resultados: 3 secciones -->
+  <div style="overflow:auto;height:calc(100% - 52px);padding:0 0 24px 0">
+
+    <!-- SECCIÓN 1: Flat — Con Serie -->
+    <div id="ex-s-flat" style="margin-bottom:0">
+      <div style="padding:8px 14px;background:var(--surface3);border-bottom:1px solid var(--border2);
+                  display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:2">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3b82f6">
+          🔢 Flat — Con Serie
+        </span>
+        <span id="ex-cnt-flat" style="font-size:10px;color:var(--muted)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;min-width:1400px">
+          <thead><tr id="ex-head-flat">
+            <th>N° Serie</th><th>Estado</th><th>Producto</th><th>Ref.</th>
+            <th>Categoría</th><th>Depósito</th><th>Tipo Op.</th>
+            <th>Proveedor</th><th>N° OC</th><th>Fecha OC</th>
+            <th>Moneda OC</th><th style="text-align:right">Subtotal OC</th>
+            <th>FC Compra</th><th>Fecha FC Cpra</th><th style="text-align:right">Subtotal FC Cpra</th>
+            <th>Cliente</th><th>N° OV</th><th>Fecha OV</th>
+            <th>Moneda OV</th><th style="text-align:right">Subtotal OV</th>
+            <th>FC Venta</th><th>Fecha FC Vta</th><th style="text-align:right">Subtotal FC Vta</th>
+            <th>Remito Ent.</th><th>Fecha Entrega</th>
+          </tr></thead>
+          <tbody id="ex-body-flat"></tbody>
+        </table>
+      </div>
+      <div id="ex-empty-flat" style="display:none;padding:16px 14px;color:var(--muted);font-size:11px">
+        Sin resultados en Flat para los filtros seleccionados.
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: OC — Sin Asignar -->
+    <div id="ex-s-oc" style="margin-bottom:0;border-top:2px solid var(--border2)">
+      <div style="padding:8px 14px;background:var(--surface3);border-bottom:1px solid var(--border2);
+                  display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:2">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f59e0b">
+          📦 OC — Líneas Sin Serie
+        </span>
+        <span id="ex-cnt-oc" style="font-size:10px;color:var(--muted)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;min-width:900px">
+          <thead><tr>
+            <th>N° OC</th><th>Tipo OC</th><th>Estado</th><th>Facturación</th><th>Recepción</th>
+            <th>Fecha OC</th><th>Proveedor</th><th>Producto</th>
+            <th>Moneda</th><th style="text-align:right">Precio Unit.</th>
+            <th style="text-align:right">Subtotal</th><th style="text-align:right">Total</th>
+            <th style="text-align:right">Qty Ped.</th><th style="text-align:right">Qty Rec.</th>
+            <th>OV Vinculada</th><th>Cliente</th>
+          </tr></thead>
+          <tbody id="ex-body-oc"></tbody>
+        </table>
+      </div>
+      <div id="ex-empty-oc" style="display:none;padding:16px 14px;color:var(--muted);font-size:11px">
+        Sin resultados en OC para los filtros seleccionados.
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: OV — Sin Asignar -->
+    <div id="ex-s-sol" style="border-top:2px solid var(--border2)">
+      <div style="padding:8px 14px;background:var(--surface3);border-bottom:1px solid var(--border2);
+                  display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:2">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8b5cf6">
+          ⚡ OV — Sin Asignar
+        </span>
+        <span id="ex-cnt-sol" style="font-size:10px;color:var(--muted)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;min-width:900px">
+          <thead><tr>
+            <th>N° OV</th><th>Estado</th><th>Tipo OV</th><th>Fecha OV</th>
+            <th>Cliente</th><th>Vendedor</th><th>Producto</th>
+            <th>Moneda</th><th style="text-align:right">Precio Unit.</th>
+            <th style="text-align:right">Subtotal</th><th style="text-align:right">Total</th>
+            <th style="text-align:right">Qty Ped.</th><th style="text-align:right">Qty Ent.</th>
+            <th>Estado Fac.</th><th>OC Vinculada</th><th>Anticipo</th>
+          </tr></thead>
+          <tbody id="ex-body-sol"></tbody>
+        </table>
+      </div>
+      <div id="ex-empty-sol" style="display:none;padding:16px 14px;color:var(--muted);font-size:11px">
+        Sin resultados en OV para los filtros seleccionados.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+<script>
+const U='https://rvumvnslydaobvvsywtu.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dW12bnNseWRhb2J2dnN5d3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzM3NDksImV4cCI6MjA4NzQ0OTc0OX0.rE06TXMzBhvX0Uwzh2UquSFJs6CP18d81xrCC7MmX3c',H={'apikey':K,'Authorization':'Bearer '+K};
+let FD=[],OD=[],SD=[],ED=[],HD=[],VD=[],FF=[],vw='cards';
+let fSort={c:'numero_serie',a:true},tSort={oc:{c:'nro_oc',a:true},hist:{c:'fecha',a:false},sol:{c:'fecha_ov',a:false}};
+
+const G=[
+  {id:'ids',  lb:'IDs',        co:'#3b82f6',on:false,cols:[{f:'lot_id',t:'di'},{f:'product_id',t:'di'},{f:'categ_id',t:'di'},{f:'po_id',t:'di'},{f:'so_id',t:'di'},{f:'fc_compra_id',t:'di'},{f:'fc_venta_id',t:'di'}]},
+  {id:'serie',lb:'Serie/Lote', co:'#22c55e',on:true,cols:[
+    {f:'numero_serie',h:'N° Serie',t:'m',s:1},{f:'chasis',h:'Chasis',t:'m'},{f:'motor',h:'Motor',t:'m'},
+    {f:'marca',h:'Marca',s:1},{f:'modelo',h:'Modelo'},{f:'anio_fabricacion',h:'Año'},
+    {f:'origen',h:'Origen'},{f:'tipo_vehiculo',h:'Tipo Veh.'},{f:'transmision',h:'Transmis.'},
+    {f:'convertidor',h:'Convertid.'},{f:'marca_motor',h:'Marca Motor'},{f:'lote_create_date',h:'Create Date',t:'m'}]},
+  {id:'prod', lb:'Producto',   co:'#a78bfa',on:true,cols:[
+    {f:'producto',h:'Producto',s:1},{f:'ref_interna',h:'Ref.',t:'m'},
+    {f:'categoria',h:'Categoría',s:1},{f:'precio_lista',h:'Precio Lista',t:'nm'},
+    {f:'tipo_producto',h:'Tipo Prod.'},{f:'tracking',h:'Tracking'}]},
+  {id:'stock',lb:'Stock',      co:'#06b6d4',on:true,cols:[
+    {f:'deposito',h:'Depósito',s:1},{f:'cantidad_stock',h:'Qty',t:'nm'},
+    {f:'en_customer',h:'En Cust.',t:'b'},{f:'tipo_operacion',h:'Tipo Op.'},{f:'propietario',h:'Propietario'}]},
+  {id:'oc',   lb:'OC',         co:'#f59e0b',on:true,cols:[
+    {f:'nro_oc',h:'N° OC',t:'m',s:1},{f:'proveedor',h:'Proveedor'},{f:'cuit_proveedor',h:'CUIT Prov.',t:'m'},
+    {f:'estado_oc',h:'Est. OC'},{f:'estado_facturacion_oc',h:'Fac. OC'},{f:'fecha_oc',h:'Fecha OC',t:'m',s:1},
+    {f:'moneda_oc',h:'Moneda'},{f:'tc_oc',h:'TC OC',t:'nm'},{f:'precio_unit_oc',h:'Precio Unit.',t:'nm'},
+    {f:'subtotal_oc_linea',h:'Subtotal Línea',t:'nm'},{f:'total_oc_linea',h:'Total Línea',t:'nm'},
+    {f:'monto_faltante_oc',h:'Faltante $',t:'nm'},{f:'percentage_faltante_oc',h:'Faltante %',t:'nm'},
+    {f:'interno_oc',h:'Interno',t:'b'}]},
+  {id:'rec',  lb:'Recepción',  co:'#f97316',on:true,cols:[
+    {f:'nro_recepcion',h:'N° Recepción',t:'m'},{f:'remito_compra',h:'Remito Cpra.',t:'m'},
+    {f:'fecha_recepcion',h:'Fecha Rec.',t:'m',s:1},
+    {f:'fecha_fc_compra_sml',h:'F.FC SML',t:'m'},{f:'nro_voucher_compra',h:'Voucher Cpra.',t:'m'}]},
+  {id:'fcc',  lb:'FC Compra',  co:'#ef4444',on:true,cols:[
+    {f:'nro_factura_compra',h:'N° FC Cpra',t:'m',s:1},{f:'fecha_fc_compra',h:'Fecha FC Cpra',t:'m',s:1},
+    {f:'estado_pago_compra',h:'Pago Cpra'},
+    {f:'proveedor_fc_compra',h:'Prov. FC Cpra'},{f:'cuit_proveedor_fc_compra',h:'CUIT Prov. FC',t:'m'},
+    {f:'moneda_fc_compra',h:'Moneda'},{f:'tc_fc_compra',h:'TC FC Cpra',t:'nm'},
+    {f:'subtotal_fc_compra',h:'Subtotal FC',t:'nm'},{f:'iva_fc_compra',h:'IVA FC',t:'nm'},{f:'total_fc_compra',h:'Total FC',t:'nm'}]},
+  {id:'fcnfc',lb:'FC NF (Faltante Compra)', co:'#fb923c',on:true,cols:[
+    {f:'nro_fc_compra_nf',h:'N° FC NF Cpra',t:'m'},{f:'fecha_fc_compra_nf',h:'Fecha FC NF Cpra',t:'m'},
+    {f:'estado_pago_compra_nf',h:'Pago NF Cpra'},
+    {f:'proveedor_fc_compra_nf',h:'Proveedor FC NF Cpra'},{f:'cuit_proveedor_fc_compra_nf',h:'CUIT Prov. FC NF Cpra',t:'m'},
+    {f:'monto_faltante_compra_nf',h:'Faltante $',t:'nm'},{f:'percentage_faltante_compra_nf',h:'Faltante %',t:'nm'}]},
+  {id:'ov',   lb:'OV',         co:'#8b5cf6',on:true,cols:[
+    {f:'nro_ov',h:'N° OV',t:'m',s:1},{f:'fecha_ov',h:'Fecha OV',t:'m',s:1},
+    {f:'estado_ov',h:'Est. OV'},{f:'estado_facturacion_ov',h:'Fac. OV'},{f:'estado_entrega_ov',h:'Entrega OV'},
+    {f:'cliente',h:'Cliente',s:1},{f:'cuit_cliente',h:'CUIT Cliente',t:'m'},
+    {f:'vendedor',h:'Vendedor',s:1},
+    {f:'moneda_ov',h:'Moneda'},{f:'tc_ov',h:'TC OV',t:'nm'},{f:'precio_unit_ov',h:'Precio Unit.',t:'nm'},
+    {f:'subtotal_ov_linea',h:'Subtotal Línea',t:'nm'},{f:'total_ov_linea',h:'Total Línea',t:'nm'},
+    {f:'monto_faltante_line',h:'Faltante $',t:'nm'},{f:'percentage_faltante',h:'Faltante %',t:'nm'},
+    {f:'paid',h:'Cobrado',t:'b'},{f:'ok_alvaro',h:'OK Álvaro',t:'b'},{f:'interno_ov',h:'Interno',t:'b'},
+    {f:'tipo_flete',h:'Tipo Flete'},{f:'flete_asignado',h:'Flete Asignado',t:'nm'}]},
+  {id:'ent',  lb:'Entrega',    co:'#ec4899',on:true,cols:[
+    {f:'nro_remito_entrega',h:'Remito Ent.',t:'m'},{f:'fecha_entrega_real',h:'F.Entrega',t:'m',s:1},
+    {f:'cliente_remito',h:'Cliente Remito'},{f:'cuit_cliente_remito',h:'CUIT Cliente Rem.',t:'m'},
+    {f:'estado_mov_salida',h:'Mov. Salida'},{f:'fecha_programada_entrega',h:'F.Prog.',t:'m'},
+    {f:'vendedor_salida_sml',h:'Vend. SML'},{f:'nro_voucher_entrega',h:'Voucher Ent.',t:'m'}]},
+  {id:'fcv',  lb:'FC Venta',   co:'#64748b',on:true,cols:[
+    {f:'nro_factura_venta',h:'N° FC Vta',t:'m',s:1},{f:'fecha_fc_venta',h:'Fecha FC Vta',t:'m',s:1},
+    {f:'estado_pago_venta',h:'Pago Vta'},{f:'tipo_fc_venta',h:'Tipo FC Vta'},
+    {f:'cliente_fc_venta',h:'Cliente FC Vta'},{f:'cuit_cliente_fc_venta',h:'CUIT Cliente FC Vta',t:'m'},
+    {f:'moneda_fc_venta',h:'Moneda'},{f:'tc_fc_venta',h:'TC FC Vta',t:'nm'},
+    {f:'subtotal_fc_venta',h:'Subtotal FC Vta',t:'nm'},{f:'iva_fc_venta',h:'IVA FC Vta',t:'nm'},
+    {f:'total_fc_venta',h:'Total FC Vta',t:'nm'}]},
+  {id:'fcnf', lb:'FC NF (Faltante)', co:'#f43f5e',on:true,cols:[
+    {f:'nro_fc_nf',h:'N° FC NF',t:'m'},{f:'fecha_fc_nf',h:'Fecha FC NF',t:'m'},
+    {f:'estado_pago_nf',h:'Pago NF'},
+    {f:'cliente_fc_nf',h:'Cliente FC NF'},{f:'cuit_cliente_fc_nf',h:'CUIT Cliente FC NF',t:'m'},
+    {f:'monto_faltante_nf',h:'Faltante $',t:'nm'},{f:'percentage_faltante_nf',h:'Faltante %',t:'nm'}]},
+  {id:'tc',   lb:'TC BNA',     co:'#84cc16',on:true,cols:[
+    {f:'tc_bna_compra',h:'TC BNA Cpra',t:'nm'},{f:'tc_bna_venta',h:'TC BNA Vta',t:'nm'}]},
+  {id:'meta', lb:'Metadata',   co:'#475569',on:true,cols:[
+    {f:'origen_dato',h:'Origen Dato'},{f:'generado_at',h:'Generado At',t:'m'}]},
+];
+
+const pr=s=>(s||'').replace(/^\[[\w.\-]+\]\s*/,'').replace(/^MARCA:\s*/i,'').trim();
+const fd=d=>d?new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
+const fm=n=>{if(n==null||n==='')return'—';const v=Number(n);if(Math.abs(v)>=1e6)return'$'+(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return'$'+(v/1e3).toFixed(0)+'K';return'$'+Math.round(v).toLocaleString('es-AR');};
+const fmF=n=>{if(n==null||n===''||n===undefined||isNaN(Number(n)))return'—';return Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+const setL=(p,m)=>{document.getElementById('lfill').style.width=p+'%';document.getElementById('lmsg').textContent=m;};
+const pop=(id,vals)=>{const el=document.getElementById(id);[...new Set(vals)].filter(Boolean).sort().forEach(v=>el.innerHTML+=`<option value="${v}">${v}</option>`);};
+
+function cEst(r){
+  // Etiquetas alineadas con dim_estado_maquinaria.estado para que el conteo matchee
+  const en=r.fecha_entrega_real||r.en_customer;
+  // Con serie
+  if(r.lot_id){
+    if(r.tipo_operacion==='En Consignación'&&!en)return{l:'En Consignación',c:'#06b6d4'};
+    if(en&&r.nro_factura_compra&&r.nro_factura_venta)return{l:'Entregada y Facturada',c:'#64748b'};
+    if(en&&!r.nro_factura_venta&&r.nro_factura_compra)return{l:'Entregada Pendiente Facturar',c:'#ef4444'};
+    if(en&&r.nro_factura_venta&&!r.nro_factura_compra)return{l:'Alerta: FC Venta Sin FC Compra',c:'#dc2626'};
+    if(en&&!r.nro_factura_compra)return{l:'Alerta: Entregada Sin FC Compra',c:'#fbbf24'};
+    if(r.nro_ov&&r.cantidad_stock>0&&r.nro_factura_compra&&(r.paid||r.ok_alvaro)&&r.estado_mov_salida==='assigned')return{l:'Lista para Entregar',c:'#10b981'};
+    if(r.nro_ov&&r.cantidad_stock>0&&r.nro_factura_compra)return{l:'Comprometida',c:'#8b5cf6'};
+    if(r.nro_factura_compra&&r.cantidad_stock>0&&!r.nro_ov)return{l:'Disponible',c:'#22c55e'};
+    if(!r.nro_factura_compra&&r.cantidad_stock>0&&!r.nro_ov)return{l:'Disponible Sin FC Compra',c:'#fbbf24'};
+    if(r.tipo_operacion==='En Consignación')return{l:'En Consignación',c:'#06b6d4'};
+  }
+  return{l:'Sin Clasificar',c:'#5a6480'};
+}
+
+
+// ══════════════════════════════════════════════════════
+// EXPLORER — solapa nueva, no modifica nada existente
+// ══════════════════════════════════════════════════════
+
+function initExplorer(){
+  // Poblar filtros de categoría
+  const cats = [...new Set(FD.map(r=>r.categoria).filter(Boolean))].sort();
+  const selCat = document.getElementById('ex-cat');
+  cats.forEach(v=>selCat.innerHTML+=`<option value="${v}">${v}</option>`);
+
+  // Poblar grupos de estado desde ED
+  const grps = [...new Set(ED.map(e=>e.grupo).filter(Boolean))].sort();
+  const selGrp = document.getElementById('ex-grp');
+  grps.forEach(v=>selGrp.innerHTML+=`<option value="${v}">${v}</option>`);
+
+  // Poblar estados desde ED
+  const ests = ED.map(e=>e.estado).filter(Boolean);
+  const selEst = document.getElementById('ex-est');
+  ests.forEach(v=>selEst.innerHTML+=`<option value="${v}">${v}</option>`);
+
+  // Depósitos desde FD
+  const deps = [...new Set(FD.map(r=>r.deposito).filter(Boolean))].sort();
+  const selDep = document.getElementById('ex-dep');
+  deps.forEach(v=>selDep.innerHTML+=`<option value="${v}">${v.replace('DEPCE/','').replace('/Existencias','')}</option>`
+    .replace(`value="${v}"`,`value="${v}"`));
+
+  // Proveedores desde FD + OD
+  const provs = [...new Set([
+    ...FD.map(r=>r.proveedor),
+    ...OD.map(r=>r.proveedor)
+  ].filter(Boolean))].sort();
+  const selPro = document.getElementById('ex-pro');
+  provs.forEach(v=>selPro.innerHTML+=`<option value="${v}">${v.substring(0,30)}</option>`);
+
+  // Clientes desde FD + SD
+  const clis = [...new Set([
+    ...FD.map(r=>r.cliente),
+    ...SD.map(r=>r.cliente)
+  ].filter(Boolean))].sort();
+  const selCli = document.getElementById('ex-cli');
+  clis.forEach(v=>selCli.innerHTML+=`<option value="${v}">${v.substring(0,30)}</option>`);
+
+  rExplorer();
+}
+
+function resetExplorer(){
+  ['ex-cat','ex-grp','ex-est','ex-dep','ex-top','ex-pro','ex-cli',
+   'ex-flat-mov','ex-oc-rec','ex-oc-fac','ex-sol-est','ex-sol-fac'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('ex-bus').value='';
+  rExplorer();
+}
+
+function rExplorer(){
+  const cat  = document.getElementById('ex-cat').value;
+  const grp  = document.getElementById('ex-grp').value;
+  const est  = document.getElementById('ex-est').value;
+  const dep  = document.getElementById('ex-dep').value;
+  const top  = document.getElementById('ex-top').value;
+  const pro  = document.getElementById('ex-pro').value;
+  const cli  = document.getElementById('ex-cli').value;
+  const bus  = document.getElementById('ex-bus').value.toLowerCase();
+
+  // Si hay filtro de grupo o estado, resolver qué estados incluye
+  let estadosOk = null;
+  if(grp || est){
+    estadosOk = new Set(
+      ED.filter(e=>
+        (!grp || e.grupo === grp) &&
+        (!est || e.estado === est)
+      ).map(e=>e.estado)
+    );
+  }
+
+  // ── FLAT ──────────────────────────────────────────
+  const flatMov = document.getElementById('ex-flat-mov').value;
+  const flatFilt = FD.filter(r=>{
+    if(cat && r.categoria !== cat) return false;
+    if(dep && r.deposito !== dep)  return false;
+    if(top && r.tipo_operacion !== top) return false;
+    if(pro && r.proveedor !== pro) return false;
+    if(cli && r.cliente !== cli)   return false;
+    if(estadosOk && !estadosOk.has(cEst(r).l)) return false;
+    if(flatMov && r.estado_mov_salida !== flatMov) return false;
+    if(bus && !Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus)) return false;
+    return true;
+  });
+
+  // ── OC ─────────────────────────────────────────────
+  const ocRec = document.getElementById('ex-oc-rec').value;
+  const ocFac = document.getElementById('ex-oc-fac').value;
+  // OC activa si no hay filtros que no le aplican (cat, grp, est, dep, top, cli)
+  const ocActivos = !cat && !grp && !est && !dep && !top && !cli;
+  const ocFilt = ocActivos ? OD.filter(r=>{
+    if(pro && r.proveedor !== pro) return false;
+    if(ocRec && r.estado_recepcion !== ocRec) return false;
+    if(ocFac && r.estado_facturacion !== ocFac) return false;
+    if(bus && !Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus)) return false;
+    return true;
+  }) : [];
+
+  // ── SOL ───────────────────────────────────────────
+  const solEst = document.getElementById('ex-sol-est').value;
+  const solFac = document.getElementById('ex-sol-fac').value;
+  // SOL activa si no hay filtros que no le aplican (cat, grp, est, dep, top, pro)
+  const solActivos = !cat && !grp && !est && !dep && !top && !pro;
+  const solFilt = solActivos ? SD.filter(r=>{
+    if(cli && r.cliente !== cli) return false;
+    if(solEst && r.estado_ov !== solEst) return false;
+    if(solFac && r.estado_facturacion_linea !== solFac) return false;
+    if(bus && !Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus)) return false;
+    return true;
+  }) : [];
+
+  // Contador total
+  const total = flatFilt.length + ocFilt.length + solFilt.length;
+  document.getElementById('ex-cnt').textContent =
+    `${total} resultados (${flatFilt.length} series · ${ocFilt.length} OC · ${solFilt.length} OV)`;
+
+  // ── Render FLAT ───────────────────────────────────
+  const colEst = {
+    'Disponible':'#22c55e','Disponible Sin FC Compra':'#fbbf24',
+    'En Consignación':'#06b6d4','Lista para Entregar':'#10b981','Comprometida':'#8b5cf6',
+    'Entregada Pendiente Facturar':'#ef4444','Entregada y Facturada':'#64748b',
+    'Alerta: Entregada Sin FC Compra':'#fbbf24','Sin Clasificar':'#5a6480'
+  };
+  const bodyFlat = document.getElementById('ex-body-flat');
+  if(flatFilt.length === 0){
+    bodyFlat.innerHTML='';
+    document.getElementById('ex-empty-flat').style.display='';
+  } else {
+    document.getElementById('ex-empty-flat').style.display='none';
+    const alerta = r => r.cantidad_stock>0&&r.en_customer&&r.deposito&&!r.deposito.includes("Customer")
+      ? '<span title="⚠ Stock inconsistente" style="color:#ef4444;margin-left:3px">⚠</span>':'' ;
+    bodyFlat.innerHTML = flatFilt.map(r=>{
+      const e=cEst(r); const ec=colEst[e.l]||'#5a6480';
+      return `<tr>
+        <td class="m" style="font-weight:600;white-space:nowrap">${r.numero_serie||'—'}${alerta(r)}</td>
+        <td><span class="badge" style="background:${ec}18;color:${ec};white-space:nowrap">${e.l}</span></td>
+        <td style="font-size:9px" title="${pr(r.producto)}">${pr(r.producto).substring(0,30)+(pr(r.producto).length>30?'…':'')}</td>
+        <td style="font-size:9px;font-family:var(--mono);color:var(--muted)">${r.ref_interna||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${(r.categoria||'—').split('/').pop().trim()}</td>
+        <td style="font-size:9px;color:var(--muted)">${(r.deposito||'—').replace('DEPCE/','').replace('/Existencias','')}</td>
+        <td style="font-size:9px">${r.tipo_operacion==='En Consignación'?'<span style="color:#06b6d4">Consig.</span>':'Propia'}</td>
+        <td style="font-size:9px" title="${r.proveedor||''}">${(r.proveedor||'—').substring(0,18)}</td>
+        <td class="m" style="font-size:9px">${r.nro_oc||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_oc)}</td>
+        <td style="font-size:9px;text-align:center">${r.moneda_oc||'—'}</td>
+        <td class="nm">${fm(r.subtotal_oc_linea)}</td>
+        <td class="m" style="font-size:9px">${r.nro_factura_compra||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_fc_compra)}</td>
+        <td class="nm">${fm(r.subtotal_fc_compra)}</td>
+        <td style="font-size:9px" title="${r.cliente||''}">${(r.cliente||'—').substring(0,18)}</td>
+        <td class="m" style="font-size:9px">${r.nro_ov||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_ov)}</td>
+        <td style="font-size:9px;text-align:center">${r.moneda_ov||'—'}</td>
+        <td class="nm">${fm(r.subtotal_ov_linea)}</td>
+        <td class="m" style="font-size:9px">${r.nro_factura_venta||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_fc_venta)}</td>
+        <td class="nm">${fm(r.subtotal_fc_venta)}</td>
+        <td class="m" style="font-size:9px">${r.nro_remito_entrega||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_entrega_real)}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('ex-cnt-flat').textContent = `${flatFilt.length} series`;
+
+  // ── Render OC ─────────────────────────────────────
+  const bodyOC = document.getElementById('ex-body-oc');
+  const cFac={invoiced:'#22c55e','to invoice':'#f59e0b'};
+  const cRec={full:'#22c55e',pending:'#f59e0b'};
+  if(ocFilt.length === 0){
+    bodyOC.innerHTML='';
+    document.getElementById('ex-empty-oc').style.display='';
+  } else {
+    document.getElementById('ex-empty-oc').style.display='none';
+    bodyOC.innerHTML = ocFilt.map(r=>`<tr>
+      <td class="m" style="font-weight:600">${r.nro_oc||'—'}</td>
+      <td style="font-size:9px;color:var(--muted)">${r.tipo_oc||'—'}</td>
+      <td><span class="badge" style="background:#3b82f618;color:#3b82f6">${r.estado_oc_label||r.estado_oc}</span></td>
+      <td><span class="badge" style="background:${(cFac[r.estado_facturacion]||'#5a6480')}18;color:${cFac[r.estado_facturacion]||'#5a6480'}">${r.estado_facturacion||'—'}</span></td>
+      <td style="font-size:9px;color:${cRec[r.estado_recepcion]||'var(--muted)'}">${r.estado_recepcion||'—'}</td>
+      <td class="m" style="font-size:9px">${fd(r.fecha_oc)}</td>
+      <td style="font-size:9px" title="${r.proveedor||''}">${(r.proveedor||'—').substring(0,22)}</td>
+      <td style="font-size:9px" title="${pr(r.producto)}">${pr(r.producto).substring(0,28)+(pr(r.producto).length>28?'…':'')}</td>
+      <td style="font-size:9px;text-align:center">${r.moneda||'—'}</td>
+      <td class="nm">${r.price_unit!=null?Number(r.price_unit).toLocaleString('es-AR',{maximumFractionDigits:2}):'—'}</td>
+      <td class="nm">${fm(r.subtotal_linea)}</td>
+      <td class="nm">${fm(r.total_linea)}</td>
+      <td class="nm" style="font-size:10px">${r.qty_pedida!=null?r.qty_pedida:'—'}</td>
+      <td class="nm" style="font-size:10px">${r.qty_received!=null?r.qty_received:'—'}</td>
+      <td class="m" style="font-size:9px">${r.nro_ov_vinculada||'—'}</td>
+      <td style="font-size:9px" title="${r.cliente_ov||''}">${(r.cliente_ov||'—').substring(0,20)}</td>
+    </tr>`).join('');
+  }
+  document.getElementById('ex-cnt-oc').textContent = `${ocFilt.length} líneas`;
+
+  // ── Render SOL ────────────────────────────────────
+  const bodySOL = document.getElementById('ex-body-sol');
+  if(solFilt.length === 0){
+    bodySOL.innerHTML='';
+    document.getElementById('ex-empty-sol').style.display='';
+  } else {
+    document.getElementById('ex-empty-sol').style.display='none';
+    bodySOL.innerHTML = solFilt.map(r=>`<tr>
+      <td class="m" style="font-weight:600">${r.nro_ov||'—'}</td>
+      <td><span class="badge" style="background:#8b5cf618;color:#8b5cf6">${r.estado_ov_label||r.estado_ov||'—'}</span></td>
+      <td style="font-size:9px;color:var(--muted)">${r.tipo_ov||'—'}</td>
+      <td class="m" style="font-size:9px">${fd(r.fecha_ov)}</td>
+      <td style="font-size:9px" title="${r.cliente||''}">${(r.cliente||'—').substring(0,22)}</td>
+      <td style="font-size:9px" title="${r.vendedor||''}">${(r.vendedor||'—').split('(')[0].trim().substring(0,18)}</td>
+      <td style="font-size:9px" title="${pr(r.producto)}">${pr(r.producto).substring(0,28)+(pr(r.producto).length>28?'…':'')}</td>
+      <td style="font-size:9px;text-align:center">${r.moneda||'—'}</td>
+      <td class="nm">${r.price_unit!=null?Number(r.price_unit).toLocaleString('es-AR',{maximumFractionDigits:2}):'—'}</td>
+      <td class="nm">${fm(r.subtotal_linea)}</td>
+      <td class="nm">${fm(r.total_linea)}</td>
+      <td class="nm" style="font-size:10px">${r.qty_pedida!=null?r.qty_pedida:'—'}</td>
+      <td class="nm" style="font-size:10px">${r.qty_delivered!=null?r.qty_delivered:'—'}</td>
+      <td style="font-size:9px;color:var(--muted)">${r.estado_facturacion_linea||'—'}</td>
+      <td class="m" style="font-size:9px">${r.oc_vinculada||'—'}</td>
+      <td style="text-align:center">${r.tiene_anticipo_ov?'<span style="color:#a78bfa;font-size:9px;font-weight:600">ANT</span>':'—'}</td>
+    </tr>`).join('');
+  }
+  document.getElementById('ex-cnt-sol').textContent = `${solFilt.length} líneas`;
+}
+
+
+async function init(){
+  // Carga secuencial para no saturar la pool de conexiones de Supabase
+  const get=async(url,pct,msg)=>{
+    setL(pct,msg);
+    const r=await fetch(url,{headers:H});
+    if(!r.ok){console.error('Fetch error',r.status,url);return [];}
+    const d=await r.json();
+    return Array.isArray(d)?d:[];
+  };
+  ED = await get(`${U}/rest/v1/dim_estado_maquinaria?select=*&order=orden.asc`,                                                               8,'Cargando estados...');
+  FD = await get(`${U}/rest/v1/vista_maquinaria_flat?select=*&order=numero_serie.asc`,                                                         25,'Cargando maquinaria...');
+  const ocRaw = await get(`${U}/rest/v1/vista_oc_maquinaria?select=*&serie_asignada=is.null&order=fecha_oc.desc`,                              45,'Cargando OC...');
+  SD = await get(`${U}/rest/v1/vista_sol_sin_asignar?select=*&order=fecha_ov.desc`,                                                            58,'Cargando SOL...');
+  HD = await get(`${U}/rest/v1/vista_historial_fc_detalle?select=*&order=nro_ov.asc,fecha.asc,nro_documento.asc&limit=3000`,                   72,'Cargando historial FC...');
+  VD = await get(`${U}/rest/v1/vista_estado_maquinaria?select=asignacion,est_compra,est_fisico_compra,est_venta,est_fisico_venta&limit=500`,    88,'Cargando dashboard...');
+  OD = ocRaw
+    .filter(r=>r.estado_oc!=='cancel')
+    .map(r=>({...r, estado_oc_label:
+      r.estado_oc==='purchase'?'Orden de Compra':
+      r.estado_oc==='draft'?'Cotización':
+      r.estado_oc==='done'?'Bloqueada':
+      r.estado_oc==='cancel'?'Cancelada':r.estado_oc}));
+  setL(85,'Renderizando...');
+  pop('f-est',[...new Set(FD.map(r=>cEst(r).l))]);
+  pop('f-ma',FD.map(r=>r.marca));pop('f-ca',FD.map(r=>r.categoria));
+  pop('f-de',FD.map(r=>r.deposito));pop('f-or',FD.map(r=>r.origen_dato));
+  pop('o-ti',OD.map(r=>r.tipo_oc));
+  pop('o-fa',OD.map(r=>r.estado_facturacion));
+  pop('o-rec',OD.map(r=>r.estado_recepcion).filter(Boolean));
+  pop('s-est',SD.map(r=>r.estado_ov_label||r.estado_ov));
+  buildBar();buildHead();rEst();rFlat();rOC();rSOL();rHist();
+  const now=new Date();
+  document.getElementById('h-ts').textContent=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('h-tot').textContent=`${FD.length} con serie · ${OD.length} OC sin serie · ${SD.length} líneas sin asignar · ${HD.length} docs FC/NC`;
+  initExplorer();
+  setL(100,'Listo');setTimeout(()=>document.getElementById('loader').classList.add('out'),300);
+}
+
+function sw(n,b){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+}
+
+function buildBar(){
+  const bar=document.getElementById('col-bar');
+  bar.innerHTML='<span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-right:4px;text-transform:uppercase;letter-spacing:.06em">Columnas</span>';
+  G.forEach(g=>{
+    const d=document.createElement('div');
+    d.className='ctg'+(g.on?' on':'');
+    d.innerHTML=`<span class="ctg-dot" style="background:${g.co}"></span>${g.lb} (${g.cols.length})`;
+    d.onclick=()=>{g.on=!g.on;d.classList.toggle('on',g.on);buildHead();rFlat();};
+    bar.appendChild(d);
+  });
+}
+
+function buildHead(){
+  const ag=G.filter(g=>g.on);
+  let r1='<tr><th rowspan="2" style="text-align:left;min-width:88px;position:sticky;left:0;background:var(--surface2)">N° Serie</th>';
+  let r2='<tr>';
+  ag.forEach(g=>{
+    r1+=`<th colspan="${g.cols.length}" class="gh sep-${g.id}" style="color:${g.co}">${g.lb}</th>`;
+    g.cols.forEach((c,i)=>{
+      const sep=i===0?`sep-${g.id}`:'';
+      const sc=c.s?`onclick="sfC('${c.f}')" id="fh-${c.f}"`:'';
+      r2+=`<th ${sc} class="${sep}" title="${c.f}">${c.h||c.f}</th>`;
+    });
+  });
+  document.getElementById('fh').innerHTML=r1+'</tr>'+r2+'</tr>';
+  document.querySelectorAll('[id^="fh-"]').forEach(th=>{
+    th.classList.remove('asc','desc');
+    if(th.id===`fh-${fSort.c}`)th.classList.add(fSort.a?'asc':'desc');
+  });
+}
+
+function sfC(col){if(fSort.c===col)fSort.a=!fSort.a;else{fSort.c=col;fSort.a=true;}buildHead();rFlat();}
+
+function rFlat(){
+  const bus=(document.getElementById('fs').value||'').toLowerCase().trim();
+  const fe=document.getElementById('f-est').value,fm_=document.getElementById('f-ma').value,
+        fc=document.getElementById('f-ca').value,fd_=document.getElementById('f-de').value,
+        fo=document.getElementById('f-or').value;
+  FF=FD.filter(r=>{
+    if(fe&&cEst(r).l!==fe)return false;if(fm_&&r.marca!==fm_)return false;
+    if(fc&&r.categoria!==fc)return false;if(fd_&&r.deposito!==fd_)return false;
+    if(fo&&r.origen_dato!==fo)return false;
+    if(bus){const row=Object.values(r).filter(Boolean).join('|').toLowerCase();if(!row.includes(bus))return false;}
+    return true;
+  });
+  FF=[...FF].sort((a,b)=>{
+    let va=a[fSort.c]??'',vb=b[fSort.c]??'';
+    if(typeof va==='boolean'){va=va?1:0;vb=vb?1:0;}
+    if(typeof va==='number')return fSort.a?va-vb:vb-va;
+    return fSort.a?String(va).localeCompare(String(vb),'es'):String(vb).localeCompare(String(va),'es');
+  });
+  document.getElementById('f-cnt').textContent=`${FF.length} / ${FD.length} registros`;
+  const ag=G.filter(g=>g.on);
+  const pr=s=>(s||'').replace(/^MARCA:\s*/i,'');
+  document.getElementById('fb').innerHTML=FF.map(r=>{
+    const est=cEst(r);
+    const alertaStock=r.cantidad_stock>0&&r.en_customer&&r.deposito&&!r.deposito.includes("Customer");
+    let c=`<td class="m" style="font-weight:600;position:sticky;left:0;background:var(--surface)">${r.numero_serie||'<span style="color:var(--muted);font-size:9px">—</span>'}${alertaStock?'<span title="⚠ Stock en depósito Y en customer simultáneamente — quant inconsistente en Odoo" style="margin-left:4px;color:#ef4444;cursor:help">⚠</span>':''}</td>`;
+    ag.forEach(g=>{
+      g.cols.forEach((col,i)=>{
+        const sp=i===0?`sep-${g.id}`:'';
+        const v=r[col.f];
+        if(v===null||v===undefined||v===''){c+=`<td class="nu ${sp}">—</td>`;return;}
+        if(col.t==='b'){c+=`<td class="${v?'bt':'bf'} ${sp}">${v?'✓':'✗'}</td>`;return;}
+        if(col.t==='nm'){const n=Number(v);const fmt=Math.abs(n)>=1e6?n.toLocaleString('es-AR',{maximumFractionDigits:0}):n.toLocaleString('es-AR',{maximumFractionDigits:2});c+=`<td class="nm ${sp}" title="${v}">${fmt}</td>`;return;}
+        if(col.t==='di'){c+=`<td class="di ${sp}">${v}</td>`;return;}
+        const s=String(v);const disp=col.f==='producto'?pr(s):s;
+        c+=`<td class="m ${sp}" title="${disp}">${disp.length>32?disp.substring(0,32)+'…':disp}</td>`;
+      });
+    });
+    return`<tr>${c}</tr>`;
+  }).join('');
+}
+
+function sT(tbl,col){
+  const s=tSort[tbl];if(s.c===col)s.a=!s.a;else{s.c=col;s.a=true;}
+  document.querySelectorAll(`[id^="th-${tbl}-"]`).forEach(th=>{th.classList.remove('asc','desc');if(th.id===`th-${tbl}-${col}`)th.classList.add(s.a?'asc':'desc');});
+  if(tbl==='oc')rOC();if(tbl==='sol')rSOL();if(tbl==='hist')rHist();
+}
+function ds(data,tbl){const{c,a}=tSort[tbl];return[...data].sort((x,y)=>{let va=x[c]??'',vb=y[c]??'';if(typeof va==='number')return a?va-vb:vb-va;return a?String(va).localeCompare(String(vb),'es'):String(vb).localeCompare(String(va),'es');});}
+
+function rOC(){
+  const bus=(document.getElementById('os').value||'').toLowerCase();
+  const ft=document.getElementById('o-ti').value;
+  const ff=document.getElementById('o-fa').value;
+  const fr=document.getElementById('o-rec').value;
+  const fser=document.getElementById('o-ser').value;
+  const fdoc=document.getElementById('o-doc').value;
+  const ftop=document.getElementById('o-top').value;
+  let data=OD.filter(r=>{
+    if(ft&&r.tipo_oc!==ft)return false;
+    if(ff&&r.estado_facturacion!==ff)return false;
+    if(fr&&r.estado_recepcion!==fr)return false;
+    if(fser==='sin'&&r.serie_asignada)return false;
+    if(fser==='con'&&!r.serie_asignada)return false;
+    if(fdoc&&(r.estado_oc_label||r.estado_oc)!==fdoc)return false;
+    if(ftop&&r.tipo_operacion!==ftop)return false;
+    if(bus&&!Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus))return false;
+    return true;
+  });
+  data=ds(data,'oc');
+  document.getElementById('o-cnt').textContent=`${data.length} líneas`;
+  const fc={invoiced:'#22c55e','to invoice':'#f59e0b',no:'#5a6480'};
+  document.getElementById('ob').innerHTML=data.map(r=>{
+    const colFac=fc[r.estado_facturacion]||'#5a6480';
+    const colRec=r.estado_recepcion==='full'?'#22c55e':r.estado_recepcion==='pending'?'#f59e0b':'#5a6480';
+    const colFcL=r.estado_pago_compra==='paid'?'#22c55e':r.estado_pago_compra?'#f59e0b':'var(--muted)';
+    const isDraft=r.estado_oc==='draft';
+    const labelColor=isDraft?'#5a6480':'#3b82f6';
+    return`<tr>
+      <td class="m" style="font-weight:600">${r.nro_oc}</td>
+      <td><span class="badge" style="background:${labelColor}18;color:${labelColor}">${r.estado_oc_label||r.estado_oc}</span></td>
+      <td style="font-size:9px;color:var(--muted)">${r.tipo_oc||'—'}</td>
+      <td><span class="badge" style="background:${colFac}18;color:${colFac}">${r.estado_facturacion||'—'}</span></td>
+      <td style="font-size:9px;color:${colRec};font-family:var(--mono)">${r.estado_recepcion||'—'}</td>
+      <td class="m">${fd(r.fecha_oc)}</td>
+      <td title="${r.proveedor||''}">${(r.proveedor||'—').substring(0,24)}</td>
+      <td title="${r.producto||''}">${(r.producto||'—').replace(/^\[.*?\]\s*/,'').substring(0,26)}</td>
+      <td style="text-align:center;font-size:10px">${r.moneda||'—'}</td>
+      <td class="nm">${r.price_unit!=null?Number(r.price_unit).toLocaleString('es-AR',{maximumFractionDigits:2}):'—'}</td>
+      <td class="nm">${fm(r.subtotal_linea)}</td>
+      <td class="nm">${fm(r.total_linea)}</td>
+      <td style="font-size:9px;font-family:var(--mono)">${r.serie_asignada||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;color:var(--muted)">${(r.deposito||'—').replace('DEPCE/','').replace('/Existencias','')}</td>
+      <td>${r.tipo_operacion==='En Consignación'?'<span class="badge" style="background:rgba(6,182,212,.12);color:#06b6d4">Consignación</span>':r.tipo_operacion==='Propia'?'<span style="font-size:9px;color:var(--muted)">Propia</span>':'<span style="color:var(--muted);font-size:9px">—</span>'}</td>
+      <td style="font-size:9px;color:${r.tipo_operacion==='En Consignación'?'#06b6d4':'var(--muted)'}" title="${r.propietario||''}">${(r.propietario||'—').substring(0,18)}</td>
+      <td class="m" style="font-size:9px">${r.nro_factura_compra||'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="nm" style="color:${colFcL}">${fm(r.subtotal_fc_compra)}</td>
+      <td class="m" style="font-weight:600;font-size:9px">${r.nro_ov_vinculada||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px">${r.cliente_ov||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px" title="${r.cliente_ov||''}">${(r.cliente_ov||'—').substring(0,22)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function rSOL(){
+  const bus=(document.getElementById('ss').value||'').toLowerCase();
+  const fe=document.getElementById('s-est').value;
+  let data=SD.filter(r=>{
+    if(fe&&(r.estado_ov_label||r.estado_ov)!==fe)return false;
+    if(bus&&!Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus))return false;
+    return true;
+  });
+  data=ds(data,'sol');
+  document.getElementById('s-cnt').textContent=`${data.length} líneas sin asignar`;
+  const pr=s=>(s||'').replace(/^\[[\w.\-]+\]\s*/,'');
+  document.getElementById('sb').innerHTML=data.map(r=>{
+    const lb=r.estado_ov_label||r.estado_ov;
+    const isDraft=r.estado_ov==='draft';
+    const ec=isDraft?'#475569':'#22c55e';
+    return`<tr>
+      <td class="m" style="font-weight:600">${r.nro_ov}</td>
+      <td><span class="badge" style="background:${ec}18;color:${ec}">${lb}</span></td>
+      <td class="m">${fd(r.fecha_ov)}</td>
+      <td title="${r.cliente||''}">${(r.cliente||'—').substring(0,22)}</td>
+      <td style="font-size:10px;color:var(--muted)">${(r.vendedor||'—').split('(')[0].trim()}</td>
+      <td title="${pr(r.producto)}">${pr(r.producto).substring(0,36)+(pr(r.producto).length>36?'…':'')}</td>
+      <td style="text-align:center;font-size:10px;font-family:var(--mono)">${r.moneda||'—'}</td>
+      <td class="nm">${r.price_unit!=null?Number(r.price_unit).toLocaleString('es-AR',{maximumFractionDigits:2}):'—'}</td>
+      <td class="nm" style="font-weight:600">${fm(r.subtotal_linea)}</td>
+      <td class="m" style="font-size:9px;color:var(--muted)">${r.estado_facturacion_linea||'—'}</td>
+      <td class="m" style="font-size:9px;color:var(--muted)">${r.oc_vinculada||'—'}</td>
+      <td style="text-align:center">${r.tiene_anticipo_ov?'<span style="color:#a78bfa;font-family:var(--mono);font-size:9px;font-weight:600">ANT</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center">${r.ready_to_deliver?'<span style="color:#22c55e;font-weight:600">✓</span>':'<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function closeDrill(){
+  document.getElementById('e-drill').style.display='none';
+}
+
+function openDrill(estado, color){
+  // Recopilar series Con Serie que matchean este estado
+  const seriesCon = FD.filter(r => cEst(r).l === estado);
+  
+  // Recopilar Sin Serie (via VD) que matchean este estado
+  const estadoDef = ED.find(e => e.estado === estado);
+  const seriesSin = estadoDef && estadoDef.asignacion === 'Sin Serie'
+    ? VD.filter(r =>
+        r.asignacion === 'Sin Serie' &&
+        r.est_compra === estadoDef.est_compra &&
+        r.est_fisico_compra === estadoDef.est_fisico_compra &&
+        r.est_venta === estadoDef.est_venta &&
+        r.est_fisico_venta === estadoDef.est_fisico_venta)
+    : [];
+
+  const panel = document.getElementById('e-drill');
+  document.getElementById('drill-dot').style.background = color;
+  document.getElementById('drill-title').textContent = estado;
+
+  let html = '';
+
+  if(seriesCon.length > 0){
+    // Encabezado tabla Con Serie
+    document.getElementById('drill-head').innerHTML = `<tr>
+      <th style="text-align:left">N° Serie</th>
+      <th style="text-align:left">Producto</th>
+      <th style="text-align:left">Ref.</th>
+      <th style="text-align:left">OC</th>
+      <th style="text-align:left">OV</th>
+      <th style="text-align:left">Cliente</th>
+      <th style="text-align:left">Depósito</th>
+      <th style="text-align:right">Costo FC</th>
+      <th style="text-align:right">Venta FC</th>
+      <th style="text-align:left">F. Recepción</th>
+      <th style="text-align:left">F. Entrega</th>
+      <th style="text-align:left">F. FC Vta</th>
+    </tr>`;
+    html = seriesCon.map(r => {
+      const alerta = r.cantidad_stock > 0 && r.en_customer && r.deposito && !r.deposito.includes("Customer")
+        ? '<span title="⚠ Stock inconsistente" style="color:#ef4444;margin-left:4px">⚠</span>' : '';
+      return `<tr>
+        <td class="m" style="font-weight:600;white-space:nowrap">${r.numero_serie||'—'}${alerta}</td>
+        <td style="font-size:9px" title="${pr(r.producto)}">${pr(r.producto).substring(0,32)+(pr(r.producto).length>32?'…':'')}</td>
+        <td style="font-size:9px;font-family:var(--mono);color:var(--muted)">${r.ref_interna||'—'}</td>
+        <td class="m" style="font-size:9px">${r.nro_oc||'—'}</td>
+        <td class="m" style="font-size:9px">${r.nro_ov||'—'}</td>
+        <td style="font-size:9px" title="${r.cliente||''}">${(r.cliente||'—').substring(0,20)}</td>
+        <td style="font-size:9px;color:var(--muted)">${(r.deposito||'—').replace('DEPCE/','').replace('/Existencias','')}</td>
+        <td class="nm" style="font-size:10px">${fm(r.subtotal_fc_compra||r.subtotal_oc_linea)}</td>
+        <td class="nm" style="font-size:10px">${fm(r.subtotal_fc_venta||r.subtotal_ov_linea)}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_recepcion)||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_entrega_real)||'—'}</td>
+        <td style="font-size:9px;color:var(--muted)">${fd(r.fecha_fc_venta)||'—'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('drill-cnt').textContent = `${seriesCon.length} series`;
+  } else if(seriesSin.length > 0){
+    // Sin Serie — mostrar info de OC/OV
+    document.getElementById('drill-head').innerHTML = `<tr>
+      <th style="text-align:left">Asignación</th>
+      <th style="text-align:left">Est. Compra</th>
+      <th style="text-align:left">Fís. Compra</th>
+      <th style="text-align:left">Est. Venta</th>
+      <th style="text-align:left">Fís. Venta</th>
+    </tr>`;
+    html = seriesSin.map(r => `<tr>
+      <td style="font-size:10px">${r.asignacion||'—'}</td>
+      <td style="font-size:10px">${r.est_compra||'—'}</td>
+      <td style="font-size:10px">${r.est_fisico_compra||'—'}</td>
+      <td style="font-size:10px">${r.est_venta||'—'}</td>
+      <td style="font-size:10px">${r.est_fisico_venta||'—'}</td>
+    </tr>`).join('');
+    document.getElementById('drill-cnt').textContent = `${seriesSin.length} registros sin serie`;
+  } else {
+    document.getElementById('drill-head').innerHTML = '';
+    html = `<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted)">Sin registros para este estado</td></tr>`;
+    document.getElementById('drill-cnt').textContent = '0 registros';
+  }
+
+  document.getElementById('drill-body').innerHTML = html;
+  panel.style.display = '';
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+
+function rEst(){
+  // Conteo combinado: Con Serie (via cEst) + Sin Serie (via vista_estado_maquinaria)
+  const cnts={};
+  FD.forEach(r=>{const e=cEst(r).l;cnts[e]=(cnts[e]||0)+1;});
+  VD.filter(r=>r.asignacion==='Sin Serie').forEach(r=>{
+    // Match con dim_estado_maquinaria por las 4 dimensiones
+    const match=ED.find(e=>
+      e.asignacion==='Sin Serie' &&
+      e.est_compra===r.est_compra &&
+      e.est_fisico_compra===r.est_fisico_compra &&
+      e.est_venta===r.est_venta &&
+      e.est_fisico_venta===r.est_fisico_venta
+    );
+    if(match)cnts[match.estado]=(cnts[match.estado]||0)+1;
+  });
+  const grps={};ED.forEach(e=>{const g=e.grupo||'Otros';if(!grps[g])grps[g]=[];grps[g].push(e);});
+  let html='';
+  Object.entries(grps).forEach(([g,arr])=>{
+    html+=`<div class="eg"><div class="egl">${g}</div><div class="ecg">`;
+    arr.forEach(e=>{
+      const n=cnts[e.estado]??0;
+      html+=`<div class="ec" onclick="openDrill('${e.estado}','${e.color_hex}')" style="cursor:pointer" title="Click para ver series"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:${e.color_hex}"></div>
+        <div class="ecn">${e.estado}</div>
+        <div class="ecs">${e.subgrupo||e.grupo}</div>
+        <div class="ecv" style="color:${e.color_hex}">${n}</div>
+        <div class="ecd">
+          <span><b>Asignación</b><i>${e.asignacion||'—'}</i></span>
+          <span><b>Est. Compra</b><i>${e.est_compra||'—'}</i></span>
+          <span><b>Fís. Compra</b><i>${e.est_fisico_compra||'—'}</i></span>
+          <span><b>Est. Venta</b><i>${e.est_venta||'—'}</i></span>
+          <span><b>Fís. Venta</b><i>${e.est_fisico_venta||'—'}</i></span>
+          <span><b>Tipo Op.</b><i>${e.tipo_operacion||'—'}</i></span>
+        </div>
+        <div class="ecf">${e.es_cierre?'<span class="flag fc">✓ Cierre</span>':''}${e.es_alerta?'<span class="flag fa">⚠ Alerta</span>':''}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('e-cards').innerHTML=html;
+  const total=Object.values(cnts).reduce((a,b)=>a+b,0);
+  const totalSinSerie=VD.filter(r=>r.asignacion==='Sin Serie').length;
+  document.getElementById('e-cnt').textContent=`${ED.length} estados · ${total} con serie · ${totalSinSerie} sin serie`;
+}
+
+function toggleVw(){
+  vw=vw==='cards'?'matrix':'cards';
+  document.getElementById('btn-vw').textContent='Vista: '+(vw==='cards'?'Tarjetas':'Matriz');
+  document.getElementById('e-cards').style.display=vw==='cards'?'':'none';
+  document.getElementById('e-matrix').style.display=vw==='matrix'?'':'none';
+  if(vw==='matrix')rMx();
+}
+
+function rMx(){
+  const cnts={};
+  FD.forEach(r=>{const e=cEst(r).l;cnts[e]=(cnts[e]||0)+1;});
+  VD.filter(r=>r.asignacion==='Sin Serie').forEach(r=>{
+    const match=ED.find(e=>e.asignacion==='Sin Serie'&&e.est_compra===r.est_compra&&e.est_fisico_compra===r.est_fisico_compra&&e.est_venta===r.est_venta&&e.est_fisico_venta===r.est_fisico_venta);
+    if(match)cnts[match.estado]=(cnts[match.estado]||0)+1;
+  });
+  const ck=(v,y='✓')=>v?`<span style="color:#22c55e;font-weight:600">${y}</span>`:`<span style="color:var(--muted)">—</span>`;
+  const ant='<span style="color:#f59e0b;font-family:var(--mono);font-size:9px;font-weight:600">ANT</span>';
+  const pnd='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">pend.</span>';
+  let lg='',html=`<div style="overflow:auto;height:100%"><table style="min-width:860px;width:100%"><thead>
+    <tr>
+      <th rowspan="2" style="text-align:left;min-width:200px">#  Estado</th>
+      <th rowspan="2" style="min-width:140px">Grupo</th><th rowspan="2">Subgrupo</th>
+      <th colspan="3" class="gh sep-oc" style="color:#f59e0b">— COMPRA —</th>
+      <th colspan="3" class="gh sep-ov" style="color:#8b5cf6">— VENTA —</th>
+      <th rowspan="2" style="text-align:right">Hoy</th>
+    </tr>
+    <tr><th class="sep-oc">OC</th><th>FC Cpra</th><th>Remito Rec.</th>
+    <th class="sep-ov">OV</th><th>FC Vta</th><th>Remito Ent.</th></tr></thead><tbody>`;
+  ED.forEach(e=>{
+    if(e.grupo!==lg){html+=`<tr><td colspan="11" style="background:var(--surface3);font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--border2)">${e.grupo}</td></tr>`;lg=e.grupo;}
+    const hOC=e.asignacion==='Con Serie'||(e.est_compra&&e.est_compra!=='Sin FAC'&&e.est_compra!=='(sin compra)');
+    const fC=e.est_compra==='FAC Compra'?ck(true):e.est_compra==='FAC Ant.Cpra'?ant:ck(false);
+    const rR=e.asignacion==='Con Serie'&&e.est_fisico_compra!=='En Pedido'&&e.est_fisico_compra!=='Sin Asignar'?ck(true):ck(false);
+    const hOV=e.est_venta!=='(sin venta)';
+    const fV=e.est_venta==='FAC Venta'?ck(true):e.est_venta==='FAC Ant.Vta'?ant:ck(false);
+    const rE=e.est_fisico_venta==='Entregado'?ck(true):e.est_fisico_venta==='Pendiente Entregar'?pnd:ck(false);
+    const n=cnts[e.estado]??0;
+    html+=`<tr>
+      <td style="text-align:left"><span class="badge" style="background:${e.color_hex}18;color:${e.color_hex}"><span class="bdot" style="background:${e.color_hex}"></span>${e.estado}${e.es_alerta?' ⚠':''}</span></td>
+      <td style="font-family:var(--mono);font-size:9px;color:var(--muted)">${e.grupo}</td>
+      <td style="font-family:var(--mono);font-size:9px;color:var(--muted)">${e.subgrupo||'—'}</td>
+      <td style="text-align:center">${ck(hOC)}</td><td style="text-align:center">${fC}</td><td style="text-align:center">${rR}</td>
+      <td style="text-align:center;border-left:2px solid var(--border2)">${ck(hOV)}</td><td style="text-align:center">${fV}</td><td style="text-align:center">${rE}</td>
+      <td style="text-align:right;font-family:var(--mono);font-size:11px">${n}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('e-matrix').innerHTML=html;
+}
+
+function xFlat(){
+  const ag=G.filter(g=>g.on);
+  const hdr=['N° Serie',...ag.flatMap(g=>g.cols.map(c=>c.h||c.f))];
+  const rows=FF.map(r=>[r.numero_serie,...ag.flatMap(g=>g.cols.map(c=>{const v=r[c.f];return v==null?'':String(v);}))]);
+  csv(hdr,rows,'flat_maquinaria.csv');
+}
+function xOC(){csv(['OC','Tipo','Estado','Facturación','Recepción','Fecha','Proveedor','Subtotal','Total','Series'],OD.map(r=>[r.nro_oc,r.tipo_oc,r.estado_oc,r.estado_facturacion,r.estado_recepcion,r.fecha_oc,r.proveedor,r.subtotal_oc,r.total_oc,r.series_asignadas]),'oc_sin_serie.csv');}
+function xSOL(){csv(['OV','Estado','Fecha','Cliente','Vendedor','Producto','Subtotal','Fac. Línea','Anticipo'],SD.map(r=>[r.nro_ov,r.estado_ov_label||r.estado_ov,r.fecha_ov,r.cliente,r.vendedor,r.producto,r.subtotal_linea,r.estado_facturacion_linea,r.tiene_anticipo_ov]),'sol_sin_asignar.csv');}
+function csv(h,r,fn){
+  // CSV con punto y coma — Excel Argentina lo abre por columna directamente
+  const lineas=[h,...r].map(row=>row.map(v=>{
+    const s=(v??'').toString().replace(/\r?\n/g,' ');
+    return s.includes(';')||s.includes('"')?`"${s.replace(/"/g,'""')}"`:s;
+  }).join(';')).join('\r\n');
+  const blob=new Blob(['\uFEFF'+lineas],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=fn;a.click();
+  URL.revokeObjectURL(url);
+}
+
+function rHist(){
+  const bus=(document.getElementById('hs').value||'').toLowerCase();
+  const fe=document.getElementById('h-emp').value;
+  const fv=document.getElementById('h-vig').value;
+  const fa=document.getElementById('h-ant').value;
+  let data=HD.filter(r=>{
+    if(fe&&r.empresa!==fe)return false;
+    if(fv!==''&&String(r.vigente)!==fv)return false;
+    if(fa!==''&&String(!!r.es_anticipo)!==fa)return false;
+    if(bus&&!Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus))return false;
+    return true;
+  });
+  data=ds(data,'hist');
+  document.getElementById('h-cnt').textContent=`${data.length} líneas · ${new Set(data.map(r=>r.nro_ov)).size} OVs`;
+  const pr=s=>(s||'').replace(/^\[.*?\]\s*/,'').replace(/^MARCA:\s*/i,'');
+  const esNF=r=>r.empresa&&!r.empresa.includes('BRICCHI');
+  const vpayC=p=>({reversed:'#ef4444',paid:'#22c55e',not_paid:'#f59e0b',partial:'#f59e0b'}[p]||'var(--muted)');
+  document.getElementById('hb').innerHTML=data.map(r=>{
+    const isNF=esNF(r);
+    const anulada=r.payment_state==='reversed'||!r.vigente;
+    const bgRow=anulada?'background:rgba(239,68,68,.04)':r.es_anticipo?'background:rgba(167,139,250,.04)':'';
+    const ncCol=r.nro_nc_asociada
+      ?`<span style="font-family:var(--mono);font-size:9px;color:#ef4444">${r.nro_nc_asociada}</span>`
+      :'<span style="color:var(--muted)">—</span>';
+    return`<tr style="${bgRow}">
+      <td class="m">${r.fecha||'—'}</td>
+      <td class="m" style="font-weight:600">${r.nro_ov||'—'}</td>
+      <td class="m" style="font-family:var(--mono);font-size:9px">${r.nro_documento||'—'}</td>
+      <td style="text-align:center">${r.es_anticipo?'<span class="badge" style="background:rgba(167,139,250,.15);color:#a78bfa;font-size:8px">ANT</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;color:${isNF?'#f43f5e':'var(--muted)'}">${r.empresa||'—'}</td>
+      <td style="font-size:9px">${r.cliente||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;font-family:var(--mono);color:var(--muted)">${r.cuit_cliente||'—'}</td>
+      <td><span style="font-size:9px;color:${vpayC(r.payment_state)};font-family:var(--mono)">${r.payment_state||'—'}</span></td>
+      <td style="text-align:center">${r.vigente?'<span style="color:#22c55e;font-weight:700">✓</span>':'<span style="color:#ef4444;font-family:var(--mono);font-size:10px">✗</span>'}</td>
+      <td>${ncCol}</td>
+      <td class="m" style="font-size:9px;color:var(--muted)">${r.fecha_nc||'—'}</td>
+      <td style="text-align:center;font-size:10px;font-family:var(--mono);color:var(--muted)">${r.moneda_fc||'—'}</td>
+      <td class="nm">${fmF(r.subtotal)}</td>
+      <td class="nm" style="color:var(--muted)">${fmF(r.iva)}</td>
+      <td class="nm" style="font-weight:600">${fmF(r.total)}</td>
+      <td style="font-size:9px;font-family:var(--mono)">${r.numero_serie||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;font-family:var(--mono);color:#f59e0b">${r.numero_serie_previsto?'<span title="Serie prevista - OC pendiente de recepción">⏳ '+r.numero_serie_previsto+'</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;color:var(--muted)">${r.ref_interna||'—'}</td>
+      <td style="font-size:9px" title="${r.producto||''}">${r.producto?pr(r.producto).substring(0,36)+(pr(r.producto).length>36?'…':''):'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;font-family:var(--mono)">${r.nro_factura_compra||'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="m" style="font-size:9px;color:var(--muted)">${r.fecha_fc_compra||'—'}</td>
+      <td style="text-align:center;font-size:10px;font-family:var(--mono);color:var(--muted)">${r.moneda_fc_compra||'—'}</td>
+      <td class="nm">${fmF(r.subtotal_fc_compra)}</td>
+      <td style="font-size:9px">${r.proveedor_fc||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-size:9px;font-family:var(--mono);color:var(--muted)">${r.cuit_proveedor||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+function xHist(){
+  const seen=new Set();
+  const rows=HD.filter(r=>{const k=(r.nro_documento||'')+'|'+(r.numero_serie||'__null__');if(seen.has(k))return false;seen.add(k);return true;});
+  csv(
+    ['OV','N° Documento','Tipo','Anticipo','Empresa','Fecha FC','Estado Pago','Vigente','NC Asociada','Fecha NC','Moneda','Subtotal','IVA','Total','N° Serie','Ref. Interna','Producto','FC Compra','Fecha FC Cpra','Mon. Cpra','Subtotal FC Cpra'],
+    rows.map(r=>[r.nro_ov,r.nro_documento,r.tipo_documento,r.es_anticipo?'SI':'NO',r.empresa,r.fecha,r.payment_state,r.vigente?'SI':'NO',r.nro_nc_asociada||'',r.fecha_nc||'',r.moneda_fc,r.subtotal,r.iva,r.total,r.numero_serie||'',r.ref_interna||'',r.producto||'',r.nro_factura_compra||'',r.fecha_fc_compra||'',r.moneda_fc_compra||'',r.subtotal_fc_compra||'']),
+    'historial_fc_nc.csv');
+}
+
+init().catch(e=>{document.getElementById('lmsg').textContent='Error: '+e.message;document.getElementById('lmsg').style.color='#ef4444';});
+// ═══════════════════════════════════════════════════════
+// IMPRESIÓN Y XLSX — funciones nuevas, no modifican nada
+// ═══════════════════════════════════════════════════════
+
+function imprimirSolapa(solapa){
+  // Obtener datos y headers según la solapa
+  let headers=[], rows=[], titulo='';
+
+  if(solapa==='Flat — Con Serie'){
+    titulo='Flat — Con Serie';
+    const ag=G.filter(g=>g.on);
+    headers=['N° Serie','Estado',...ag.flatMap(g=>g.cols.map(c=>c.h||c.f))];
+    rows=FF.map(r=>[r.numero_serie||'',cEst(r).l,
+      ...ag.flatMap(g=>g.cols.map(c=>r[c.f]!=null?String(r[c.f]):''))]);
+
+  } else if(solapa==='OC — Líneas de Compra'){
+    titulo='OC — Líneas de Compra';
+    headers=['N° OC','Tipo OC','Estado','Facturación','Recepción','Fecha OC',
+             'Proveedor','Producto','Moneda','Precio Unit.','Subtotal','Total',
+             'Qty Ped.','Qty Rec.','OV Vinculada','Cliente'];
+    rows=OD.map(r=>[r.nro_oc,r.tipo_oc,r.estado_oc_label||r.estado_oc,
+      r.estado_facturacion,r.estado_recepcion,r.fecha_oc,
+      r.proveedor,pr(r.producto||''),r.moneda,
+      r.price_unit,r.subtotal_linea,r.total_linea,
+      r.qty_pedida,r.qty_received,r.nro_ov_vinculada||'',r.cliente_ov||'']);
+
+  } else if(solapa==='OV — Sin Asignar'){
+    titulo='OV — Sin Asignar';
+    headers=['N° OV','Estado','Tipo OV','Fecha OV','Cliente','Vendedor',
+             'Producto','Moneda','Precio Unit.','Subtotal','Total',
+             'Qty Ped.','Estado Fac.','OC Vinculada'];
+    rows=SD.map(r=>[r.nro_ov,r.estado_ov_label||r.estado_ov,r.tipo_ov,r.fecha_ov,
+      r.cliente,(r.vendedor||'').split('(')[0].trim(),
+      pr(r.producto||''),r.moneda,r.price_unit,
+      r.subtotal_linea,r.total_linea,r.qty_pedida,
+      r.estado_facturacion_linea,r.oc_vinculada||'']);
+
+  } else if(solapa==='Historial FC/NC'){
+    titulo='Historial FC/NC';
+    headers=['N° OV','N° Documento','Fecha','Estado Pago','Empresa',
+             'Cliente','Moneda','Subtotal','IVA','Total',
+             'N° Serie','Ref.','Producto','FC Compra','Subtotal Cpra','Proveedor'];
+    rows=HD.map(r=>[r.nro_ov,r.nro_documento,r.fecha,r.payment_state,r.empresa,
+      r.cliente,r.moneda_fc,r.subtotal,r.iva,r.total,
+      r.numero_serie||r.numero_serie_previsto||'',r.ref_interna||'',
+      pr(r.producto||''),r.nro_factura_compra||'',r.subtotal_fc_compra||'',r.proveedor_fc||'']);
+
+  } else if(solapa==='Explorer'){
+    titulo='Explorer';
+    // Tomar de la tabla DOM del explorer
+    headers=[...document.querySelectorAll('#ex-head-flat th')].map(th=>th.textContent);
+    rows=[...document.querySelectorAll('#ex-body-flat tr')].map(tr=>
+      [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+  }
+
+  if(!rows.length){ alert('Sin datos para imprimir.'); return; }
+
+  // Mostrar modal de configuración
+  abrirModalImpresion(titulo, headers, rows);
+}
+
+function abrirModalImpresion(titulo, allHeaders, allRows){
+  // Crear modal
+  const modal = document.createElement('div');
+  modal.id = 'print-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:24px;width:560px;max-height:80vh;overflow-y:auto';
+
+  // Checkboxes de columnas
+  const colChecks = allHeaders.map((h,i)=>
+    `<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin:3px 0">
+      <input type="checkbox" checked data-ci="${i}" style="accent-color:#3b82f6"> ${h}
+    </label>`).join('');
+
+  box.innerHTML = `
+    <div style="font-weight:700;font-size:14px;margin-bottom:16px;color:var(--fg)">
+      🖨 Configurar impresión — <span style="color:#3b82f6">${titulo}</span>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <label style="font-size:12px;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--muted)">Orientación:</span>
+        <select id="pm-orient" style="background:var(--surface3);border:1px solid var(--border2);color:var(--fg);padding:4px 8px;border-radius:4px;font-size:12px">
+          <option value="landscape">Horizontal (Landscape)</option>
+          <option value="portrait">Vertical (Portrait)</option>
+        </select>
+      </label>
+      <label style="font-size:12px;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--muted)">Tamaño:</span>
+        <select id="pm-size" style="background:var(--surface3);border:1px solid var(--border2);color:var(--fg);padding:4px 8px;border-radius:4px;font-size:12px">
+          <option value="A4">A4</option>
+          <option value="A3">A3</option>
+          <option value="letter">Letter</option>
+        </select>
+      </label>
+      <label style="font-size:12px;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--muted)">Fuente:</span>
+        <select id="pm-font" style="background:var(--surface3);border:1px solid var(--border2);color:var(--fg);padding:4px 8px;border-radius:4px;font-size:12px">
+          <option value="8px">8px (más columnas)</option>
+          <option value="9px" selected>9px</option>
+          <option value="10px">10px</option>
+          <option value="11px">11px (más legible)</option>
+        </select>
+      </label>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">
+      Columnas a incluir:
+      <button onclick="document.querySelectorAll('#pm-cols input').forEach(x=>x.checked=true)"
+        style="margin-left:8px;font-size:10px;padding:2px 6px;background:var(--surface3);border:1px solid var(--border2);color:var(--fg);border-radius:3px;cursor:pointer">Todas</button>
+      <button onclick="document.querySelectorAll('#pm-cols input').forEach(x=>x.checked=false)"
+        style="margin-left:4px;font-size:10px;padding:2px 6px;background:var(--surface3);border:1px solid var(--border2);color:var(--fg);border-radius:3px;cursor:pointer">Ninguna</button>
+    </div>
+    <div id="pm-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;max-height:280px;overflow-y:auto;border:1px solid var(--border2);border-radius:6px;padding:10px;margin-bottom:16px">
+      ${colChecks}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="document.getElementById('print-modal').remove()"
+        style="padding:8px 16px;background:var(--surface3);border:1px solid var(--border2);color:var(--fg);border-radius:6px;cursor:pointer;font-size:12px">
+        Cancelar
+      </button>
+      <button id="pm-print-btn"
+        style="padding:8px 20px;background:#1B3A6B;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">
+        🖨 Imprimir / Guardar PDF
+      </button>
+    </div>
+  `;
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  // Cerrar al click fuera
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+
+  document.getElementById('pm-print-btn').onclick = ()=>{
+    const orient = document.getElementById('pm-orient').value;
+    const size   = document.getElementById('pm-size').value;
+    const font   = document.getElementById('pm-font').value;
+    const selIdx = [...document.querySelectorAll('#pm-cols input')]
+                   .filter(x=>x.checked).map(x=>Number(x.dataset.ci));
+    if(!selIdx.length){ alert('Seleccioná al menos una columna.'); return; }
+
+    const hSel  = selIdx.map(i=>allHeaders[i]);
+    const rSel  = allRows.map(r=>selIdx.map(i=>r[i]??''));
+    const fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const hora  = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+
+    const thead = `<tr>${hSel.map(h=>`<th>${h}</th>`).join('')}</tr>`;
+    const tbody = rSel.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+@page { size: ${size} ${orient}; margin: 1cm; }
+body { font-family: Arial, sans-serif; font-size: ${font}; color: #000; }
+h2 { font-size: 13px; margin: 0 0 4px; color: #1B3A6B; }
+p  { font-size: 9px; color: #666; margin: 0 0 8px; }
+table { border-collapse: collapse; width: 100%; }
+th { background: #1B3A6B; color: #fff; padding: 4px 6px; text-align: left;
+     font-size: calc(${font} - 1px); white-space: nowrap; }
+td { border: 1px solid #ddd; padding: 3px 6px; vertical-align: top; }
+tr:nth-child(even) td { background: #f5f7fa; }
+</style></head><body>
+<h2>BRICCHI HNOS. SA — ${titulo}</h2>
+<p>${fecha} ${hora} &nbsp;·&nbsp; ${rSel.length} registros</p>
+<table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
+<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>
+</body></html>`;
+
+    const pw = window.open('','_blank','width=900,height=700');
+    pw.document.write(html);
+    pw.document.close();
+    modal.remove();
+  };
+}
+
+// tsv() redirige a csv() — mismo separador punto y coma
+const tsv = (h,r,fn) => csv(h,r,fn);
+
+function xlsxFlat(){
+  const ag = G.filter(g=>g.on);
+  const headers = ['N° Serie','Estado',...ag.flatMap(g=>g.cols.map(c=>c.h||c.f))];
+  const rows = FF.map(r=>[
+    r.numero_serie, cEst(r).l,
+    ...ag.flatMap(g=>g.cols.map(c=>r[c.f]!=null?String(r[c.f]):''))
+  ]);
+  tsv(headers, rows, `bricchi_flat_${new Date().toISOString().slice(0,10)}.tsv`);
+}
+
+function xlsxOC(){
+  const headers = ['N° OC','Tipo OC','Estado','Facturación','Recepción','Fecha OC',
+                   'Proveedor','Producto','Moneda','Precio Unit.','Subtotal','Total',
+                   'Qty Ped.','Qty Rec.','OV Vinculada','Cliente'];
+  const rows = OD.map(r=>[
+    r.nro_oc, r.tipo_oc, r.estado_oc_label||r.estado_oc,
+    r.estado_facturacion, r.estado_recepcion, r.fecha_oc,
+    r.proveedor, pr(r.producto||''), r.moneda,
+    r.price_unit, r.subtotal_linea, r.total_linea,
+    r.qty_pedida, r.qty_received,
+    r.nro_ov_vinculada||'', r.cliente_ov||''
+  ]);
+  tsv(headers, rows, `bricchi_oc_${new Date().toISOString().slice(0,10)}.tsv`);
+}
+
+function xlsxSOL(){
+  const headers = ['N° OV','Estado','Tipo OV','Fecha OV','Cliente','Vendedor',
+                   'Producto','Moneda','Precio Unit.','Subtotal','Total',
+                   'Qty Ped.','Qty Ent.','Estado Fac.','OC Vinculada','Anticipo'];
+  const rows = SD.map(r=>[
+    r.nro_ov, r.estado_ov_label||r.estado_ov, r.tipo_ov, r.fecha_ov,
+    r.cliente, (r.vendedor||'').split('(')[0].trim(),
+    pr(r.producto||''), r.moneda, r.price_unit,
+    r.subtotal_linea, r.total_linea, r.qty_pedida, r.qty_delivered,
+    r.estado_facturacion_linea, r.oc_vinculada||'',
+    r.tiene_anticipo_ov?'Sí':'No'
+  ]);
+  tsv(headers, rows, `bricchi_ov_${new Date().toISOString().slice(0,10)}.tsv`);
+}
+
+function xlsxHist(){
+  const headers = ['N° OV','N° Documento','Fecha','Estado Pago','Vigente','Anticipo',
+                   'Empresa','Cliente','CUIT','NC Asociada','Fecha NC','Moneda',
+                   'Subtotal','IVA','Total','N° Serie','N° Serie Prev.',
+                   'Ref.','Producto','FC Compra','Fecha FC Cpra','Mon. Cpra',
+                   'Subtotal Cpra','Proveedor','CUIT Prov.'];
+  const rows = HD.map(r=>[
+    r.nro_ov, r.nro_documento, r.fecha, r.payment_state,
+    r.vigente?'Sí':'No', r.es_anticipo?'Sí':'No',
+    r.empresa, r.cliente, r.cuit_cliente,
+    r.nro_nc_asociada||'', r.fecha_nc||'', r.moneda_fc,
+    r.subtotal, r.iva, r.total,
+    r.numero_serie||'', r.numero_serie_previsto||'',
+    r.ref_interna||'', pr(r.producto||''),
+    r.nro_factura_compra||'', r.fecha_fc_compra||'',
+    r.moneda_fc_compra||'', r.subtotal_fc_compra||'',
+    r.proveedor_fc||'', r.cuit_proveedor||''
+  ]);
+  tsv(headers, rows, `bricchi_historial_${new Date().toISOString().slice(0,10)}.tsv`);
+}
+
+function xlsxExplorer(){
+  // Flat filtrada
+  const hFlat = [...document.querySelectorAll('#ex-head-flat th')].map(th=>th.textContent);
+  const rFlat = [...document.querySelectorAll('#ex-body-flat tr')].map(tr=>
+    [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+  // OC filtrada
+  const hOC = [...document.querySelectorAll('#ex-body-oc').closest('table')
+    .querySelectorAll('thead th')].map(th=>th.textContent);
+  const rOC = [...document.querySelectorAll('#ex-body-oc tr')].map(tr=>
+    [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+  // SOL filtrada
+  const hSOL = [...document.querySelectorAll('#ex-body-sol').closest('table')
+    .querySelectorAll('thead th')].map(th=>th.textContent);
+  const rSOL = [...document.querySelectorAll('#ex-body-sol tr')].map(tr=>
+    [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+
+  // Armar un solo TSV con secciones separadas
+  const sep = ['---','---'];
+  const lineas = [
+    ...(rFlat.length?[hFlat,...rFlat,[sep]]:[]),
+    ...(rOC.length?[hOC,...rOC,[sep]]:[]),
+    ...(rSOL.length?[hSOL,...rSOL]:[])
+  ];
+  if(!lineas.length){ alert('Sin datos para exportar.'); return; }
+  tsv(lineas[0], lineas.slice(1), `bricchi_explorer_${new Date().toISOString().slice(0,10)}.tsv`);
+}
+
+
+function xExplorer(){
+  // Flat filtrada
+  const hFlat=['N° Serie','Estado','Producto','Ref.','Categoría','Depósito','Tipo Op.',
+                'Proveedor','N° OC','Fecha OC','Moneda OC','Subtotal OC',
+                'FC Compra','Fecha FC Cpra','Subtotal FC Cpra',
+                'Cliente','N° OV','Fecha OV','Moneda OV','Subtotal OV',
+                'FC Venta','Fecha FC Vta','Subtotal FC Vta','Remito Ent.','F. Entrega'];
+  // Leer filas de la tabla DOM del Explorer (ya filtradas)
+  const rFlat=[...document.querySelectorAll('#ex-body-flat tr')].map(tr=>
+    [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+
+  const hOC=['N° OC','Tipo OC','Estado','Facturación','Recepción','Fecha OC',
+              'Proveedor','Producto','Moneda','Precio Unit.','Subtotal','Total',
+              'Qty Ped.','Qty Rec.','OV Vinculada','Cliente'];
+  const rOC=[...document.querySelectorAll('#ex-body-oc tr')].map(tr=>
+    [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+
+  const hSOL=['N° OV','Estado','Tipo OV','Fecha OV','Cliente','Vendedor',
+               'Producto','Moneda','Precio Unit.','Subtotal','Total',
+               'Qty Ped.','Qty Ent.','Estado Fac.','OC Vinculada','Anticipo'];
+  const rSOL=[...document.querySelectorAll('#ex-body-sol tr')].map(tr=>
+    [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()));
+
+  if(!rFlat.length&&!rOC.length&&!rSOL.length){
+    alert('Sin datos para exportar con los filtros actuales.'); return;
+  }
+  // Un solo TSV con las 3 secciones separadas por una fila vacía
+  const bloques=[];
+  if(rFlat.length){ bloques.push([hFlat,...rFlat]); }
+  if(rOC.length)  { bloques.push([hOC,...rOC]); }
+  if(rSOL.length) { bloques.push([hSOL,...rSOL]); }
+
+  // Usar csv() con punto y coma — mismo formato que el resto de solapas
+  if(bloques.length===1){
+    csv(bloques[0][0], bloques[0].slice(1), `bricchi_explorer_${new Date().toISOString().slice(0,10)}.csv`);
+  } else {
+    // Múltiples secciones: encadenar con fila vacía entre cada una
+    const h = bloques[0][0];
+    const allRows = [];
+    bloques.forEach((b,i)=>{
+      if(i>0) allRows.push(b[0].map(()=>'')); // fila vacía separadora
+      allRows.push(b[0]); // header de cada sección
+      allRows.push(...b.slice(1));
+    });
+    csv(h, allRows, `bricchi_explorer_${new Date().toISOString().slice(0,10)}.csv`);
+  }
+}
+
+</script>
+</body>
+</html>
