@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Portal Bricchi</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0D1520;
+  --surface:   #131E2E;
+  --surface2:  #1A2840;
+  --border:    #1F3050;
+  --blue:      #3B82F6;
+  --blue-dim:  #0F2444;
+  --green:     #10B981;
+  --green-dim: #0A2E1F;
+  --amber:     #F59E0B;
+  --red:       #EF4444;
+  --red-dim:   #2D0F0F;
+  --text:      #DDE8F5;
+  --muted:     #5A7899;
+  --muted2:    #8AAABB;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Login ── */
+.login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%; max-width: 380px;
+}
+.login-logo {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 28px;
+}
+.login-logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.login-logo-text { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+.login-logo-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* ── No acceso ── */
+.no-access {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; gap: 12px;
+}
+.no-access h2 { font-family: 'Syne', sans-serif; font-size: 20px; }
+.no-access p  { color: var(--muted2); font-size: 14px; }
+
+/* ── Header ── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 58px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 11px; }
+.logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.logo-text { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+.logo-sub  { font-size: 11px; color: var(--muted); }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.user-badge {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px;
+  font-size: 12px; color: var(--muted2);
+}
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+}
+.tab {
+  padding: 14px 20px;
+  font-size: 13px; font-weight: 600;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-color: var(--blue); }
+
+/* ── Content ── */
+.content { padding: 28px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Headings ── */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 700;
+}
+
+/* ── Form card ── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.form-card-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--muted2); margin-bottom: 14px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.form-row {
+  display: flex; gap: 12px;
+  flex-wrap: wrap; align-items: flex-end;
+}
+.field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: .4px; }
+.field input[type=text],
+.field input[type=email],
+.field input[type=url],
+.field input[type=number] {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 13px;
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  outline: none; transition: border-color .2s;
+}
+.field input:focus { border-color: var(--blue); }
+.field-check {
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 2px;
+}
+.field-check input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--blue); cursor: pointer; }
+.field-check label { font-size: 13px; cursor: pointer; color: var(--muted2); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+  transition: opacity .2s; font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+}
+.btn:hover { opacity: .85; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-ghost   { background: transparent; color: var(--muted2); border: 1px solid var(--border); }
+.btn-danger  { background: var(--red-dim); color: var(--red); border: 1px solid #3D1515; font-size: 12px; padding: 6px 12px; }
+.btn-full    { width: 100%; justify-content: center; margin-top: 4px; }
+
+/* ── Permissions matrix ── */
+.matrix-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+.matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
+.matrix thead th {
+  background: var(--surface); padding: 10px 12px;
+  text-align: center; font-weight: 600; color: var(--muted2);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.matrix thead th:first-child { text-align: left; min-width: 200px; position: sticky; left: 0; background: var(--surface); }
+.matrix thead th .mod-icon  { font-size: 18px; display: block; }
+.matrix thead th .mod-name  { font-size: 11px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; display: block; }
+.matrix tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.matrix tbody tr:last-child td { border-bottom: none; }
+.matrix tbody tr:hover td { background: var(--surface); }
+.matrix tbody td:first-child { position: sticky; left: 0; background: var(--bg); }
+.matrix tbody tr:hover td:first-child { background: var(--surface); }
+.user-cell .u-name  { font-weight: 500; }
+.user-cell .u-email { font-size: 11px; color: var(--muted); }
+.check-cell { text-align: center; }
+.check-cell input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
+
+/* ── Plain table ── */
+.plain-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+}
+.plain-table th {
+  background: var(--surface); padding: 10px 16px;
+  text-align: left; font-weight: 600; color: var(--muted2);
+  border-bottom: 1px solid var(--border);
+}
+.plain-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.plain-table tr:last-child td { border-bottom: none; }
+.plain-table tr:hover td { background: var(--surface); }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 4px; font-size: 11px; font-weight: 600;
+}
+.badge-admin    { background: var(--blue-dim); color: var(--blue); }
+.badge-active   { background: var(--green-dim); color: var(--green); }
+.badge-inactive { background: #1A1A2E; color: var(--muted); }
+
+/* ── Toast ── */
+.toast-wrap {
+  position: fixed; top: 20px; right: 20px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 10px 16px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; pointer-events: none;
+  animation: fadeIn .2s ease;
+}
+.toast-ok  { background: var(--green-dim); color: var(--green); border: 1px solid #155A3A; }
+.toast-err { background: var(--red-dim);   color: var(--red);   border: 1px solid #5A1515; }
+@keyframes fadeIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+
+/* ── States ── */
+.empty   { padding: 48px; text-align: center; color: var(--muted); font-size: 14px; }
+.loading { padding: 48px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════ -->
+<div id="screen-login" style="display:none">
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-icon">⚙️</div>
+        <div>
+          <div class="login-logo-text">Portal Bricchi</div>
+          <div class="login-logo-sub">Panel de administración</div>
+        </div>
+      </div>
+
+      <div id="login-form">
+        <div class="field" style="margin-bottom:14px">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="tu@email.com"
+            onkeydown="if(event.key==='Enter') sendMagicLink()" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="sendMagicLink()">
+          Enviar Magic Link
+        </button>
+      </div>
+
+      <div id="login-sent" style="display:none; text-align:center; color:var(--muted2); font-size:13px; line-height:1.6">
+        ✅ Revisá tu email —<br>te enviamos el link de acceso.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIN ACCESO ══════════════════════════════════ -->
+<div id="screen-noaccess" style="display:none">
+  <div class="no-access">
+    <div style="font-size:44px">🚫</div>
+    <h2>Sin acceso</h2>
+    <p>Tu usuario no tiene permisos de administrador.</p>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ══ PANEL ═══════════════════════════════════════ -->
+<div id="screen-panel" style="display:none">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">⚙️</div>
+      <div>
+        <div class="logo-text">Admin — Portal Bricchi</div>
+        <div class="logo-sub">Gestión de accesos</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="user-badge" id="admin-email"></span>
+      <button class="btn btn-ghost" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('permisos', this)">Permisos</div>
+    <div class="tab" onclick="switchTab('usuarios', this)">Usuarios</div>
+    <div class="tab" onclick="switchTab('modulos', this)">Módulos</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ─ TAB: PERMISOS ─ -->
+    <div id="tab-permisos" class="tab-panel active">
+      <div class="section-head">
+        <div class="section-title">Matriz de permisos</div>
+        <button class="btn btn-ghost" onclick="loadData()">↻ Actualizar</button>
+      </div>
+      <div id="matrix-container"><div class="loading">Cargando…</div></div>
+    </div>
+
+    <!-- ─ TAB: USUARIOS ─ -->
+    <div id="tab-usuarios" class="tab-panel">
+      <div class="form-card">
+        <div class="form-card-title">Agregar usuario</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Email *</label>
+            <input type="email" id="new-email" placeholder="usuario@empresa.com" />
+          </div>
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" id="new-nombre" placeholder="Nombre completo" />
+          </div>
+          <div class="field">
+            <label>Sector</label>
+            <input type="text" id="new-sector" placeholder="Ej: Ventas" />
+          </div>
+          <div class="field-check">
+            <input type="checkbox" id="new-admin" />
+            <label for="new-admin">Admin</label>
+          </div>
+          <button class="btn btn-primary" onclick="addUsuario()">+ Agregar</button>
+        </div>
+      </div>
+      <div id="usuarios-container"><div class="loading">Cargando…</div></div>
+    </div>
+
+    <!-- ─ TAB: MÓDULOS ─ -->
+    <div id="tab-modulos" class="tab-panel">
+      <div class="form-card">
+        <div class="form-card-title">Agregar módulo</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Nombre *</label>
+            <input type="text" id="new-mod-nombre" placeholder="Auditoría IVA" oninput="autoSlug()" />
+          </div>
+          <div class="field" style="max-width:180px">
+            <label>Slug *</label>
+            <input type="text" id="new-mod-slug" placeholder="auditoria-iva" />
+          </div>
+          <div class="field" style="min-width:280px">
+            <label>URL *</label>
+            <input type="url" id="new-mod-url" placeholder="https://dashboards-br.vercel.app/…" />
+          </div>
+          <div class="field" style="max-width:80px">
+            <label>Icono</label>
+            <input type="text" id="new-mod-icono" value="📊" />
+          </div>
+          <div class="field" style="max-width:80px">
+            <label>Orden</label>
+            <input type="number" id="new-mod-orden" value="0" />
+          </div>
+          <button class="btn btn-primary" onclick="addModulo()">+ Agregar</button>
+        </div>
+      </div>
+      <div id="modulos-container"><div class="loading">Cargando…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const SUPABASE_URL = 'https://rvumvnslydaobvvsywtu.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_G5UyixsCzmVlMVsvtvYl3Q_2kD8afm5'
+
+const { createClient } = supabase
+const db     = createClient(SUPABASE_URL, SUPABASE_KEY)
+const portal = db.schema('portal')
+
+let usuarios = []
+let modulos  = []
+let permisos = []
+
+// ══ AUTH ══════════════════════════════════════════
+
+async function init() {
+  const { data: { session } } = await db.auth.getSession()
+
+  if (!session) {
+    show('screen-login')
+    return
+  }
+
+  // Buscar por auth_user_id primero, luego por email como fallback
+  let { data: usuario } = await portal
+    .from('usuarios')
+    .select('id, email, is_admin, auth_user_id')
+    .eq('auth_user_id', session.user.id)
+    .single()
+
+  // Fallback: buscar por email si no encontró por auth_user_id
+  if (!usuario) {
+    const { data: usuarioByEmail } = await portal
+      .from('usuarios')
+      .select('id, email, is_admin, auth_user_id')
+      .eq('email', session.user.email)
+      .single()
+    usuario = usuarioByEmail
+
+    // Si encontró por email, sincronizar el auth_user_id
+    if (usuario && usuario.auth_user_id !== session.user.id) {
+      await portal
+        .from('usuarios')
+        .update({ auth_user_id: session.user.id })
+        .eq('id', usuario.id)
+    }
+  }
+
+  if (!usuario?.is_admin) {
+    show('screen-noaccess')
+    return
+  }
+
+  document.getElementById('admin-email').textContent = usuario.email
+  show('screen-panel')
+  loadData()
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('login-email').value.trim()
+  if (!email) return
+
+  const { error } = await db.auth.signInWithOtp({ email })
+  if (error) { toast(error.message, 'err'); return }
+
+  document.getElementById('login-form').style.display = 'none'
+  document.getElementById('login-sent').style.display  = 'block'
+}
+
+async function logout() {
+  await db.auth.signOut()
+  location.reload()
+}
+
+db.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_IN') init()
+})
+
+// ══ DATA ═══════════════════════════════════════════
+
+async function loadData() {
+  const [{ data: u }, { data: m }, { data: p }] = await Promise.all([
+    portal.from('usuarios').select('*').order('nombre'),
+    portal.from('modulos').select('*').order('orden'),
+    portal.from('usuario_modulos').select('*')
+  ])
+
+  usuarios = u || []
+  modulos  = m || []
+  permisos = p || []
+
+  renderMatrix()
+  renderUsuarios()
+  renderModulos()
+}
+
+// ══ MATRIZ DE PERMISOS ════════════════════════════
+
+function renderMatrix() {
+  const container = document.getElementById('matrix-container')
+
+  if (!usuarios.length || !modulos.length) {
+    container.innerHTML = '<div class="empty">Agregá usuarios y módulos en las otras solapas para configurar permisos.</div>'
+    return
+  }
+
+  // Lookup: { usuario_id: { modulo_id: habilitado } }
+  const lk = {}
+  permisos.forEach(p => {
+    if (!lk[p.usuario_id]) lk[p.usuario_id] = {}
+    lk[p.usuario_id][p.modulo_id] = p.habilitado
+  })
+
+  const headCols = modulos.map(m => `
+    <th>
+      <span class="mod-icon">${m.icono || '📊'}</span>
+      <span class="mod-name" title="${m.nombre}">${m.nombre}</span>
+    </th>`).join('')
+
+  const rows = usuarios.map(u => {
+    const cells = modulos.map(m => {
+      const checked = lk[u.id]?.[m.id] ? 'checked' : ''
+      return `<td class="check-cell">
+        <input type="checkbox" ${checked}
+          onchange="togglePermiso(this,'${u.id}',${m.id})" />
+      </td>`
+    }).join('')
+
+    return `<tr>
+      <td class="user-cell">
+        <div class="u-name">${u.nombre || '—'}</div>
+        <div class="u-email">${u.email}</div>
+      </td>
+      ${cells}
+    </tr>`
+  }).join('')
+
+  container.innerHTML = `
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead><tr><th>Usuario</th>${headCols}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`
+}
+
+async function togglePermiso(el, usuarioId, moduloId) {
+  const habilitado = el.checked
+
+  const { error } = await portal
+    .from('usuario_modulos')
+    .upsert(
+      { usuario_id: usuarioId, modulo_id: moduloId, habilitado },
+      { onConflict: 'usuario_id,modulo_id' }
+    )
+
+  if (error) {
+    el.checked = !habilitado
+    toast('Error al guardar', 'err')
+  } else {
+    const idx = permisos.findIndex(p => p.usuario_id === usuarioId && p.modulo_id === moduloId)
+    if (idx >= 0) permisos[idx].habilitado = habilitado
+    else permisos.push({ usuario_id: usuarioId, modulo_id: moduloId, habilitado })
+    toast('Guardado ✓', 'ok')
+  }
+}
+
+// ══ USUARIOS ══════════════════════════════════════
+
+async function addUsuario() {
+  const email    = document.getElementById('new-email').value.trim()
+  const nombre   = document.getElementById('new-nombre').value.trim()
+  const sector   = document.getElementById('new-sector').value.trim()
+  const is_admin = document.getElementById('new-admin').checked
+
+  if (!email) { toast('El email es obligatorio', 'err'); return }
+
+  const { error } = await portal.from('usuarios').insert({ email, nombre, sector, is_admin })
+  if (error) { toast(error.message, 'err'); return }
+
+  toast(`${email} agregado`, 'ok')
+  document.getElementById('new-email').value    = ''
+  document.getElementById('new-nombre').value   = ''
+  document.getElementById('new-sector').value   = ''
+  document.getElementById('new-admin').checked  = false
+  loadData()
+}
+
+async function deleteUsuario(id, email) {
+  if (!confirm(`¿Eliminar a ${email}? También se borrarán sus permisos.`)) return
+
+  const { error } = await portal.from('usuarios').delete().eq('id', id)
+  if (error) { toast(error.message, 'err'); return }
+
+  toast('Usuario eliminado', 'ok')
+  loadData()
+}
+
+function renderUsuarios() {
+  const c = document.getElementById('usuarios-container')
+
+  if (!usuarios.length) {
+    c.innerHTML = '<div class="empty">No hay usuarios todavía.</div>'
+    return
+  }
+
+  const rows = usuarios.map(u => `
+    <tr>
+      <td>${u.email}</td>
+      <td>${u.nombre || '—'}</td>
+      <td>${u.sector || '—'}</td>
+      <td>${u.is_admin ? '<span class="badge badge-admin">Admin</span>' : ''}</td>
+      <td>${u.activo
+        ? '<span class="badge badge-active">Activo</span>'
+        : '<span class="badge badge-inactive">Inactivo</span>'}</td>
+      <td>
+        <button class="btn btn-danger"
+          onclick="deleteUsuario('${u.id}','${u.email}')">Eliminar</button>
+      </td>
+    </tr>`).join('')
+
+  c.innerHTML = `
+    <table class="plain-table">
+      <thead><tr>
+        <th>Email</th><th>Nombre</th><th>Sector</th>
+        <th>Rol</th><th>Estado</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+}
+
+// ══ MÓDULOS ═══════════════════════════════════════
+
+function autoSlug() {
+  const v = document.getElementById('new-mod-nombre').value
+  document.getElementById('new-mod-slug').value = toSlug(v)
+}
+
+function toSlug(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+async function addModulo() {
+  const nombre = document.getElementById('new-mod-nombre').value.trim()
+  const slug   = document.getElementById('new-mod-slug').value.trim()
+  const url    = document.getElementById('new-mod-url').value.trim()
+  const icono  = document.getElementById('new-mod-icono').value.trim() || '📊'
+  const orden  = parseInt(document.getElementById('new-mod-orden').value) || 0
+
+  if (!nombre || !slug || !url) { toast('Nombre, slug y URL son obligatorios', 'err'); return }
+
+  const { error } = await portal.from('modulos').insert({ nombre, slug, url, icono, orden })
+  if (error) { toast(error.message, 'err'); return }
+
+  toast(`${nombre} agregado`, 'ok')
+  document.getElementById('new-mod-nombre').value = ''
+  document.getElementById('new-mod-slug').value   = ''
+  document.getElementById('new-mod-url').value    = ''
+  document.getElementById('new-mod-icono').value  = '📊'
+  document.getElementById('new-mod-orden').value  = '0'
+  loadData()
+}
+
+async function deleteModulo(id, nombre) {
+  if (!confirm(`¿Eliminar "${nombre}"? También se borrarán sus permisos.`)) return
+
+  const { error } = await portal.from('modulos').delete().eq('id', id)
+  if (error) { toast(error.message, 'err'); return }
+
+  toast('Módulo eliminado', 'ok')
+  loadData()
+}
+
+function renderModulos() {
+  const c = document.getElementById('modulos-container')
+
+  if (!modulos.length) {
+    c.innerHTML = '<div class="empty">No hay módulos todavía.</div>'
+    return
+  }
+
+  const rows = modulos.map(m => `
+    <tr>
+      <td style="font-size:18px">${m.icono || '📊'}</td>
+      <td>${m.nombre}</td>
+      <td><code style="color:var(--muted2);font-size:12px">${m.slug}</code></td>
+      <td style="font-size:12px;color:var(--muted2);max-width:300px;
+                 overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          title="${m.url}">${m.url}</td>
+      <td style="color:var(--muted2)">${m.orden}</td>
+      <td>
+        <button class="btn btn-danger"
+          onclick="deleteModulo(${m.id},'${m.nombre.replace(/'/g,"\\'")}')">Eliminar</button>
+      </td>
+    </tr>`).join('')
+
+  c.innerHTML = `
+    <table class="plain-table">
+      <thead><tr>
+        <th></th><th>Nombre</th><th>Slug</th>
+        <th>URL</th><th>Orden</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+}
+
+// ══ UTILS ═════════════════════════════════════════
+
+function show(screenId) {
+  ['screen-login', 'screen-noaccess', 'screen-panel'].forEach(id =>
+    document.getElementById(id).style.display = (id === screenId ? 'block' : 'none')
+  )
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+  el.classList.add('active')
+  document.getElementById('tab-' + name).classList.add('active')
+}
+
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div')
+  el.className = `toast toast-${type}`
+  el.textContent = msg
+  document.getElementById('toasts').appendChild(el)
+  setTimeout(() => el.remove(), 2500)
+}
+
+// ── Start
+init()
+</script>
+</body>
+</html>
