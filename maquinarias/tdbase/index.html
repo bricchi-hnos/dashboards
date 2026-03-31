@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquinaria — Base de Datos | Bricchi Hnos SA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#252b3b;--border2:#2e3650;--text:#d4daf0;--muted:#5a6480;--accent:#3b82f6;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+#loader{position:fixed;inset:0;background:#ffffff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;transition:opacity .5s}
+#loader.out{opacity:0;pointer-events:none}
+.l-logo{display:flex;flex-direction:column;align-items:center;gap:12px}
+.l-logo span{font-family:var(--sans);font-size:12px;color:#666;letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+.l-logo span b{color:#D42B2B;font-weight:700}
+.l-bar{width:280px;height:2px;background:#e5e7eb;border-radius:2px;overflow:hidden}
+.l-fill{height:100%;width:0;background:#D42B2B;transition:width .4s}
+.l-msg{font-family:var(--mono);font-size:10px;color:#999;letter-spacing:.05em}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
+.h-logo{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.h-logo b{color:var(--text)}
+.h-meta{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;gap:14px}
+.h-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;padding:8px 20px 0;background:var(--surface);border-bottom:1px solid var(--border)}
+.tab{padding:7px 18px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;background:none;border-top:none;border-left:none;border-right:none;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.toolbar{display:flex;gap:6px;align-items:center;padding:7px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.search{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:3px;outline:none;width:200px}
+.search:focus{border-color:var(--accent)}
+.fsel{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:11px;padding:4px 7px;border-radius:3px;outline:none;cursor:pointer}
+.btn{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border2);padding:4px 10px;border-radius:3px;cursor:pointer;transition:.15s}
+.btn:hover{color:var(--text);border-color:var(--accent)}
+.cnt{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.col-bar{display:flex;gap:5px;align-items:center;padding:5px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ctg{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;border:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;user-select:none;transition:.12s}
+.ctg:hover{border-color:var(--accent);color:var(--accent)}
+.ctg.on{border-color:var(--accent);background:rgba(59,130,246,.1);color:var(--accent)}
+.ctg-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+main{height:calc(100vh - 118px);overflow:hidden;display:flex;flex-direction:column}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+.tscroll{flex:1;overflow:auto}
+table{border-collapse:collapse;font-size:11px;white-space:nowrap}
+thead th{position:sticky;top:0;background:var(--surface2);border-bottom:1px solid var(--border2);border-right:1px solid var(--border);padding:6px 9px;font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}
+thead th.asc::after{content:' ↑'}thead th.desc::after{content:' ↓'}
+thead th.gh{background:var(--surface3);font-size:8px;text-align:center;border-bottom:1px solid var(--border2);letter-spacing:.07em;cursor:default}
+thead th.cf{padding:2px 4px;cursor:default;background:var(--surface3)}
+thead th.cf input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:2px;outline:none}
+thead th.cf input:focus{border-color:var(--accent)}
+tbody tr{border-bottom:1px solid rgba(37,43,59,.5)}
+tbody tr:hover td{background:rgba(59,130,246,.04)}
+tbody td{padding:4px 9px;border-right:1px solid rgba(37,43,59,.3);max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.fuente-flat{background:rgba(34,197,94,.12);color:#22c55e;border-radius:2px;padding:1px 5px;font-family:var(--mono);font-size:9px;font-weight:600}
+.fuente-oc{background:rgba(245,158,11,.12);color:#f59e0b;border-radius:2px;padding:1px 5px;font-family:var(--mono);font-size:9px;font-weight:600}
+.fuente-ov{background:rgba(139,92,246,.12);color:#8b5cf6;border-radius:2px;padding:1px 5px;font-family:var(--mono);font-size:9px;font-weight:600}
+.m{font-family:var(--mono);font-size:10px}
+.nu{color:var(--muted);font-style:italic;font-size:9px}
+.nm{text-align:right;font-family:var(--mono);font-size:10px}
+.bt{color:#22c55e;font-family:var(--mono);font-size:10px;text-align:center}
+.bf{color:var(--muted);font-family:var(--mono);font-size:10px;text-align:center}
+.di{color:var(--muted);font-family:var(--mono);font-size:9px}
+.per{font-family:var(--mono);font-size:10px;color:#a78bfa}
+.sep-serie{border-left:2px solid #22c55e!important}
+.sep-prod{border-left:2px solid #a78bfa!important}
+.sep-stock{border-left:2px solid #06b6d4!important}
+.sep-oc{border-left:2px solid #f59e0b!important}
+.sep-rec{border-left:2px solid #f97316!important}
+.sep-fcc{border-left:2px solid #ef4444!important}
+.sep-pfcc{border-left:2px solid #ef4444!important}
+.sep-ov{border-left:2px solid #8b5cf6!important}
+.sep-ent{border-left:2px solid #ec4899!important}
+.sep-fcv{border-left:2px solid #64748b!important}
+.sep-pfcv{border-left:2px solid #64748b!important}
+.sep-tc{border-left:2px solid #84cc16!important}
+.sep-meta{border-left:2px solid #475569!important}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:500;white-space:nowrap}
+.bdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.pag-bar{display:flex;align-items:center;gap:6px;padding:6px 16px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap}
+.pag-btn{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);border:1px solid var(--border2);padding:3px 8px;border-radius:3px;cursor:pointer}
+.pag-btn.on{color:var(--accent);border-color:var(--accent)}
+/* PIVOT */
+.piv-wrap{flex:1;overflow:auto;padding:14px 16px}
+.piv-builder{background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:14px;margin-bottom:12px}
+.piv-builder h3{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.piv-zones{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.piv-zone{border:1px dashed var(--border2);border-radius:4px;padding:8px;min-height:52px}
+.piv-zone label{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.piv-tags{display:flex;flex-wrap:wrap;gap:3px;min-height:24px}
+.ptag{padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.ptag-r{background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)}
+.ptag-c{background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3)}
+.ptag-v{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.piv-fields-wrap label{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px}
+.piv-group-section{margin-bottom:8px}
+.piv-group-label{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;padding:3px 0;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.piv-group-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.piv-field-list{display:flex;flex-wrap:wrap;gap:3px}
+.pf{background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:2px 8px;font-family:var(--mono);font-size:10px;color:var(--muted);cursor:pointer;transition:.12s}
+.pf:hover{color:var(--text);border-color:var(--accent)}
+.pf.num{border-left:2px solid #22c55e}
+.pf.dim{border-left:2px solid var(--accent)}
+.piv-actions{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.piv-actions label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.piv-result{overflow:auto;margin-top:4px}
+table.ptbl{border-collapse:collapse;font-size:11px;white-space:nowrap}
+table.ptbl thead th{position:sticky;top:0;background:var(--surface2);border-bottom:1px solid var(--border2);border-right:1px solid var(--border);padding:6px 9px;font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;user-select:none;min-width:120px;text-align:right}
+table.ptbl thead th:first-child{text-align:left;background:var(--surface3)}
+table.ptbl thead th.asc::after{content:' ↑'}table.ptbl thead th.desc::after{content:' ↓'}
+table.ptbl thead th.cf{padding:2px 4px;cursor:default;background:var(--surface3)}
+table.ptbl thead th.cf input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:2px;outline:none}
+table.ptbl thead th.cf input:focus{border-color:var(--accent)}
+table.ptbl tbody tr{border-bottom:1px solid rgba(37,43,59,.5)}
+table.ptbl tbody tr:hover td{background:rgba(59,130,246,.04)}
+table.ptbl tbody td{padding:4px 9px;border-right:1px solid rgba(37,43,59,.3);font-family:var(--mono);font-size:10px;text-align:right}
+table.ptbl tbody td:first-child{text-align:left}
+table.ptbl tbody td.nu{color:var(--muted);font-style:italic;font-size:9px}
+table.ptbl tr.grand{border-top:2px solid var(--accent)}
+table.ptbl tr.grand td{background:var(--surface3);color:var(--accent);font-weight:800;font-family:var(--mono);font-size:10px;text-align:right}
+table.ptbl tr.grand td:first-child{text-align:left;color:var(--accent)}
+/* Vistas guardadas */
+.saved-views{display:flex;align-items:center;gap:6px;padding:6px 0;flex-wrap:wrap}
+.saved-views label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.sv-input{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:3px;outline:none;width:160px}
+.sv-input:focus{border-color:var(--accent)}
+.piv-empty{text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);font-size:11px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="loader">
+  <div class="l-logo">
+    <span><b>BRICCHI HNOS.</b> SA</span>
+    <span>Maquinaria — Base de Datos</span>
+  </div>
+  <div class="l-bar"><div class="l-fill" id="lfill"></div></div>
+  <div class="l-msg" id="lmsg">Iniciando...</div>
+</div>
+<header>
+  <div class="h-logo"><b>BRICCHI</b> HNOS. SA &nbsp;·&nbsp; Maquinaria — Base de Datos</div>
+  <div class="h-meta">
+    <span><span class="h-dot"></span><span id="h-cnt">—</span> registros &nbsp;·&nbsp; <span id="h-cnt-flat" style="color:#22c55e">— serie</span> &nbsp;·&nbsp; <span id="h-cnt-oc" style="color:#f59e0b">— OC</span> &nbsp;·&nbsp; <span id="h-cnt-ov" style="color:#8b5cf6">— OV</span></span>
+    <span id="h-ts">—</span>
+  </div>
+</header>
+<div class="tabs">
+  <button class="tab active" onclick="setTab('base')">📋 Base Completa</button>
+  <button class="tab" onclick="setTab('pivot')">🔄 Tabla Dinámica</button>
+</div>
+<main>
+
+<!-- BASE COMPLETA -->
+<div class="page active" id="pg-base">
+  <div class="toolbar">
+    <input class="search" id="b-bus" placeholder="Buscar en toda la tabla..." oninput="filtrarBase()" style="width:220px">
+    <select class="fsel" id="b-est" onchange="filtrarBase()"><option value="">Estado — Todos</option></select>
+    <select class="fsel" id="b-dep" onchange="filtrarBase()"><option value="">Depósito — Todos</option></select>
+    <select class="fsel" id="b-prov" onchange="filtrarBase()"><option value="">Proveedor — Todos</option></select>
+    <select class="fsel" id="b-cli" onchange="filtrarBase()"><option value="">Cliente — Todos</option></select>
+    <select class="fsel" id="b-pfc" onchange="filtrarBase()"><option value="">Per. Fiscal Cpra.</option></select>
+    <select class="fsel" id="b-pfv" onchange="filtrarBase()"><option value="">Per. Fiscal Vta.</option></select>
+    <select class="fsel" id="b-moc" onchange="filtrarBase()"><option value="">Moneda OC</option></select>
+    <select class="fsel" id="b-fue" onchange="filtrarBase()">
+      <option value="">Fuente — Todas</option>
+      <option value="flat">Con Serie (Flat)</option>
+      <option value="OC">OC Sin Serie</option>
+      <option value="OV">OV Sin Asignar</option>
+    </select>
+    <button class="btn" onclick="limpiarBase()">✕ Limpiar</button>
+    <button class="btn" onclick="exportBase()">⬇ CSV</button>
+    <span class="cnt" id="b-cnt" style="margin-left:auto">—</span>
+  </div>
+  <div class="col-bar" id="col-bar"></div>
+  <div class="tscroll">
+    <table style="width:100%" id="b-tbl">
+      <thead id="b-thead"></thead>
+      <tbody id="b-tbody"></tbody>
+    </table>
+  </div>
+  <div class="pag-bar" id="b-pag"></div>
+</div>
+
+<!-- TABLA DINÁMICA -->
+<div class="page" id="pg-pivot">
+<div class="piv-wrap">
+  <div class="piv-builder">
+    <h3>Constructor — Tabla Dinámica</h3>
+    <div class="piv-zones">
+      <div class="piv-zone">
+        <label>Columnas a mostrar</label>
+        <div class="piv-tags" id="pz-r"></div>
+      </div>
+      
+      <div class="piv-zone">
+        <label>Valores numéricos</label>
+        <div class="piv-tags" id="pz-v"></div>
+      </div>
+      <div class="piv-zone">
+        <label>Datos activos</label>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);padding-top:4px" id="pz-info">—</div>
+      </div>
+    </div>
+    <div class="piv-fields-wrap">
+      <label>Campos disponibles — 🟦 Columna de texto/fecha &nbsp; 🟩 Columna numérica &nbsp;&nbsp; Clic para agregar</label>
+      <div id="piv-fields"></div>
+    </div>
+    <div class="piv-actions">
+      <label>Agregar a:</label>
+      <select class="fsel" id="piv-dest">
+        <option value="r">Columnas a mostrar</option>
+        <option value="v">Valores numéricos</option>
+      </select>
+      <button class="btn" onclick="calcPivot()" style="color:var(--accent);border-color:var(--accent)">▶ Generar tabla</button>
+      <button class="btn" onclick="limpiarPivot()">✕ Limpiar</button>
+      <button class="btn" onclick="exportPivot()">⬇ CSV Pivot</button>
+      <span style="width:1px;height:20px;background:var(--border2);margin:0 4px"></span>
+      <!-- Vistas guardadas -->
+      <div class="saved-views">
+        <label>💾 Vista:</label>
+        <select class="fsel" id="sv-list" onchange="cargarVista(this.value)" style="min-width:140px">
+          <option value="">— Mis vistas —</option>
+        </select>
+        <input class="sv-input" id="sv-name" placeholder="Nombre de la vista...">
+        <button class="btn" onclick="guardarVista(this)" style="color:#22c55e;border-color:#22c55e">💾 Guardar</button>
+        <button class="btn" onclick="eliminarVista()" style="color:#ef4444;border-color:#ef4444">🗑 Eliminar</button>
+      </div>
+    </div>
+  </div>
+  <div class="piv-result" id="piv-result">
+    <div class="piv-empty">Agregá al menos un campo en Filas y uno en Valores para generar la tabla dinámica.</div>
+  </div>
+</div>
+</div>
+
+</main>
+<script>
+const U='https://rvumvnslydaobvvsywtu.supabase.co';
+const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dW12bnNseWRhb2J2dnN5d3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzM3NDksImV4cCI6MjA4NzQ0OTc0OX0.rE06TXMzBhvX0Uwzh2UquSFJs6CP18d81xrCC7MmX3c';
+const H={'apikey':K,'Authorization':'Bearer '+K};
+const PG=200;
+
+// GRUPOS — idénticos al modelo 42, con campos de período agregados
+const G=[
+  {id:'fuente',lb:'Fuente',           co:'#3b82f6', on:true, sep:'sep-serie', cols:[
+    {f:'_fuente_label',       h:'Fuente',            t:'fuente'},
+  ]},
+  {id:'serie',lb:'Serie/Lote',       co:'#22c55e',on:true,sep:'sep-serie',cols:[
+    {f:'numero_serie',        h:'N° Serie',        t:'m',s:1},
+    {f:'chasis',              h:'Chasis',          t:'m'},
+    {f:'motor',               h:'Motor',           t:'m'},
+    {f:'marca',               h:'Marca',           s:1},
+    {f:'modelo',              h:'Modelo'},
+    {f:'anio_fabricacion',    h:'Año'},
+    {f:'origen',              h:'Origen'},
+    {f:'tipo_vehiculo',       h:'Tipo Veh.'},
+    {f:'transmision',         h:'Transmis.'},
+    {f:'convertidor',         h:'Convertid.'},
+    {f:'marca_motor',         h:'Marca Motor'},
+    {f:'lote_create_date',    h:'Create Date',     t:'m'},
+    {f:'nro_serie_prev',      h:'N° Serie Prev.',   t:'m',s:1},
+  ]},
+  {id:'prod', lb:'Producto',          co:'#a78bfa',on:true,sep:'sep-prod',cols:[
+    {f:'producto',            h:'Producto',        s:1},
+    {f:'ref_interna',         h:'Ref.',            t:'m'},
+    {f:'categoria',           h:'Categoría',       s:1},
+    {f:'precio_lista',        h:'Precio Lista',    t:'nm'},
+    {f:'tipo_producto',       h:'Tipo Prod.'},
+    {f:'tracking',            h:'Tracking'},
+  ]},
+  {id:'stock',lb:'Stock',             co:'#06b6d4',on:true,sep:'sep-stock',cols:[
+    {f:'_estado',             h:'Estado',          s:1},
+    {f:'deposito',            h:'Depósito',        s:1},
+    {f:'cantidad_stock',      h:'Qty',             t:'nm'},
+    {f:'en_customer',         h:'En Cust.',        t:'b'},
+    {f:'tipo_operacion',      h:'Tipo Op.'},
+    {f:'propietario',         h:'Propietario'},
+  ]},
+  {id:'oc',   lb:'OC',                co:'#f59e0b',on:true,sep:'sep-oc',cols:[
+    {f:'nro_oc',                  h:'N° OC',           t:'m',s:1},
+    {f:'proveedor',               h:'Proveedor',       s:1},
+    {f:'cuit_proveedor',          h:'CUIT Prov.',      t:'m'},
+    {f:'estado_oc',               h:'Est. OC'},
+    {f:'estado_facturacion_oc',   h:'Fac. OC'},
+    {f:'fecha_oc',                h:'Fecha OC',        t:'m',s:1},
+    {f:'_periodo_oc',             h:'Período OC',      t:'per',s:1},
+    {f:'moneda_oc',               h:'Moneda'},
+    {f:'tc_oc',                   h:'TC OC',           t:'nm'},
+    {f:'precio_unit_oc',          h:'Precio Unit.',    t:'nm'},
+    {f:'subtotal_oc_linea',       h:'Subtotal Línea',  t:'nm'},
+    {f:'total_oc_linea',          h:'Total Línea',     t:'nm'},
+    {f:'monto_faltante_oc',       h:'Faltante $',      t:'nm'},
+    {f:'percentage_faltante_oc',  h:'Faltante %',      t:'nm'},
+    {f:'interno_oc',              h:'Interno',         t:'b'},
+  ]},
+  {id:'rec',  lb:'Recepción',         co:'#f97316',on:true,sep:'sep-rec',cols:[
+    {f:'nro_recepcion',           h:'N° Recepción',    t:'m'},
+    {f:'remito_compra',           h:'Remito Cpra.',    t:'m'},
+    {f:'fecha_recepcion',         h:'Fecha Rec.',      t:'m',s:1},
+    {f:'fecha_fc_compra_sml',     h:'F.FC SML',        t:'m'},
+    {f:'nro_voucher_compra',      h:'Voucher Cpra.',   t:'m'},
+  ]},
+  {id:'fcc',  lb:'FC Compra',         co:'#ef4444',on:true,sep:'sep-fcc',cols:[
+    {f:'nro_factura_compra',      h:'N° FC Cpra',      t:'m',s:1},
+    {f:'fecha_fc_compra',         h:'Fecha FC Cpra',   t:'m',s:1},
+    {f:'_periodo_fc_compra',      h:'Per. Fiscal Cpra',t:'per',s:1},
+    {f:'estado_pago_compra',      h:'Pago Cpra'},
+    {f:'proveedor_fc_compra',     h:'Prov. FC Cpra'},
+    {f:'cuit_proveedor_fc_compra',h:'CUIT Prov. FC',   t:'m'},
+    {f:'moneda_fc_compra',        h:'Moneda'},
+    {f:'tc_fc_compra',            h:'TC FC Cpra',      t:'nm'},
+    {f:'subtotal_fc_compra',      h:'Subtotal FC',     t:'nm'},
+    {f:'iva_fc_compra',           h:'IVA FC',          t:'nm'},
+    {f:'total_fc_compra',         h:'Total FC',        t:'nm'},
+  ]},
+  {id:'ov',   lb:'OV',                co:'#8b5cf6',on:true,sep:'sep-ov',cols:[
+    {f:'nro_ov',                  h:'N° OV',           t:'m',s:1},
+    {f:'fecha_ov',                h:'Fecha OV',        t:'m',s:1},
+    {f:'_periodo_ov',             h:'Período OV',      t:'per',s:1},
+    {f:'estado_ov',               h:'Est. OV'},
+    {f:'estado_facturacion_ov',   h:'Fac. OV'},
+    {f:'estado_entrega_ov',       h:'Entrega OV'},
+    {f:'cliente',                 h:'Cliente',         s:1},
+    {f:'cuit_cliente',            h:'CUIT Cliente',    t:'m'},
+    {f:'vendedor',                h:'Vendedor',        s:1},
+    {f:'moneda_ov',               h:'Moneda'},
+    {f:'tc_ov',                   h:'TC OV',           t:'nm'},
+    {f:'precio_unit_ov',          h:'Precio Unit.',    t:'nm'},
+    {f:'subtotal_ov_linea',       h:'Subtotal Línea',  t:'nm'},
+    {f:'total_ov_linea',          h:'Total Línea',     t:'nm'},
+    {f:'monto_faltante_line',     h:'Faltante $',      t:'nm'},
+    {f:'percentage_faltante',     h:'Faltante %',      t:'nm'},
+    {f:'paid',                    h:'Cobrado',         t:'b'},
+    {f:'ok_alvaro',               h:'OK Álvaro',       t:'b'},
+    {f:'interno_ov',              h:'Interno',         t:'b'},
+    {f:'tipo_flete',              h:'Tipo Flete'},
+    {f:'flete_asignado',          h:'Flete Asignado',  t:'nm'},
+  ]},
+  {id:'ent',  lb:'Entrega',           co:'#ec4899',on:true,sep:'sep-ent',cols:[
+    {f:'nro_remito_entrega',      h:'Remito Ent.',     t:'m'},
+    {f:'fecha_entrega_real',      h:'F.Entrega',       t:'m',s:1},
+    {f:'cliente_remito',          h:'Cliente Remito'},
+    {f:'cuit_cliente_remito',     h:'CUIT Cli. Rem.',  t:'m'},
+    {f:'estado_mov_salida',       h:'Mov. Salida'},
+    {f:'fecha_programada_entrega',h:'F.Prog.',         t:'m'},
+    {f:'vendedor_salida_sml',     h:'Vend. SML'},
+    {f:'nro_voucher_entrega',     h:'Voucher Ent.',    t:'m'},
+  ]},
+  {id:'fcv',  lb:'FC Venta',          co:'#64748b',on:true,sep:'sep-fcv',cols:[
+    {f:'nro_factura_venta',       h:'N° FC Vta',       t:'m',s:1},
+    {f:'fecha_fc_venta',          h:'Fecha FC Vta',    t:'m',s:1},
+    {f:'_periodo_fc_venta',       h:'Per. Fiscal Vta', t:'per',s:1},
+    {f:'estado_pago_venta',       h:'Pago Vta'},
+    {f:'tipo_fc_venta',           h:'Tipo FC Vta'},
+    {f:'cliente_fc_venta',        h:'Cliente FC Vta'},
+    {f:'cuit_cliente_fc_venta',   h:'CUIT Cli. FC Vta',t:'m'},
+    {f:'moneda_fc_venta',         h:'Moneda'},
+    {f:'tc_fc_venta',             h:'TC FC Vta',       t:'nm'},
+    {f:'subtotal_fc_venta',       h:'Subtotal FC Vta', t:'nm'},
+    {f:'iva_fc_venta',            h:'IVA FC Vta',      t:'nm'},
+    {f:'total_fc_venta',          h:'Total FC Vta',    t:'nm'},
+  ]},
+  {id:'fcnf', lb:'FC NF (Faltante)',  co:'#f43f5e',on:true,sep:'sep-pfcv',cols:[
+    {f:'nro_fc_nf',               h:'N° FC NF',        t:'m'},
+    {f:'fecha_fc_nf',             h:'Fecha FC NF',     t:'m'},
+    {f:'estado_pago_nf',          h:'Pago NF'},
+    {f:'cliente_fc_nf',           h:'Cliente FC NF'},
+    {f:'cuit_cliente_fc_nf',      h:'CUIT Cli. FC NF', t:'m'},
+    {f:'monto_faltante_nf',       h:'Faltante $',      t:'nm'},
+    {f:'percentage_faltante_nf',  h:'Faltante %',      t:'nm'},
+  ]},
+  {id:'tc',   lb:'TC BNA',            co:'#84cc16',on:true,sep:'sep-tc',cols:[
+    {f:'tc_bna_compra',           h:'TC BNA Cpra',     t:'nm'},
+    {f:'tc_bna_venta',            h:'TC BNA Vta',      t:'nm'},
+  ]},
+  {id:'meta', lb:'Metadata',          co:'#475569',on:true,sep:'sep-meta',cols:[
+    {f:'origen_dato',             h:'Origen Dato'},
+    {f:'generado_at',             h:'Generado At',     t:'m'},
+  ]},
+];
+
+// CAMPOS PARA TABLA DINÁMICA — todos los campos de cada grupo
+const PG_GRUPOS=[
+  {id:'fuente',lb:'Fuente',      co:'#3b82f6',fields:[
+    {id:'_fuente_label',  h:'Fuente',             num:false},
+  ]},
+  {id:'serie',lb:'Serie/Lote',   co:'#22c55e',fields:[
+    {id:'numero_serie',   h:'N° Serie',            num:false},
+    {id:'chasis',         h:'Chasis',              num:false},
+    {id:'motor',          h:'Motor',               num:false},
+    {id:'marca',          h:'Marca',               num:false},
+    {id:'modelo',         h:'Modelo',              num:false},
+    {id:'anio_fabricacion',h:'Año Fab.',           num:false},
+    {id:'origen',         h:'Origen',              num:false},
+    {id:'tipo_vehiculo',  h:'Tipo Vehículo',       num:false},
+    {id:'nro_serie_prev', h:'N° Serie Prev.',      num:false},
+    {id:'transmision',    h:'Transmisión',         num:false},
+    {id:'convertidor',    h:'Convertidor',         num:false},
+    {id:'marca_motor',    h:'Marca Motor',         num:false},
+  ]},
+  {id:'prod', lb:'Producto',     co:'#a78bfa',fields:[
+    {id:'producto',       h:'Producto',            num:false},
+    {id:'ref_interna',    h:'Ref. Interna',        num:false},
+    {id:'categoria',      h:'Categoría',           num:false},
+    {id:'precio_lista',   h:'Precio Lista',        num:true},
+    {id:'tipo_producto',  h:'Tipo Producto',       num:false},
+    {id:'tracking',       h:'Tracking',            num:false},
+  ]},
+  {id:'stock',lb:'Stock',        co:'#06b6d4',fields:[
+    {id:'_estado',        h:'Estado',              num:false},
+    {id:'deposito',       h:'Depósito',            num:false},
+    {id:'cantidad_stock', h:'Cantidad Stock',      num:true},
+    {id:'en_customer',    h:'En Customer',         num:false},
+    {id:'tipo_operacion', h:'Tipo Operación',      num:false},
+    {id:'propietario',    h:'Propietario',         num:false},
+  ]},
+  {id:'oc',   lb:'OC',           co:'#f59e0b',fields:[
+    {id:'nro_oc',             h:'N° OC',           num:false},
+    {id:'nro_serie_prev',     h:'N° Serie Prev.',  num:false},
+    {id:'fila_oc',            h:'Fila OC',         num:true},
+    {id:'proveedor',          h:'Proveedor',       num:false},
+    {id:'cuit_proveedor',     h:'CUIT Prov.',      num:false},
+    {id:'fecha_oc',           h:'Fecha OC',        num:false},
+    {id:'_periodo_oc',        h:'Período OC',      num:false},
+    {id:'estado_oc',          h:'Estado OC',       num:false},
+    {id:'estado_facturacion_oc',h:'Facturación OC',num:false},
+    {id:'moneda_oc',          h:'Moneda OC',       num:false},
+    {id:'tc_oc',              h:'TC OC',           num:true},
+    {id:'precio_unit_oc',     h:'Precio Unit. OC', num:true},
+    {id:'subtotal_oc_linea',  h:'Subtotal OC',     num:true},
+    {id:'total_oc_linea',     h:'Total OC',        num:true},
+    {id:'monto_faltante_oc',  h:'Faltante OC $',   num:true},
+    {id:'interno_oc',         h:'Interno OC',      num:false},
+  ]},
+  {id:'rec',  lb:'Recepción',    co:'#f97316',fields:[
+    {id:'nro_recepcion',      h:'N° Recepción',    num:false},
+    {id:'remito_compra',      h:'Remito Cpra.',    num:false},
+    {id:'fecha_recepcion',    h:'Fecha Recepción', num:false},
+    {id:'nro_voucher_compra', h:'Voucher Cpra.',   num:false},
+  ]},
+  {id:'fcc',  lb:'FC Compra',    co:'#ef4444',fields:[
+    {id:'nro_factura_compra',     h:'N° FC Compra',     num:false},
+    {id:'fecha_fc_compra',        h:'Fecha FC Cpra.',   num:false},
+    {id:'_periodo_fc_compra',     h:'Per. Fiscal Cpra.',num:false},
+    {id:'estado_pago_compra',     h:'Pago FC Cpra.',    num:false},
+    {id:'proveedor_fc_compra',    h:'Prov. FC Cpra.',   num:false},
+    {id:'cuit_proveedor_fc_compra',h:'CUIT Prov. FC',   num:false},
+    {id:'moneda_fc_compra',       h:'Moneda FC Cpra.',  num:false},
+    {id:'tc_fc_compra',           h:'TC FC Cpra.',      num:true},
+    {id:'tc_bna_compra',          h:'TC BNA Cpra.',     num:true},
+    {id:'subtotal_fc_compra',     h:'Subtotal FC Cpra.',num:true},
+    {id:'iva_fc_compra',          h:'IVA FC Cpra.',     num:true},
+    {id:'total_fc_compra',        h:'Total FC Cpra.',   num:true},
+  ]},
+  {id:'ov',   lb:'OV',           co:'#8b5cf6',fields:[
+    {id:'nro_ov',                 h:'N° OV',            num:false},
+    {id:'fecha_ov',               h:'Fecha OV',         num:false},
+    {id:'_periodo_ov',            h:'Período OV',       num:false},
+    {id:'estado_ov',              h:'Estado OV',        num:false},
+    {id:'estado_facturacion_ov',  h:'Facturación OV',   num:false},
+    {id:'estado_entrega_ov',      h:'Entrega OV',       num:false},
+    {id:'cliente',                h:'Cliente',          num:false},
+    {id:'cuit_cliente',           h:'CUIT Cliente',     num:false},
+    {id:'vendedor',               h:'Vendedor',         num:false},
+    {id:'moneda_ov',              h:'Moneda OV',        num:false},
+    {id:'tc_ov',                  h:'TC OV',            num:true},
+    {id:'precio_unit_ov',         h:'Precio Unit. OV',  num:true},
+    {id:'subtotal_ov_linea',      h:'Subtotal OV',      num:true},
+    {id:'total_ov_linea',         h:'Total OV',         num:true},
+    {id:'monto_faltante_line',    h:'Faltante OV $',    num:true},
+    {id:'paid',                   h:'Cobrado',          num:false},
+    {id:'ok_alvaro',              h:'OK Álvaro',        num:false},
+    {id:'tipo_flete',             h:'Tipo Flete',       num:false},
+    {id:'flete_asignado',         h:'Flete Asignado',   num:true},
+    {id:'interno_ov',             h:'Interno OV',       num:false},
+  ]},
+  {id:'ent',  lb:'Entrega',      co:'#ec4899',fields:[
+    {id:'nro_remito_entrega',     h:'Remito Entrega',   num:false},
+    {id:'fecha_entrega_real',     h:'Fecha Entrega',    num:false},
+    {id:'fecha_programada_entrega',h:'F. Programada',   num:false},
+    {id:'cliente_remito',         h:'Cliente Remito',   num:false},
+    {id:'estado_mov_salida',      h:'Mov. Salida',      num:false},
+    {id:'vendedor_salida_sml',    h:'Vend. SML',        num:false},
+    {id:'nro_voucher_entrega',    h:'Voucher Entrega',  num:false},
+  ]},
+  {id:'fcv',  lb:'FC Venta',     co:'#64748b',fields:[
+    {id:'nro_factura_venta',      h:'N° FC Venta',      num:false},
+    {id:'fecha_fc_venta',         h:'Fecha FC Venta',   num:false},
+    {id:'_periodo_fc_venta',      h:'Per. Fiscal Vta.', num:false},
+    {id:'estado_pago_venta',      h:'Pago FC Venta',    num:false},
+    {id:'tipo_fc_venta',          h:'Tipo FC Venta',    num:false},
+    {id:'cliente_fc_venta',       h:'Cliente FC Vta.',  num:false},
+    {id:'cuit_cliente_fc_venta',  h:'CUIT Cli. FC Vta.',num:false},
+    {id:'moneda_fc_venta',        h:'Moneda FC Vta.',   num:false},
+    {id:'tc_fc_venta',            h:'TC FC Vta.',       num:true},
+    {id:'tc_bna_venta',           h:'TC BNA Vta.',      num:true},
+    {id:'subtotal_fc_venta',      h:'Subtotal FC Vta.', num:true},
+    {id:'iva_fc_venta',           h:'IVA FC Vta.',      num:true},
+    {id:'total_fc_venta',         h:'Total FC Vta.',    num:true},
+  ]},
+  {id:'fcnf', lb:'FC NF',        co:'#f43f5e',fields:[
+    {id:'nro_fc_nf',              h:'N° FC NF',         num:false},
+    {id:'fecha_fc_nf',            h:'Fecha FC NF',      num:false},
+    {id:'estado_pago_nf',         h:'Pago FC NF',       num:false},
+    {id:'monto_faltante_nf',      h:'Faltante NF $',    num:true},
+  ]},
+  {id:'meta', lb:'Metadata',     co:'#475569',fields:[
+    {id:'origen_dato',            h:'Origen Dato',      num:false},
+    {id:'_fuente_label',          h:'Fuente',           num:false},
+    {id:'_count',                 h:'Cantidad (contar)',num:true},
+  ]},
+];
+
+let FD=[],FF=[],sortC='numero_serie',sortA=true,pagActual=1;
+let pivR=[],pivC=[],pivV=[];
+// Fuentes separadas para filtros independientes
+let FD_FLAT=[],FD_OC=[],FD_OV=[];
+
+const pr=s=>(s||'').replace(/^\[[\w.\-]+\]\s*/,'').replace(/^MARCA:\s*/i,'').trim();
+const fd=d=>d?new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
+const fm=n=>{if(n==null||n==='')return'—';const v=Number(n);if(isNaN(v))return'—';if(Math.abs(v)>=1e6)return'$'+(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return'$'+(v/1e3).toFixed(0)+'K';return'$'+Math.round(v).toLocaleString('es-AR');};
+const fmEx=n=>{if(n==null||n==='')return'—';const v=Number(n);if(isNaN(v))return'—';return'$'+v.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+const setL=(p,m)=>{document.getElementById('lfill').style.width=p+'%';document.getElementById('lmsg').textContent=m;};
+
+function periodo(fecha){
+  if(!fecha)return'—';
+  const d=new Date(fecha);
+  if(isNaN(d.getTime()))return'—';
+  return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function cEstado(r){
+  const en=r.fecha_entrega_real||r.en_customer;
+  if(r.tipo_operacion==='En Consignación'&&!en)return{l:'En Consignación',c:'#06b6d4'};
+  if(en&&r.nro_factura_compra&&r.nro_factura_venta)return{l:'Entregada y Facturada',c:'#64748b'};
+  if(en&&!r.nro_factura_venta&&r.nro_factura_compra)return{l:'Entregada Pend. Facturar',c:'#ef4444'};
+  if(en&&r.nro_factura_venta&&!r.nro_factura_compra)return{l:'Alerta: FC Vta sin FC Cpra',c:'#dc2626'};
+  if(en&&!r.nro_factura_compra)return{l:'Alerta: Entregada sin FC Cpra',c:'#fbbf24'};
+  if(r.nro_ov&&r.cantidad_stock>0&&r.nro_factura_compra&&(r.paid||r.ok_alvaro)&&r.estado_mov_salida==='assigned')return{l:'Lista para Entregar',c:'#10b981'};
+  if(r.nro_ov&&r.cantidad_stock>0&&r.nro_factura_compra)return{l:'Comprometida',c:'#8b5cf6'};
+  if(r.nro_factura_compra&&r.cantidad_stock>0&&!r.nro_ov)return{l:'Disponible',c:'#22c55e'};
+  if(!r.nro_factura_compra&&r.cantidad_stock>0&&!r.nro_ov)return{l:'Disponible Sin FC Cpra',c:'#fbbf24'};
+  if(r.tipo_operacion==='En Consignación')return{l:'En Consignación',c:'#06b6d4'};
+  return{l:'Sin Clasificar',c:'#5a6480'};
+}
+
+function enriquecer(r){
+  const e=cEstado(r);
+  r._estado=e.l;r._estado_color=e.c;
+  r._periodo_oc=periodo(r.fecha_oc);
+  r._periodo_ov=periodo(r.fecha_ov);
+  r._periodo_fc_compra=periodo(r.fecha_fc_compra);
+  r._periodo_fc_venta=periodo(r.fecha_fc_venta);
+  if(r.vendedor)r.vendedor=r.vendedor.replace(/\s*\(.*\)/,'').trim();
+  r._count=1;
+  r._fuente=null;
+  r._fuente_label='Flat';
+  return r;
+}
+
+// Normalizar fila de vista_oc_sin_serie al formato flat
+function normOC(r){
+  return{
+    _fuente:'OC',_fuente_label:'OC',
+    _estado:'OC Sin Serie',_estado_color:'#f59e0b',
+    numero_serie:null,
+    nro_serie_prev:r.nro_serie_prev||null,
+    fila_oc:r.fila_oc||null,
+    nro_serie_prev:r.nro_serie_prev||null,
+    producto:r.producto,ref_interna:r.ref_interna,categoria:r.categoria,
+    chasis:r.chasis,motor:r.motor,marca:r.marca,modelo:r.modelo,
+    anio_fabricacion:r.anio_fabricacion,origen:r.origen,tipo_vehiculo:r.tipo_vehiculo,
+    deposito:r.deposito,cantidad_stock:r.cantidad,
+    tipo_operacion:r.tipo_operacion,propietario:r.propietario,
+    // OC
+    nro_oc:r.nro_oc,proveedor:r.proveedor,
+    fecha_oc:r.fecha_oc,_periodo_oc:periodo(r.fecha_oc),
+    estado_oc:r.estado_oc,estado_facturacion_oc:r.estado_facturacion_oc,
+    subtotal_oc_linea:r.subtotal_compra,tc_oc:r.tc_compra,
+    // Recepción
+    nro_recepcion:r.nro_recepcion,remito_compra:r.remito_compra,
+    fecha_recepcion:r.fecha_recepcion,
+    // FC Compra
+    nro_factura_compra:r.nro_factura_compra,
+    fecha_fc_compra:r.fecha_fc_compra_real,
+    _periodo_fc_compra:periodo(r.fecha_fc_compra_real),
+    subtotal_fc_compra:r.subtotal_fc_compra||null,
+    iva_fc_compra:r.iva_fc_compra||null,
+    total_fc_compra:r.total_fc_compra||null,
+    moneda_fc_compra:r.moneda_fc_compra||null,
+    estado_pago_compra:r.estado_pago_compra||null,
+    proveedor_fc_compra:r.proveedor_fc_compra||null,
+    // OV
+    nro_ov:r.nro_ov,cliente:r.cliente,vendedor:r.vendedor?r.vendedor.replace(/\s*\(.*\)/,'').trim():null,
+    fecha_ov:r.fecha_ov,_periodo_ov:periodo(r.fecha_ov),
+    estado_ov:r.estado_ov,estado_facturacion_ov:r.estado_facturacion_ov,
+    subtotal_ov_linea:r.subtotal_venta,
+    // FC Venta
+    nro_factura_venta:r.nro_factura_venta,
+    fecha_fc_venta:r.fecha_factura_venta,
+    _periodo_fc_venta:periodo(r.fecha_factura_venta),
+    // Entrega
+    nro_remito_entrega:r.nro_remito_entrega,
+    fecha_entrega_real:r.fecha_entrega_real,
+    fecha_programada_entrega:r.fecha_programada_entrega,
+    origen_dato:r.origen_dato,generado_at:r.generado_at,
+    _count:1,
+  };
+}
+
+// Normalizar fila de vista_sol_sin_asignar al formato flat
+function normOV(r){
+  return{
+    _fuente:'OV',_fuente_label:'OV',
+    _estado:'OV Sin Asignar',_estado_color:'#8b5cf6',
+    numero_serie:null,
+    producto:r.producto,ref_interna:null,categoria:null,
+    // OV
+    nro_ov:r.nro_ov,cliente:r.cliente,
+    vendedor:r.vendedor?r.vendedor.replace(/\s*\(.*\)/,'').trim():null,
+    fecha_ov:r.fecha_ov,_periodo_ov:periodo(r.fecha_ov),
+    estado_ov:r.estado_ov_label||r.estado_ov,
+    estado_facturacion_ov:r.estado_facturacion_linea,
+    moneda_ov:r.moneda,precio_unit_ov:r.price_unit,
+    subtotal_ov_linea:r.subtotal_linea,total_ov_linea:r.total_linea,
+    ok_alvaro:r.ok_alvaro,
+    // OC vinculada
+    nro_oc:r.oc_vinculada,
+    _periodo_oc:null,_periodo_fc_compra:null,_periodo_fc_venta:null,
+    _count:1,
+  };
+}
+
+function renderCelda(r,col,esFirst,sep){
+  const v=r[col.f];
+  const cls=esFirst?` class="${sep}"`:'';
+  if(col.t==='fuente'){
+    const f=r._fuente||'flat';
+    const lbl={'flat':'Flat','OC':'OC','OV':'OV'}[f]||f;
+    const cc={'flat':'fuente-flat','OC':'fuente-oc','OV':'fuente-ov'}[f]||'fuente-flat';
+    return`<td${cls}><span class="${cc}">${lbl}</span></td>`;
+  }
+  if(col.f==='_estado'){
+    const c=r._estado_color||'#5a6480';
+    return`<td${cls}><span class="badge" style="background:${c}22;color:${c}"><span class="bdot" style="background:${c}"></span>${r._estado||'—'}</span></td>`;
+  }
+  if(col.t==='b')return`<td${cls} class="${v?'bt':'bf'}">${v?'✓':'—'}</td>`;
+  if(col.t==='nm')return`<td${cls} class="nm">${fmEx(v)}</td>`;
+  if(col.t==='per')return`<td${cls} class="per">${v||'—'}</td>`;
+  if(col.t==='m'){
+    if(v==null||v==='')return`<td${cls} class="nu">—</td>`;
+    const esFecha=col.f.startsWith('fecha')||col.f==='lote_create_date'||col.f==='generado_at';
+    return`<td${cls} class="m">${esFecha?fd(v):v}</td>`;
+  }
+  if(v==null||v==='')return`<td${cls} class="nu">—</td>`;
+  if(col.s){const txt=col.f==='producto'?pr(v):v;return`<td${cls} title="${String(txt).replace(/"/g,"'")}">${String(txt).substring(0,45)}</td>`;}
+  return`<td${cls}>${String(v).substring(0,40)}</td>`;
+}
+
+async function cargar(){
+  try{
+    setL(10,'Conectando a Supabase...');
+    const [r1,r2,r3]=await Promise.all([
+      fetch(`${U}/rest/v1/vista_maquinaria_flat?select=*&order=numero_serie`,{headers:H}),
+      fetch(`${U}/rest/v1/vista_oc_sin_serie?select=*&order=nro_oc`,{headers:H}),
+      fetch(`${U}/rest/v1/vista_sol_sin_asignar?select=*&order=nro_ov.desc`,{headers:H}),
+    ]);
+    if(!r1.ok)throw new Error(`Flat HTTP ${r1.status}`);
+    setL(60,'Procesando datos...');
+    FD_FLAT=(await r1.json()).map(enriquecer);
+    FD_OC=r2.ok?(await r2.json()).map(normOC):[];
+    FD_OV=r3.ok?(await r3.json()).map(normOV):[];
+    // Unir todo en FD: primero las con serie, luego OC sin serie, luego OV sin asignar
+    FD=[...FD_FLAT,...FD_OC,...FD_OV];
+    setL(90,'Construyendo tabla...');
+    document.getElementById('h-ts').textContent=FD_FLAT[0]?.generado_at?new Date(FD_FLAT[0].generado_at).toLocaleString('es-AR'):'—';
+    document.getElementById('h-cnt').textContent=FD.length;
+    construirColBar();
+    poblarFiltros();
+    construirPivFields();
+    filtrarBase();
+    setL(100,'Listo');
+    setTimeout(()=>document.getElementById('loader').classList.add('out'),400);
+  }catch(e){setL(100,'Error: '+e.message);}
+}
+
+function construirColBar(){
+  const bar=document.getElementById('col-bar');
+  bar.innerHTML='<span style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:4px">Grupos:</span>';
+  G.forEach(g=>{
+    const el=document.createElement('span');
+    el.className='ctg'+(g.on?' on':'');
+    el.innerHTML=`<span class="ctg-dot" style="background:${g.co}"></span>${g.lb}`;
+    el.onclick=()=>{g.on=!g.on;el.classList.toggle('on');renderTabla();};
+    bar.appendChild(el);
+  });
+}
+
+function poblarFiltros(){
+  const add=(id,vals)=>{const s=document.getElementById(id);[...new Set(vals)].filter(Boolean).sort().forEach(v=>s.innerHTML+=`<option value="${v}">${v.length>45?v.substring(0,45)+'…':v}</option>`);};
+  add('b-est',FD.map(r=>r._estado));
+  add('b-dep',FD.map(r=>r.deposito));
+  add('b-prov',FD.map(r=>r.proveedor));
+  add('b-cli',FD.map(r=>r.cliente));
+  add('b-pfc',FD.map(r=>r._periodo_fc_compra).filter(v=>v&&v!=='—'));
+  add('b-pfv',FD.map(r=>r._periodo_fc_venta).filter(v=>v&&v!=='—'));
+  add('b-moc',FD.map(r=>r.moneda_oc).filter(Boolean));
+}
+
+function filtrarBase(){
+  const bus=document.getElementById('b-bus').value.toLowerCase().trim();
+  const est=document.getElementById('b-est').value;
+  const dep=document.getElementById('b-dep').value;
+  const prov=document.getElementById('b-prov').value;
+  const cli=document.getElementById('b-cli').value;
+  const pfc=document.getElementById('b-pfc').value;
+  const pfv=document.getElementById('b-pfv').value;
+  const moc=document.getElementById('b-moc').value;
+  const fue=document.getElementById('b-fue').value;
+  FF=FD.filter(r=>{
+    if(est&&r._estado!==est)return false;
+    if(dep&&r.deposito!==dep)return false;
+    if(prov&&r.proveedor!==prov)return false;
+    if(cli&&r.cliente!==cli)return false;
+    if(pfc&&r._periodo_fc_compra!==pfc)return false;
+    if(pfv&&r._periodo_fc_venta!==pfv)return false;
+    if(moc&&r.moneda_oc!==moc)return false;
+    if(fue){
+      if(fue==='flat'&&r._fuente)return false;
+      if(fue==='OC'&&r._fuente!=='OC')return false;
+      if(fue==='OV'&&r._fuente!=='OV')return false;
+    }
+    if(bus&&!Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus))return false;
+    return true;
+  });
+  pagActual=1;
+  document.getElementById('b-cnt').textContent=FF.length+' registros';
+  document.getElementById('h-cnt').textContent=FF.length;
+  document.getElementById('h-cnt-flat').textContent=FF.filter(r=>!r._fuente).length+' serie';
+  document.getElementById('h-cnt-oc').textContent=FF.filter(r=>r._fuente==='OC').length+' OC';
+  document.getElementById('h-cnt-ov').textContent=FF.filter(r=>r._fuente==='OV').length+' OV';
+  renderTabla();
+  document.getElementById('pz-info').textContent=FF.length+' registros con filtros activos';
+}
+
+function limpiarBase(){
+  ['b-bus','b-est','b-dep','b-prov','b-cli','b-pfc','b-pfv','b-moc','b-fue'].forEach(id=>{document.getElementById(id).value='';});
+  colFilters={};
+  filtrarBase();
+}
+
+// Filtros por columna
+let colFilters={};
+
+function renderTabla(){
+  const activos=G.filter(g=>g.on);
+  const allCols=activos.flatMap(g=>g.cols);
+
+  // Aplicar filtros de columna sobre FF
+  let datos=[...FF].filter(r=>{
+    return allCols.every(col=>{
+      const f=(colFilters[col.f]||'').trim();
+      if(!f)return true;
+      return evalFiltro(f, r[col.f]);
+    });
+  });
+
+  // Ordenar: fuente primero, luego columna elegida
+  datos.sort((a,b)=>{
+    const fo={'flat':0,'OC':1,'OV':2};
+    const fa=fo[a._fuente||'flat']??0,fb=fo[b._fuente||'flat']??0;
+    if(fa!==fb)return fa-fb;
+    const va=a[sortC]??'',vb=b[sortC]??'';
+    return va<vb?(sortA?-1:1):va>vb?(sortA?1:-1):0;
+  });
+
+  // Header fila 1: grupos
+  let hg='<tr>';
+  activos.forEach(g=>hg+=`<th class="gh ${g.sep}" colspan="${g.cols.length}" style="color:${g.co}">${g.lb}</th>`);
+  hg+='</tr>';
+  // Header fila 2: nombres de columnas con ordenamiento
+  hg+='<tr>';
+  activos.forEach(g=>g.cols.forEach((col,i)=>{
+    const sc=sortC===col.f?(sortA?' asc':' desc'):'';
+    const cls=i===0?`${g.sep} ${sc}`.trim():sc;
+    hg+=`<th class="${cls}" onclick="ordenar('${col.f}')" title="Clic para ordenar">${col.h}</th>`;
+  }));
+  hg+='</tr>';
+  // Header fila 3: inputs de filtro por columna
+  hg+='<tr>';
+  activos.forEach(g=>g.cols.forEach((col,i)=>{
+    const cls=i===0?`cf ${g.sep}`.trim():'cf';
+    const v=(colFilters[col.f]||'').replace(/"/g,'&quot;');
+    const isPer=col.t==='per'||col.f.startsWith('fecha')||col.f.includes('periodo')||col.f.includes('_periodo');
+    const ph=isPer?'🔍 ej: >=2025-01':'🔍';
+    hg+=`<th class="${cls}"><input type="text" value="${v}" placeholder="${ph}" oninput="debounceColFilter('${col.f}',this.value)" title="${isPer?'Rango: >=2025-01 o <=2026-12 o solo 2025':'Filtrar '+col.h}"></th>`;
+  }));
+  hg+='</tr>';
+
+  document.getElementById('b-thead').innerHTML=hg;
+
+  // Renderizar TODAS las filas sin paginación
+  document.getElementById('b-tbody').innerHTML=datos.map(r=>
+    `<tr>${activos.flatMap(g=>g.cols.map((col,i)=>renderCelda(r,col,i===0,g.sep))).join('')}</tr>`
+  ).join('');
+
+  // Actualizar contador
+  document.getElementById('b-cnt').textContent=datos.length+' registros';
+  document.getElementById('b-pag').innerHTML=`<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${datos.length} filas — ${FF.length} filtrados de ${FD.length} totales</span>`;
+}
+
+// Debounce para filtros de columna (evita re-render en cada tecla)
+let _colFilterTimer=null;
+function debounceColFilter(field,val){
+  clearTimeout(_colFilterTimer);
+  _colFilterTimer=setTimeout(()=>setColFilter(field,val),300);
+}
+
+function setColFilter(field,val){
+  if(val)colFilters[field]=val;
+  else delete colFilters[field];
+  renderTabla();
+}
+
+function ordenar(c){if(sortC===c)sortA=!sortA;else{sortC=c;sortA=true;}renderTabla();}
+
+function renderPag(tp,tot,ini,fin){
+  const bar=document.getElementById('b-pag');
+  if(tp<=1){bar.innerHTML='';return;}
+  let h=`<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${ini}–${fin} de ${tot}</span>`;
+  if(pagActual>1)h+=`<button class="pag-btn" onclick="irPag(${pagActual-1})">‹</button>`;
+  const d=Math.max(1,pagActual-2),hs=Math.min(tp,pagActual+2);
+  for(let i=d;i<=hs;i++)h+=`<button class="pag-btn${i===pagActual?' on':''}" onclick="irPag(${i})">${i}</button>`;
+  if(pagActual<tp)h+=`<button class="pag-btn" onclick="irPag(${pagActual+1})">›</button>`;
+  h+=`<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">/ ${tp} págs.</span>`;
+  bar.innerHTML=h;
+}
+function irPag(n){pagActual=n;renderTabla();}
+
+function exportBase(){
+  const cols=G.filter(g=>g.on).flatMap(g=>g.cols);
+  const hdr=cols.map(c=>`"${c.h}"`).join(',');
+  const rows=FF.map(r=>cols.map(c=>{let v=r[c.f];if(v==null)v='';return`"${String(v).replace(/"/g,'""')}"`;}).join(','));
+  const csv='\uFEFF'+[hdr,...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`maquinaria_base_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function setTab(t){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`pg-${t}`).classList.add('active');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['base','pivot'][i]===t));
+}
+
+function construirPivFields(){
+  const cont=document.getElementById('piv-fields');
+  cont.innerHTML='';
+  PG_GRUPOS.forEach(g=>{
+    const sec=document.createElement('div');
+    sec.className='piv-group-section';
+    sec.innerHTML=`<div class="piv-group-label" style="color:${g.co}">${g.lb}</div>
+      <div class="piv-field-list">${g.fields.map(f=>
+        `<span class="pf ${f.num?'num':'dim'}" onclick="addPivField('${f.id}')">${f.h}</span>`
+      ).join('')}</div>`;
+    cont.appendChild(sec);
+  });
+}
+
+function getPivLabel(fid){
+  for(const g of PG_GRUPOS){const f=g.fields.find(x=>x.id===fid);if(f)return f.h;}return fid;
+}
+
+function addPivField(fid){
+  const dest=document.getElementById('piv-dest').value;
+  if(dest==='r'){if(!pivR.includes(fid))pivR.push(fid);}
+  else if(dest==='c'){if(!pivC.includes(fid))pivC.push(fid);}
+  else if(dest==='v'){if(!pivV.includes(fid))pivV.push(fid);}
+  renderPivTags();
+}
+
+function removePivTag(zona,fid){
+  if(zona==='r')pivR=pivR.filter(x=>x!==fid);
+  else if(zona==='c')pivC=pivC.filter(x=>x!==fid);
+  else if(zona==='v')pivV=pivV.filter(x=>x!==fid);
+  renderPivTags();
+}
+
+function renderPivTags(){
+  const rT=(zona,arr,cls)=>{
+    const c=document.getElementById(`pz-${zona}`);c.innerHTML='';
+    arr.forEach(fid=>{
+      const t=document.createElement('span');
+      t.className=`ptag ${cls}`;
+      t.innerHTML=`${getPivLabel(fid)} <span onclick="removePivTag('${zona}','${fid}')" style="cursor:pointer;opacity:.5">✕</span>`;
+      c.appendChild(t);
+    });
+  };
+  rT('r',pivR,'ptag-r');rT('v',pivV,'ptag-v');
+}
+
+function limpiarPivot(){
+  pivR=[];pivC=[];pivV=[];window.pivColFilters={};window.pivSort=null;renderPivTags();
+  document.getElementById('piv-result').innerHTML='<div class="piv-empty">Agregá al menos un campo en Filas y uno en Valores.</div>';
+}
+
+function getPivVal(r,fid){if(fid==='_count')return 1;const v=r[fid];return(v==null||v===''||v==='—')?null:v;}
+function fmtP(v,fid){
+  if(v==null||v===0)return'—';
+  if(fid==='_count')return v.toLocaleString('es-AR');
+  const isNum=PG_GRUPOS.flatMap(g=>g.fields).find(f=>f.id===fid)?.num;
+  if(isNum)return fmEx(v);
+  return String(v);
+}
+
+function calcPivot(){
+  if(pivV.length===0&&pivR.length===0){
+    document.getElementById('piv-result').innerHTML='<div class="piv-empty">Agregá al menos un campo para generar la tabla.</div>';return;
+  }
+  // Los campos seleccionados en Filas son las columnas a mostrar
+  // Los campos en Valores son columnas numéricas adicionales
+  const colsDim=pivR;   // dimensiones (columnas de texto/fecha)
+  const colsNum=pivV;   // valores numéricos
+  const allCols=[...colsDim,...colsNum];
+  if(allCols.length===0){
+    document.getElementById('piv-result').innerHTML='<div class="piv-empty">Agregá campos en Filas y/o Valores.</div>';return;
+  }
+
+  // Filtros de columna para la tabla pivot
+  if(!window.pivColFilters)window.pivColFilters={};
+
+  // Aplicar filtros
+  let datos=FF.filter(r=>{
+    return allCols.every(fid=>{
+      const f=(window.pivColFilters[fid]||'').trim();
+      if(!f)return true;
+      const v=r[fid];
+      return evalFiltro(f, v);
+    });
+  });
+
+  // Ordenar
+  if(!window.pivSort)window.pivSort={c:allCols[0],a:true};
+  datos=[...datos].sort((a,b)=>{
+    const va=a[window.pivSort.c]??'',vb=b[window.pivSort.c]??'';
+    return va<vb?(window.pivSort.a?-1:1):va>vb?(window.pivSort.a?1:-1):0;
+  });
+
+  // Totales para columnas numéricas
+  const totales={};
+  colsNum.forEach(fid=>{
+    totales[fid]=datos.reduce((s,r)=>s+(Number(r[fid])||0),0);
+  });
+
+  // Headers
+  let hg='<tr>';
+  allCols.forEach((fid,i)=>{
+    const lbl=getPivLabel(fid);
+    const sc=window.pivSort.c===fid?(window.pivSort.a?' asc':' desc'):'';
+    hg+=`<th class="${sc}" onclick="pivOrdenar('${fid}')" title="Clic para ordenar">${lbl}</th>`;
+  });
+  hg+='</tr>';
+  // Fila de filtros por columna
+  hg+='<tr>';
+  allCols.forEach((fid,i)=>{
+    const cls=i===0?'cf':'cf';
+    const v=(window.pivColFilters[fid]||'').replace(/"/g,'&quot;');
+    const isFD=fid.startsWith('fecha')||fid.startsWith('_periodo')||fid.includes('periodo');
+    const phPiv=isFD?'🔍 >=2025-01 o &vacío':'🔍 texto o &vacío';
+    const ttPiv=isFD?'>=2025-01 | <=2026-12 | >=X&vacío (OR con &)':'texto libre | vacío | cond1&cond2';
+    hg+=`<th class="${cls}"><input type="text" value="${v}" placeholder="${phPiv}" title="${ttPiv}" oninput="debouncePivFilter('${fid}',this.value)"></th>`;
+  });
+  hg+='</tr>';
+
+  // Filas de datos
+  const rows=datos.map(r=>`<tr>${allCols.map(fid=>{
+    const v=r[fid];
+    const isNum=colsNum.includes(fid);
+    if(v==null||v==='')return`<td class="nu">—</td>`;
+    if(isNum){
+      const n=Number(v);
+      if(!isNaN(n)){
+        return`<td>${fmEx(n)}</td>`;
+      }
+    }
+    // Detectar fecha
+    if(fid.startsWith('fecha')||fid==='lote_create_date')
+      return`<td>${new Date(v).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</td>`;
+    return`<td title="${String(v).replace(/"/g,"'")}">${String(v).substring(0,50)}</td>`;
+  }).join('')}</tr>`).join('');
+
+  // Fila de totales
+  let totRow=`<tr class="grand"><td>TOTAL (${datos.length} reg.)</td>`;
+  allCols.slice(1).forEach(fid=>{
+    if(colsNum.includes(fid)&&totales[fid]){
+      const n=totales[fid];
+      if(Math.abs(n)>=1e6)totRow+=`<td>$${(n/1e6).toFixed(2)}M</td>`;
+      else totRow+=`<td>$${Math.round(n).toLocaleString('es-AR')}</td>`;
+    }else{totRow+=`<td></td>`;}
+  });
+  totRow+='</tr>';
+
+  const wrap=document.getElementById('piv-result');
+  wrap.innerHTML=`<table class="ptbl" style="width:100%"><thead>${hg}</thead><tbody>${rows}</tbody><tfoot>${totRow}</tfoot></table>`;
+}
+
+function pivOrdenar(fid){
+  if(!window.pivSort)window.pivSort={c:fid,a:true};
+  else if(window.pivSort.c===fid)window.pivSort.a=!window.pivSort.a;
+  else{window.pivSort.c=fid;window.pivSort.a=true;}
+  calcPivot();
+}
+
+let _pivFilterTimer=null;
+function debouncePivFilter(fid,val){
+  clearTimeout(_pivFilterTimer);
+  _pivFilterTimer=setTimeout(()=>setPivColFilter(fid,val),300);
+}
+
+function setPivColFilter(fid,val){
+  if(!window.pivColFilters)window.pivColFilters={};
+  if(val)window.pivColFilters[fid]=val;
+  else delete window.pivColFilters[fid];
+  calcPivot();
+}
+
+function exportPivot(){
+  const tbl=document.querySelector('#piv-result table');
+  if(!tbl){alert('Primero generá la tabla.');return;}
+  // Solo las filas de datos, no los filtros
+  const rows=[...tbl.querySelectorAll('thead tr:first-child,tbody tr,tfoot tr')]
+    .map(tr=>[...tr.querySelectorAll('th,td')].map(c=>`"${c.textContent.trim().replace(/"/g,'""')}"`).join(','));
+  const csv='\uFEFF'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`vista_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+// ─── VISTAS GUARDADAS — Supabase (no localStorage, funciona desde archivo local) ───
+
+async function cargarListaVistas(){
+  const sel=document.getElementById('sv-list');
+  const cur=sel.value;
+  try{
+    const res=await fetch(`${U}/rest/v1/pivot_views?select=nombre&order=nombre`,{headers:H});
+    const rows=res.ok?await res.json():[];
+    sel.innerHTML='<option value="">— Mis vistas —</option>';
+    rows.forEach(r=>{
+      sel.innerHTML+=`<option value="${r.nombre}"${r.nombre===cur?' selected':''}>${r.nombre}</option>`;
+    });
+  }catch(e){console.error('cargarListaVistas:',e);}
+}
+
+async function guardarVista(btn){
+  const nombre=document.getElementById('sv-name').value.trim();
+  if(!nombre){alert('Escribí un nombre para la vista.');return;}
+  if(pivR.length===0&&pivV.length===0){alert('Configurá al menos Filas y Valores antes de guardar.');return;}
+  try{
+    const body={nombre,filas:pivR,columnas:pivC,valores:pivV};
+    const res=await fetch(`${U}/rest/v1/pivot_views`,{
+      method:'POST',
+      headers:{...H,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(body)
+    });
+    if(!res.ok)throw new Error(await res.text());
+    await cargarListaVistas();
+    document.getElementById('sv-list').value=nombre;
+    document.getElementById('sv-name').value='';
+    if(btn){const orig=btn.textContent;btn.textContent='✓ Guardado';setTimeout(()=>btn.textContent=orig,1500);}
+  }catch(e){alert('Error al guardar: '+e.message);}
+}
+
+async function cargarVista(nombre){
+  if(!nombre)return;
+  try{
+    const res=await fetch(`${U}/rest/v1/pivot_views?nombre=eq.${encodeURIComponent(nombre)}&select=filas,columnas,valores`,{headers:H});
+    const rows=res.ok?await res.json():[];
+    if(!rows.length)return;
+    const v=rows[0];
+    pivR=[...v.filas];pivC=[...v.columnas];pivV=[...v.valores];
+    renderPivTags();
+    document.getElementById('sv-name').value=nombre;
+  }catch(e){console.error('cargarVista:',e);}
+}
+
+async function eliminarVista(){
+  const sel=document.getElementById('sv-list');
+  const nombre=sel.value;
+  if(!nombre){alert('Seleccioná una vista para eliminar.');return;}
+  if(!confirm(`¿Eliminar la vista "${nombre}"?`))return;
+  try{
+    const res=await fetch(`${U}/rest/v1/pivot_views?nombre=eq.${encodeURIComponent(nombre)}`,{
+      method:'DELETE',
+      headers:H
+    });
+    if(!res.ok)throw new Error(await res.text());
+    await cargarListaVistas();
+    document.getElementById('sv-name').value='';
+  }catch(e){alert('Error al eliminar: '+e.message);}
+}
+
+// ─── Evaluador de condición de filtro ────────────────────────────────────────
+// Soporta: texto libre, >=, <=, >, <, vacío/vacio, y combinaciones con & (OR)
+// Ejemplos: ">=2026-02", "vacío", ">=2026-02&vacío", "hanomag"
+function evalFiltro(raw, val){
+  const partes = raw.split('&').map(p => p.trim()).filter(Boolean);
+  // OR entre partes: si alguna coincide, retorna true
+  return partes.some(f => {
+    const fLow = f.toLowerCase();
+    // Vacío
+    if(fLow==='vacío'||fLow==='vacio'||fLow==='(vacío)'||fLow==='(vacio)')
+      return val==null||val===''||val==='—'||String(val)==='(vacío)';
+    // Si el valor es nulo/vacío y la condición no es "vacío", no matchea
+    if(val==null||val==='') return false;
+    const sv = String(val);
+    if(f.startsWith('>=')) return sv >= f.slice(2).trim();
+    if(f.startsWith('<=')) return sv <= f.slice(2).trim();
+    if(f.startsWith('>'))  return sv >  f.slice(1).trim();
+    if(f.startsWith('<'))  return sv <  f.slice(1).trim();
+    return sv.toLowerCase().includes(fLow);
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+cargar();
+cargarListaVistas();  // async, no bloqueante
+</script>
+</body>
+</html>
