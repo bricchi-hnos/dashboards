@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gesitón Fiscal — Bricchi Hnos.</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0d1520; font-family: sans-serif; }
+    .header {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header span { color: #c8971e; font-weight: 700; font-size: 14px; }
+    .header small { color: #4a5568; font-size: 12px; }
+    iframe {
+      width: 100%;
+      height: calc(100vh - 45px);
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span>⚙️ Bricchi Hnos.</span>
+    <small>/ Gesitón Fiscal</small>
+    <small style="margin-left:auto;color:#374151;">Aplicación externa</small>
+  </div>
+  <iframe
+    src="https://proyectos-bricchi.vercel.app/administracion/fiscal/impuestos-mensuales/gestion-fiscal.html"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+    allow="fullscreen"
+    title="Gesitón Fiscal"
+  ></iframe>
+</body>
+</html>
