@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spread Maquinaria | Bricchi Hnos SA</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--sf:#111318;--sf2:#181c24;--sf3:#1e2330;--bd:#252b3b;--bd2:#2e3650;--tx:#d4daf0;--mu:#5a6480;--ac:#3b82f6;--gr:#22c55e;--re:#ef4444;--ye:#f59e0b;--or:#fb923c;--pu:#a78bfa;--mo:'IBM Plex Mono',monospace;--sa:'IBM Plex Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sa);background:var(--bg);color:var(--tx);font-size:13px;min-height:100vh}
+#loader{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;transition:opacity .5s}
+#loader.out{opacity:0;pointer-events:none}
+.l-logo span{font-family:var(--sa);font-size:12px;color:#666;letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+.l-logo span b{color:#D42B2B}
+.l-bar{width:280px;height:2px;background:#e5e7eb;border-radius:2px;overflow:hidden;margin-top:8px}
+.l-fill{height:100%;width:0;background:#D42B2B;transition:width .4s}
+.l-msg{font-family:var(--mo);font-size:10px;color:#999}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--sf);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:200}
+.h-logo{font-family:var(--mo);font-size:11px;color:var(--mu);letter-spacing:.1em;text-transform:uppercase}
+.h-logo b{color:var(--tx)}
+.h-meta{font-family:var(--mo);font-size:10px;color:var(--mu);display:flex;gap:14px;align-items:center}
+.h-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gr);animation:pulse 2s infinite;margin-right:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;background:var(--sf);border-bottom:1px solid var(--bd);padding:0 16px;position:sticky;top:43px;z-index:199}
+.tab{font-family:var(--mo);font-size:10px;color:var(--mu);background:none;border:none;border-bottom:2px solid transparent;padding:10px 16px;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--tx)}.tab.on{color:var(--tx);border-bottom-color:var(--ac)}
+.toolbar{display:flex;gap:6px;align-items:center;padding:8px 16px;background:var(--sf);border-bottom:1px solid var(--bd);flex-wrap:wrap;position:sticky;top:84px;z-index:198}
+.search{background:var(--sf2);border:1px solid var(--bd2);color:var(--tx);font-family:var(--mo);font-size:11px;padding:4px 9px;border-radius:3px;outline:none}
+.search:focus{border-color:var(--ac)}
+.fsel{background:var(--sf2);border:1px solid var(--bd2);color:var(--tx);font-family:var(--sa);font-size:11px;padding:4px 7px;border-radius:3px;outline:none;cursor:pointer}
+.btn{font-family:var(--mo);font-size:10px;color:var(--mu);background:var(--sf2);border:1px solid var(--bd2);padding:4px 10px;border-radius:3px;cursor:pointer;white-space:nowrap}
+.btn:hover{color:var(--tx);border-color:var(--ac)}
+.sep{width:1px;height:18px;background:var(--bd2);margin:0 2px}
+.cnt{font-family:var(--mo);font-size:10px;color:var(--mu);margin-left:auto}
+.page{display:none;padding:0 16px 24px}.page.on{display:block}
+.stitle{font-family:var(--mo);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:16px 0 8px}
+.tscroll{overflow-x:auto;border:1px solid var(--bd);border-radius:4px}
+.dt{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
+.dt thead th{background:var(--sf3);border-bottom:1px solid var(--bd2);padding:6px 10px;font-family:var(--mo);font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;text-align:left}
+.dt thead th.r{text-align:right}
+.dt tbody tr{border-bottom:1px solid rgba(37,43,59,.4)}
+.dt tbody tr:hover td{background:rgba(59,130,246,.04)}
+.dt tbody td{padding:5px 10px;vertical-align:middle}
+.dt tbody td.r{text-align:right;font-family:var(--mo);font-size:10px}
+.dt tbody td.m{font-family:var(--mo);font-size:10px;color:var(--mu)}
+.dt tbody td.mono{font-family:var(--mo);font-size:10px}
+.badge{display:inline-block;padding:1px 5px;border-radius:2px;font-size:8px;font-family:var(--mo);text-transform:uppercase;font-weight:600}
+.bg{background:rgba(34,197,94,.15);color:var(--gr)}.br{background:rgba(239,68,68,.15);color:var(--re)}
+.by{background:rgba(245,158,11,.15);color:var(--ye)}.bb{background:rgba(59,130,246,.15);color:var(--ac)}
+.bp{background:rgba(167,139,250,.15);color:var(--pu)}.bo{background:rgba(251,146,60,.15);color:var(--or)}
+.tot td{background:var(--sf3)!important;border-top:2px solid var(--ac);font-family:var(--mo);font-size:10px;font-weight:700;padding:7px 10px}
+.empty{padding:32px 16px;text-align:center;font-family:var(--mo);font-size:11px;color:var(--mu)}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--sf)}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="loader">
+  <div class="l-logo"><span>BRICCHI HNOS SA &middot; <b>Spread Maquinaria</b></span></div>
+  <div class="l-bar"><div class="l-fill" id="lfill"></div></div>
+  <div class="l-msg" id="lmsg">Iniciando...</div>
+</div>
+<header>
+  <div class="h-logo"><b>BRICCHI</b> HNOS SA &nbsp;&middot;&nbsp; Spread Maquinaria</div>
+  <div class="h-meta"><span><span class="h-dot"></span><span id="h-ts">--:--</span></span><span id="h-cnt" style="color:var(--mu)"></span></div>
+</header>
+<div class="tabs">
+  <button class="tab on" onclick="sw('fc',this)">FC del Periodo</button>
+  <button class="tab" onclick="sw('ant',this)">Anticipos de Venta</button>
+  <button class="tab" onclick="sw('inc',this)">Inconsistencias</button>
+  <button class="tab" onclick="sw('rec',this)">Recupero / Ajuste</button>
+  <button class="tab" onclick="sw('res',this)">Resumen</button>
+</div>
+<div class="toolbar">
+  <select class="fsel" id="f-per" onchange="render()" style="min-width:140px"><option value="" selected>Todos los periodos</option></select>
+  <select class="fsel" id="f-emp" onchange="render()">
+    <option value="" selected>Ambas empresas</option>
+    <option value="BRICCHI HNOS SA">Bricchi</option>
+    <option value="Empresa NF">NF</option>
+  </select>
+  <input class="search" id="f-bus" type="text" placeholder="OV, FC, cliente, serie..." oninput="render()" style="width:240px">
+  <div class="sep"></div>
+  <button class="btn" onclick="xCSV()">&#11015; CSV</button>
+  <span class="cnt" id="t-cnt"></span>
+</div>
+
+<!-- COLUMNAS COMPARTIDAS: Fecha|OV|NFC|Empresa|Cliente|CUIT|Pago|Vig|FechaNCCanc|NCCancel|ImpNCCanc|NCBonif|ImpNCBonif|Mon|Subtotal|IVA|Total|NSerie|NSeriePrev|NuevoUsado|Ref|Producto|FCCpra|FechaCpra|MonCpra|SubtotalCpra|Proveedor|Spread -->
+
+<!-- TAB FC -->
+<div class="page on" id="page-fc">
+  <div class="stitle" style="color:var(--gr)">&#10003; Facturas de Venta Vigentes del Periodo</div>
+  <div class="tscroll"><table class="dt">
+    <thead><tr>
+      <th>Fecha</th><th>OV</th><th>N&deg; FC</th><th>Empresa</th><th>Cliente</th><th>CUIT</th>
+      <th>Pago</th><th>Vig.</th>
+      <th>Fecha NC Canc.</th><th>NC Cancelaci&oacute;n</th><th class="r">Importe NC Canc.</th>
+      <th>NC Bonificaci&oacute;n</th><th class="r">Importe NC Bonif.</th>
+      <th>Mon.</th><th class="r">Subtotal</th><th class="r">IVA</th><th class="r">Total</th>
+      <th>N&deg; Serie</th><th style="color:var(--ye)">N&deg; Serie Prev.</th><th>Nuevo/Usado</th>
+      <th>Ref.</th><th>Producto</th>
+      <th>FC Compra</th><th>Fecha Cpra</th><th>Mon.Cpra</th><th class="r">Subtotal Cpra</th><th>Proveedor</th>
+      <th class="r">Spread</th>
+    </tr></thead>
+    <tbody id="tb-fc"></tbody>
+  </table></div>
+</div>
+
+<!-- TAB ANTICIPOS -->
+<div class="page" id="page-ant">
+  <div class="stitle" style="color:var(--pu)">&#9655; Anticipos de Venta del Periodo</div>
+  <p style="font-family:var(--mo);font-size:10px;color:var(--mu);padding:4px 0 12px">ANT ODOO: anticipo marcado en Odoo. ANT VENTA: FC sin FC de compra o con FC compra de otro periodo. FC ANULADA: FC revertida con NC por mismo importe. Saldo pendiente debe llegar a $0.</p>
+  <div class="tscroll"><table class="dt">
+    <thead><tr>
+      <th>Tipo</th><th>Fecha</th><th>OV</th><th>N&deg; FC</th><th>Empresa</th><th>Cliente</th><th>CUIT</th>
+      <th>Pago</th><th>Vig.</th>
+      <th>Fecha NC Canc.</th><th>NC Cancelaci&oacute;n</th><th class="r">Importe NC Canc.</th>
+      <th>NC Bonificaci&oacute;n</th><th class="r">Importe NC Bonif.</th>
+      <th>Mon.</th><th class="r">Subtotal</th><th class="r">IVA</th><th class="r">Total</th>
+      <th>N&deg; Serie</th><th style="color:var(--ye)">N&deg; Serie Prev.</th><th>Nuevo/Usado</th>
+      <th>Ref.</th><th>Producto</th>
+      <th>FC Compra</th><th>Fecha Cpra</th><th>Mon.Cpra</th><th class="r">Subtotal Cpra</th><th>Proveedor</th>
+      <th class="r">Saldo Pend.</th>
+    </tr></thead>
+    <tbody id="tb-ant"></tbody>
+  </table></div>
+</div>
+
+<!-- TAB INCONSISTENCIAS -->
+<div class="page" id="page-inc">
+  <div class="stitle" style="color:var(--re)">&#9888; Inconsistencias</div>
+  <div class="tscroll"><table class="dt">
+    <thead><tr>
+      <th>Tipo</th><th>Fecha</th><th>OV</th><th>N&deg; FC</th><th>Empresa</th><th>Cliente</th><th>CUIT</th>
+      <th>Pago</th><th>Vig.</th>
+      <th>Fecha NC Canc.</th><th>NC Cancelaci&oacute;n</th><th class="r">Importe NC Canc.</th>
+      <th>NC Bonificaci&oacute;n</th><th class="r">Importe NC Bonif.</th>
+      <th>Mon.</th><th class="r">Subtotal</th><th class="r">IVA</th><th class="r">Total</th>
+      <th>N&deg; Serie</th><th style="color:var(--ye)">N&deg; Serie Prev.</th><th>Nuevo/Usado</th>
+      <th>Ref.</th><th>Producto</th>
+      <th>FC Compra</th><th>Fecha Cpra</th><th>Mon.Cpra</th><th class="r">Subtotal Cpra</th><th>Proveedor</th>
+    </tr></thead>
+    <tbody id="tb-inc"></tbody>
+  </table></div>
+</div>
+
+<!-- TAB RECUPERO -->
+<div class="page" id="page-rec">
+  <div class="stitle" style="color:var(--ac)">&#8635; Recupero / Ajuste de Spread del Periodo</div>
+  <p style="font-family:var(--mo);font-size:10px;color:var(--mu);padding:4px 0 12px">NC emitidas en este periodo que cancelan FC de periodos anteriores (excluye anticipos). FC de compra de este periodo cuya FC de venta fue en periodo anterior. Requiere periodo seleccionado.</p>
+  <div class="tscroll"><table class="dt">
+    <thead><tr>
+      <th>Tipo</th><th>Fecha</th><th>OV</th><th>Documento</th><th>Referencia</th><th>Cliente</th>
+      <th class="r">Impacto Spread</th>
+    </tr></thead>
+    <tbody id="tb-rec"></tbody>
+  </table></div>
+</div>
+
+<!-- TAB RESUMEN -->
+<div class="page" id="page-res">
+  <div class="stitle" style="color:var(--ac)">&#9776; Resumen del Periodo - Todos los Comprobantes</div>
+  <div class="tscroll"><table class="dt">
+    <thead><tr>
+      <th>Secci&oacute;n</th><th>Fecha</th><th>OV</th><th>N&deg; FC</th><th>Empresa</th><th>Cliente</th><th>CUIT</th>
+      <th>Pago</th><th>Vig.</th>
+      <th>Fecha NC Canc.</th><th>NC Cancelaci&oacute;n</th><th class="r">Importe NC Canc.</th>
+      <th>NC Bonificaci&oacute;n</th><th class="r">Importe NC Bonif.</th>
+      <th>Mon.</th><th class="r">Subtotal</th><th class="r">IVA</th><th class="r">Total</th>
+      <th>N&deg; Serie</th><th style="color:var(--ye)">N&deg; Serie Prev.</th><th>Nuevo/Usado</th>
+      <th>Ref.</th><th>Producto</th>
+      <th>FC Compra</th><th>Fecha Cpra</th><th>Mon.Cpra</th><th class="r">Subtotal Cpra</th><th>Proveedor</th>
+      <th class="r">Spread</th>
+    </tr></thead>
+    <tbody id="tb-res"></tbody>
+  </table></div>
+</div>
+
+<script>
+var U='https://rvumvnslydaobvvsywtu.supabase.co';
+var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dW12bnNseWRhb2J2dnN5d3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzM3NDksImV4cCI6MjA4NzQ0OTc0OX0.rE06TXMzBhvX0Uwzh2UquSFJs6CP18d81xrCC7MmX3c';
+var H={'apikey':K,'Authorization':'Bearer '+K};
+var HD=[], NC_BONIF=[];
+var TAB='fc';
+
+function sL(p,m){document.getElementById('lfill').style.width=p+'%';document.getElementById('lmsg').textContent=m;}
+function fm(n){if(n==null||n===''||isNaN(Number(n)))return '<span style="color:var(--mu)">-</span>';var v=Number(n);return '$'+v.toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function fd(d){return d?new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';}
+function prN(s){return (s||'').replace(/^\[.*?\]\s*/,'').replace(/^MARCA:\s*/i,'').trim();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function vpay(p){return ({reversed:'var(--re)',paid:'var(--gr)',not_paid:'var(--ye)',partial:'var(--ye)'}[p])||'var(--mu)';}
+function fCond(v){if(!v)return '-';if(v==='new')return '<span class="badge bg">NUEVO</span>';if(v==='used')return '<span class="badge by">USADO</span>';return esc(v);}
+function fCondTxt(v){if(!v)return '';if(v==='new')return 'NUEVO - SIN USO';if(v==='used')return 'USADO - EN EL ESTADO EN QUE SE ENCUENTRA';return v;}
+function getBonif(r,bm){
+  // Buscar NC bonif por OV primero, luego por numero de FC
+  return (bm.byOV&&bm.byOV[r.nro_ov])||
+         (bm.byFC&&bm.byFC[r.nro_documento])||
+         null;
+}
+function vigH(r){return r.vigente?'<span style="color:var(--gr);font-weight:700">&#10003;</span>':'<span style="color:var(--re);font-family:var(--mo);font-size:10px">&#10007;</span>';}
+
+async function getAll(base,p,m){
+  sL(p,m);var all=[];var offset=0;var limit=1000;
+  while(true){
+    var sep=base.indexOf('?')>=0?'&':'?';
+    var r=await fetch(base+sep+'limit='+limit+'&offset='+offset,{headers:Object.assign({},H,{'Prefer':'count=none'})});
+    if(!r.ok)break;var d=await r.json();if(!Array.isArray(d))break;
+    all=all.concat(d);if(d.length<limit)break;offset+=limit;
+  }
+  return all;
+}
+
+async function init(){
+  try{
+    HD=await getAll(U+'/rest/v1/vista_historial_fc_detalle?select=*&order=nro_ov.asc,fecha.asc,nro_documento.asc',10,'Cargando historial FC...');
+    NC_BONIF=await getAll(U+'/rest/v1/account_move?select=name,invoice_origin,amount_untaxed,amount_tax,amount_total,invoice_date,payment_state&move_type=eq.out_refund&state=eq.posted&reversed_entry_id=is.null',80,'Cargando NC bonificacion...');
+    // Cargar lineas payment_term de NC de bonificacion para vincular por numero de FC
+    if(NC_BONIF.length){
+      // Obtener IDs de las NC
+      var ncIds=NC_BONIF.map(function(nc){return nc.name;});
+      // Buscar en account_move_line las lineas payment_term con nombre "Aplica a FA-..."
+      var ncLines=await getAll(U+'/rest/v1/account_move_line?select=move_id,display_type,name&display_type=eq.payment_term&name=like.*FA-*',85,'Vinculando NC bonificacion...');
+      // Asociar lineas a NC
+      NC_BONIF.forEach(function(nc){nc.move_lines=[];});
+      var ncMap={};NC_BONIF.forEach(function(nc){
+        // El move_id en account_move_line es "[id, name]" -- extraer el name
+        ncMap[nc.name]=nc;
+      });
+      ncLines.forEach(function(l){
+        if(!l.name)return;
+        // Extraer nombre de FC del texto "Aplica a FA-A 00004-00000698"
+        var mFC=l.name.match(/FA-[A-Z]\s+[\d]+-[\d]+/);
+        if(!mFC)return;
+        // Identificar a que NC pertenece esta linea via move_id
+        var moveName='';
+        if(l.move_id){var mm=String(l.move_id).match(/"([^"]+)"/);if(mm)moveName=mm[1];}
+        var nc=ncMap[moveName];
+        if(nc)nc.move_lines.push({display_type:l.display_type,name:l.name});
+      });
+    }
+    poblarPeriodos();render();
+    sL(100,'Listo');
+    document.getElementById('h-ts').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    setTimeout(function(){document.getElementById('loader').classList.add('out');},400);
+  }catch(e){sL(100,'Error: '+e.message);document.getElementById('lmsg').style.color='#ef4444';}
+}
+
+function poblarPeriodos(){
+  var sel=document.getElementById('f-per');
+  var meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var periodos=[...new Set(HD.map(function(r){return r.fecha?r.fecha.substring(0,7):null;}).filter(Boolean))].sort().reverse();
+  while(sel.options.length>1)sel.remove(1);
+  periodos.forEach(function(p){var o=document.createElement('option');o.value=p;o.textContent=meses[parseInt(p.substring(5,7),10)-1]+' '+p.substring(0,4);sel.appendChild(o);});
+}
+
+function sw(tab,btn){
+  TAB=tab;
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});document.getElementById('page-'+tab).classList.add('on');
+  render();
+}
+
+// ============================================================
+// DATOS FILTRADOS BASE
+// ============================================================
+function getBase(){
+  var emp=document.getElementById('f-emp').value;
+  var bus=(document.getElementById('f-bus').value||'').toLowerCase();
+  return HD.filter(function(r){
+    if(emp&&r.empresa!==emp)return false;
+    if(bus&&!Object.values(r).filter(Boolean).join('|').toLowerCase().includes(bus))return false;
+    return true;
+  });
+}
+
+function getNcBonifMap(){
+  // Mapa por OV (invoice_origin)
+  var byOV={};
+  // Mapa por numero de FC (via linea payment_term "Aplica a FA-A ...")
+  var byFC={};
+  NC_BONIF.forEach(function(nc){
+    // Vincular por OV
+    if(nc.invoice_origin){
+      var ov=nc.invoice_origin;
+      if(!byOV[ov])byOV[ov]={ncs:[],subtotal:0};
+      byOV[ov].ncs.push(nc.name);byOV[ov].subtotal+=Number(nc.amount_untaxed||0);
+    }
+    // Vincular por FC via lineas payment_term
+    if(nc.move_lines){
+      nc.move_lines.forEach(function(l){
+        if(l.display_type==='payment_term'&&l.name){
+          // Extraer numero de FC del texto "Aplica a FA-A ..."
+          var m=l.name.match(/FA-[A-Z]\s+[\d]+-[\d]+/);
+          if(m){
+            var fc=m[0].replace(/\s+/g,' ').trim();
+            if(!byFC[fc])byFC[fc]={ncs:[],subtotal:0};
+            byFC[fc].ncs.push(nc.name);byFC[fc].subtotal+=Number(nc.amount_untaxed||0);
+          }
+        }
+      });
+    }
+  });
+  return {byOV:byOV,byFC:byFC};
+}
+
+// ============================================================
+// FUNCION GENERADORA DE FILA ESTANDAR
+// 28 columnas fijas (sin Seccion): Fecha OV NFC Empresa Cliente CUIT Pago Vig
+//   FechaNCCanc NCCancel ImpNCCanc NCBonif ImpNCBonif Mon Sub IVA Tot
+//   NSerie NSeriePrev NuevoUsado Ref Prod FCCpra FechaCpra MonCpra SubCpra Prov Spread
+// Si anulada=true: serie/producto/FC compra en blanco
+// ============================================================
+function fila(r,bonif,extra){
+  // extra = {seccion, bgColor, spreadOverride, anulada, saldoPend}
+  extra=extra||{};
+  var anulada=extra.anulada||false;
+  var ncFuera=extra.per&&r.fecha_nc&&r.fecha_nc.substring(0,7)>extra.per;
+
+  // NC Cancelacion
+  var ncCancelHtml=r.nro_nc_asociada
+    ?(ncFuera?'<span class="badge by">'+esc(r.nro_nc_asociada)+' *</span>':'<span class="badge br">'+esc(r.nro_nc_asociada)+'</span>')
+    :'<span style="color:var(--mu)">-</span>';
+  // Importe NC Cancelacion = subtotal de la FC si tiene NC (es una cancelacion total)
+  var impNCCanc=(r.nro_nc_asociada&&!ncFuera)?fm(r.subtotal):'<span style="color:var(--mu)">-</span>';
+  // NC Bonificacion
+  var ncBonifHtml=bonif?'<span class="badge by" title="'+esc(bonif.ncs.join(', '))+'">'+esc(bonif.ncs[0])+(bonif.ncs.length>1?' (+'+(bonif.ncs.length-1)+')':'')+'</span>':'<span style="color:var(--mu)">-</span>';
+  var impNCBonif=bonif?'<span style="color:var(--ye)">'+fm(bonif.subtotal)+'</span>':'<span style="color:var(--mu)">-</span>';
+
+  // Spread = Subtotal Venta - Imp NC Canc - Imp NC Bonif - Subtotal Cpra
+  var ncCancAmt=(r.nro_nc_asociada&&!ncFuera)?Number(r.subtotal||0):0;
+  var ncBonifAmt=bonif?Number(bonif.subtotal||0):0;
+  var cpraAmt=Number(r.subtotal_fc_compra||0);
+  var spread=Number(r.subtotal||0)-ncCancAmt-ncBonifAmt-cpraAmt;
+  var spreadHtml=extra.spreadOverride!=null?extra.spreadOverride
+    :'<span style="color:'+(spread>=0?'var(--gr)':'var(--re)')+';font-weight:600">'+fm(spread)+'</span>';
+
+  var bg=extra.bgColor||'';
+  var cells='';
+
+  if(extra.seccion!=null){
+    cells+='<td>'+extra.seccion+'</td>';
+  }
+
+  cells+=''
+    +'<td class="m">'+fd(r.fecha)+'</td>'
+    +'<td style="font-weight:600">'+esc(r.nro_ov||'-')+'</td>'
+    +'<td class="mono">'+esc(r.nro_documento||'-')+'</td>'
+    +'<td style="font-size:9px;color:'+(r.empresa&&!r.empresa.includes('BRICCHI')?'#f43f5e':'var(--mu)')+'">'+esc(r.empresa||'-')+'</td>'
+    +'<td style="font-size:9px">'+esc(r.cliente||'-')+'</td>'
+    +'<td class="m">'+esc(r.cuit_cliente||'-')+'</td>'
+    +'<td><span style="font-size:9px;color:'+vpay(r.payment_state)+';font-family:var(--mo)">'+esc(r.payment_state||'-')+'</span></td>'
+    +'<td style="text-align:center">'+vigH(r)+'</td>'
+    +'<td class="m">'+(r.fecha_nc?'<span style="color:'+(ncFuera?'var(--ye)':'var(--mu)')+'">'+fd(r.fecha_nc)+'</span>':'-')+'</td>'
+    +'<td>'+ncCancelHtml+'</td>'
+    +'<td class="r">'+impNCCanc+'</td>'
+    +'<td>'+ncBonifHtml+'</td>'
+    +'<td class="r">'+impNCBonif+'</td>'
+    +'<td class="m">'+esc(r.moneda_fc||'-')+'</td>'
+    +'<td class="r">'+fm(r.subtotal)+'</td>'
+    +'<td class="r" style="color:var(--mu)">'+fm(r.iva)+'</td>'
+    +'<td class="r" style="font-weight:600">'+fm(r.total)+'</td>'
+    +'<td class="mono" style="color:var(--gr)">'+(anulada?'':esc(r.numero_serie||''))+'</td>'
+    +'<td class="mono" style="color:var(--ye)">'+(anulada?'':(r.numero_serie_previsto?'&#9203; '+esc(r.numero_serie_previsto):''))+'</td>'
+    +'<td>'+(anulada?'':fCond(r.condition))+'</td>'
+    +'<td class="m">'+(anulada?'':esc(r.ref_interna||''))+'</td>'
+    +'<td style="font-size:9px" title="'+(anulada?'':esc(r.producto||''))+'">'+(anulada?'':(r.producto?prN(r.producto).substring(0,36)+(prN(r.producto).length>36?'...':''):''))+'</td>'
+    +'<td class="mono">'+(anulada?'':esc(r.nro_factura_compra||''))+'</td>'
+    +'<td class="m">'+(anulada?'':fd(r.fecha_fc_compra))+'</td>'
+    +'<td class="m">'+(anulada?'':esc(r.moneda_fc_compra||''))+'</td>'
+    +'<td class="r">'+(anulada?'':fm(r.subtotal_fc_compra))+'</td>'
+    +'<td style="font-size:9px">'+(anulada?'':esc(r.proveedor_fc||''))+'</td>'
+    +(extra.lastCol!=null?extra.lastCol:('<td class="r">'+spreadHtml+'</td>'));
+
+  return '<tr style="'+(bg?'background:'+bg:'')+'">'+cells+'</tr>';
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  var per=document.getElementById('f-per').value;
+  var base=getBase();
+  var bm=getNcBonifMap();
+  if(TAB==='fc')renderFC(base,per,bm);
+  else if(TAB==='ant')renderAnt(base,per,bm);
+  else if(TAB==='inc')renderInc(base,per,bm);
+  else if(TAB==='rec')renderRec(base,per);
+  else if(TAB==='res')renderRes(base,per,bm);
+}
+
+// ============================================================
+// FC DEL PERIODO
+// ============================================================
+function renderFC(base,per,bm){
+  var data=base.filter(function(r){
+    if(!r.vigente||r.es_anticipo)return false;
+    // Excluir Anticipo de Venta (sin FC cpra o FC cpra de otro periodo)
+    if(!r.nro_factura_compra)return false;
+    if(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)!==r.fecha.substring(0,7)){
+      // FC compra de otro periodo: si es anterior OK, si es posterior es ANT VENTA
+      if(r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7))return false;
+    }
+    if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+    return true;
+  }).sort(function(a,b){return a.fecha!==b.fecha?a.fecha<b.fecha?-1:1:(a.nro_documento<b.nro_documento?-1:1);});
+
+  // Emparejar FC con serie por posicion dentro de cada OV
+  // La vista hace producto cartesiano cuando hay 2 maquinas del mismo product_id en una OV
+  // Solucion: para cada OV, ordenar FC unicas y series unicas, emparejar por indice
+  (function(){
+    var ovGrupos={};
+    data.forEach(function(r){
+      if(!ovGrupos[r.nro_ov])ovGrupos[r.nro_ov]={fcs:{},series:{}};
+      ovGrupos[r.nro_ov].fcs[r.nro_documento]=true;
+      if(r.numero_serie)ovGrupos[r.nro_ov].series[r.numero_serie]=true;
+    });
+    // Para cada OV con mas de 1 FC y 1 serie del mismo producto
+    Object.keys(ovGrupos).forEach(function(ov){
+      var g=ovGrupos[ov];
+      var fcs=Object.keys(g.fcs).sort();
+      var series=Object.keys(g.series).sort();
+      // Solo aplicar si hay exactamente tantas series como FC (caso SIVM039: 2 FC, 2 series)
+      if(fcs.length>1&&series.length===fcs.length){
+        var asignacion={};
+        fcs.forEach(function(fc,i){asignacion[fc]=series[i];});
+        // Filtrar: para cada FC duplicada, quedarse solo con la fila que tiene la serie asignada
+        var seen={};
+        data=data.filter(function(r){
+          if(fcs.indexOf(r.nro_documento)<0)return true; // FC de otra OV, no tocar
+          if(seen[r.nro_documento])return false; // ya procesada
+          // Si tiene serie asignada, quedarse con la fila correcta
+          if(asignacion[r.nro_documento]&&r.numero_serie&&r.numero_serie!==asignacion[r.nro_documento])return false;
+          seen[r.nro_documento]=true;return true;
+        });
+      }
+    });
+    // Deduplicacion final por nro_documento para cualquier otro caso
+    var seen2={};
+    data=data.filter(function(r){
+      if(seen2[r.nro_documento])return false;
+      seen2[r.nro_documento]=true;return true;
+    });
+  })();
+
+  document.getElementById('t-cnt').textContent=data.length+' lineas - '+new Set(data.map(function(r){return r.nro_ov;})).size+' OVs';
+  document.getElementById('h-cnt').textContent=data.length+' FC vigentes';
+
+  var totVta=0,totNCC=0,totNCB=0,totCpra=0;
+  data.forEach(function(r){
+    var bonif=getBonif(r,bm);
+    var ncFuera=per&&r.fecha_nc&&r.fecha_nc.substring(0,7)>per;
+    totVta+=Number(r.subtotal||0);
+    if(r.nro_nc_asociada&&!ncFuera)totNCC+=Number(r.subtotal||0);
+    if(bonif)totNCB+=Number(bonif.subtotal||0);
+    totCpra+=Number(r.subtotal_fc_compra||0);
+  });
+  var spread=totVta-totNCC-totNCB-totCpra;
+
+  var html=data.map(function(r){return fila(r,getBonif(r,bm),{per:per});}).join('');
+
+  if(data.length){
+    // Fila spread: 8 celdas vacias + subtotal + 2 vacias + NC canc + NC bonif + ... + subtotal cpra + spread
+    html+='<tr class="tot">'
+      +'<td colspan="8" style="color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.05em">Spread del periodo</td>'
+      +'<td colspan="5"></td>'
+      +'<td></td><td class="r">'+fm(totVta)+'</td><td></td><td></td>'
+      +'<td colspan="5"></td>'
+      +'<td colspan="4"></td>'
+      +'<td class="r" style="color:var(--mu)">'+fm(totCpra)+'</td>'
+      +'<td></td>'
+      +'<td class="r"><span style="color:'+(spread>=0?'var(--gr)':'var(--re)')+';font-size:12px">'+fm(spread)+'</span></td>'
+      +'</tr>';
+  }
+
+  document.getElementById('tb-fc').innerHTML=html||'<tr><td colspan="28" class="empty">Sin facturas para el periodo seleccionado</td></tr>';
+}
+
+// ============================================================
+// ANTICIPOS DE VENTA
+// ============================================================
+function renderAnt(base,per,bm){
+  var data=base.filter(function(r){
+    var esAntOdoo=r.es_anticipo;
+    var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+    // FC anulada: reversed + tiene NC + tiene FC compra del mismo periodo
+    var esAnulada=!r.vigente&&!!r.nro_nc_asociada&&!r.es_anticipo;
+    if(!esAntOdoo&&!esAntVta&&!esAnulada)return false;
+    if(esAntOdoo&&!r.vigente&&!r.nro_nc_asociada)return false;
+    if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+    return true;
+  }).sort(function(a,b){return a.fecha!==b.fecha?a.fecha<b.fecha?-1:1:(a.nro_documento<b.nro_documento?-1:1);});
+
+  // Emparejar FC con serie por posicion dentro de cada OV
+  // La vista hace producto cartesiano cuando hay 2 maquinas del mismo product_id en una OV
+  // Solucion: para cada OV, ordenar FC unicas y series unicas, emparejar por indice
+  (function(){
+    var ovGrupos={};
+    data.forEach(function(r){
+      if(!ovGrupos[r.nro_ov])ovGrupos[r.nro_ov]={fcs:{},series:{}};
+      ovGrupos[r.nro_ov].fcs[r.nro_documento]=true;
+      if(r.numero_serie)ovGrupos[r.nro_ov].series[r.numero_serie]=true;
+    });
+    // Para cada OV con mas de 1 FC y 1 serie del mismo producto
+    Object.keys(ovGrupos).forEach(function(ov){
+      var g=ovGrupos[ov];
+      var fcs=Object.keys(g.fcs).sort();
+      var series=Object.keys(g.series).sort();
+      // Solo aplicar si hay exactamente tantas series como FC (caso SIVM039: 2 FC, 2 series)
+      if(fcs.length>1&&series.length===fcs.length){
+        var asignacion={};
+        fcs.forEach(function(fc,i){asignacion[fc]=series[i];});
+        // Filtrar: para cada FC duplicada, quedarse solo con la fila que tiene la serie asignada
+        var seen={};
+        data=data.filter(function(r){
+          if(fcs.indexOf(r.nro_documento)<0)return true; // FC de otra OV, no tocar
+          if(seen[r.nro_documento])return false; // ya procesada
+          // Si tiene serie asignada, quedarse con la fila correcta
+          if(asignacion[r.nro_documento]&&r.numero_serie&&r.numero_serie!==asignacion[r.nro_documento])return false;
+          seen[r.nro_documento]=true;return true;
+        });
+      }
+    });
+    // Deduplicacion final por nro_documento para cualquier otro caso
+    var seen2={};
+    data=data.filter(function(r){
+      if(seen2[r.nro_documento])return false;
+      seen2[r.nro_documento]=true;return true;
+    });
+  })();
+
+  document.getElementById('t-cnt').textContent=data.length+' anticipos';
+
+  var totFC=0,totNC=0;
+  data.forEach(function(r){
+    totFC+=Number(r.subtotal||0);
+    if(r.nro_nc_asociada)totNC+=Number(r.subtotal||0);
+  });
+
+  var html=data.map(function(r){
+    var esAntOdoo=r.es_anticipo;
+    var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+    var esAnulada=!esAntOdoo&&!esAntVta;
+    var badge=esAntOdoo?'<span class="badge bp">ANT ODOO</span>':esAntVta?'<span class="badge by">ANT VENTA</span>':'<span class="badge br">FC ANULADA</span>';
+    var bonifAnt=getBonif(r,bm);
+    var ncCancAmt=r.nro_nc_asociada?Number(r.subtotal||0):0;
+    var ncBonifAmt=bonifAnt?Number(bonifAnt.subtotal||0):0;
+    var saldoNum=Number(r.subtotal||0)-ncCancAmt-ncBonifAmt;
+    var saldo=saldoNum>0?'<span style="color:var(--ye);font-weight:600">'+fm(saldoNum)+'</span>':'<span style="color:var(--gr)">'+fm(0)+'</span>';
+    var bg=!r.nro_nc_asociada?'rgba(245,158,11,.04)':'rgba(34,197,94,.04)';
+    // FC Anulada: no mostrar serie ni datos de compra
+    var f=fila(r,getBonif(r,bm),{per:per,anulada:esAnulada,bgColor:bg,lastCol:'<td class="r">'+saldo+'</td>'});
+    // Insertar columna Tipo al inicio de la fila
+    return f.replace('<tr style="background:'+bg+'">','<tr style="background:'+bg+'"><td>'+badge+'</td>');
+  }).join('');
+
+  if(data.length){
+    var saldoTot=totFC-totNC;
+    html+='<tr class="tot">'
+      +'<td colspan="9" style="color:var(--mu);font-size:10px;text-transform:uppercase">Totales</td>'
+      +'<td colspan="3"></td>'
+      +'<td colspan="2"></td>'
+      +'<td></td><td class="r">'+fm(totFC)+'</td><td></td><td></td>'
+      +'<td colspan="11"></td>'
+      +'<td class="r" style="color:'+(saldoTot>0?'var(--ye)':'var(--gr)')+'">'+fm(saldoTot)+'</td>'
+      +'</tr>';
+  }
+
+  document.getElementById('tb-ant').innerHTML=html||'<tr><td colspan="29" class="empty">Sin anticipos para el periodo seleccionado</td></tr>';
+}
+
+// ============================================================
+// INCONSISTENCIAS
+// ============================================================
+function renderInc(base,per,bm){
+  // Solo casos que no son ANT VENTA ni FC normales: actualmente vacio salvo casos extremos
+  // Dejamos la tabla para cuando aparezcan casos reales
+  document.getElementById('t-cnt').textContent='0 inconsistencias';
+  document.getElementById('tb-inc').innerHTML='<tr><td colspan="28" class="empty">&#10003; Sin inconsistencias detectadas</td></tr>';
+}
+
+// ============================================================
+// RECUPERO / AJUSTE
+// ============================================================
+function renderRec(base,per){
+  if(!per){
+    document.getElementById('t-cnt').textContent='';
+    document.getElementById('tb-rec').innerHTML='<tr><td colspan="7" class="empty">Selecciona un periodo para ver los ajustes</td></tr>';
+    return;
+  }
+  var rows=[];
+  base.forEach(function(r){
+    if(!r.nro_nc_asociada||!r.fecha_nc||r.es_anticipo)return;
+    var ncPer=r.fecha_nc.substring(0,7);
+    var fcPer=r.fecha?r.fecha.substring(0,7):'';
+    if(ncPer===per&&fcPer<per){
+      rows.push('<tr style="background:rgba(59,130,246,.04)">'
+        +'<td><span class="badge br">NC CANCEL.</span></td>'
+        +'<td class="m">'+fd(r.fecha_nc)+'</td>'
+        +'<td style="font-weight:600">'+esc(r.nro_ov)+'</td>'
+        +'<td class="mono">'+esc(r.nro_nc_asociada)+'</td>'
+        +'<td style="font-size:9px;color:var(--mu)">Cancela '+esc(r.nro_documento)+' ('+fcPer+')</td>'
+        +'<td style="font-size:9px">'+esc(r.cliente||'-')+'</td>'
+        +'<td class="r" style="color:var(--re);font-weight:600">'+fm(-Number(r.subtotal||0))+'</td>'
+        +'</tr>');
+    }
+  });
+  base.forEach(function(r){
+    if(!r.vigente||r.es_anticipo||!r.nro_factura_compra||!r.fecha_fc_compra)return;
+    var cpPer=r.fecha_fc_compra.substring(0,7);
+    var vtPer=r.fecha?r.fecha.substring(0,7):'';
+    if(cpPer===per&&vtPer<per){
+      rows.push('<tr style="background:rgba(59,130,246,.04)">'
+        +'<td><span class="badge bb">FC CPRA DIF.</span></td>'
+        +'<td class="m">'+fd(r.fecha_fc_compra)+'</td>'
+        +'<td style="font-weight:600">'+esc(r.nro_ov)+'</td>'
+        +'<td class="mono">'+esc(r.nro_factura_compra)+'</td>'
+        +'<td style="font-size:9px;color:var(--mu)">FC venta '+esc(r.nro_documento)+' ('+vtPer+')</td>'
+        +'<td style="font-size:9px">'+esc(r.cliente||'-')+'</td>'
+        +'<td class="r" style="color:var(--re);font-weight:600">'+fm(-Number(r.subtotal_fc_compra||0))+'</td>'
+        +'</tr>');
+    }
+  });
+  document.getElementById('t-cnt').textContent=rows.length+' ajustes';
+  document.getElementById('tb-rec').innerHTML=rows.length?rows.join(''):'<tr><td colspan="7" class="empty">Sin ajustes para este periodo</td></tr>';
+}
+
+// ============================================================
+// RESUMEN
+// ============================================================
+function renderRes(base,per,bm){
+  var rows=[];
+
+  // 1. FC Vigentes
+  var fcData=base.filter(function(r){
+    if(!r.vigente||r.es_anticipo)return false;
+    if(!r.nro_factura_compra)return false;
+    if(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7))return false;
+    if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+    return true;
+  }).sort(function(a,b){return a.fecha!==b.fecha?a.fecha<b.fecha?-1:1:(a.nro_documento<b.nro_documento?-1:1);});
+  (function(){
+    var ovG={};
+    fcData.forEach(function(r){
+      if(!ovG[r.nro_ov])ovG[r.nro_ov]={fcs:{},series:{}};
+      ovG[r.nro_ov].fcs[r.nro_documento]=true;
+      if(r.numero_serie)ovG[r.nro_ov].series[r.numero_serie]=true;
+    });
+    Object.keys(ovG).forEach(function(ov){
+      var g=ovG[ov];var fcs=Object.keys(g.fcs).sort();var series=Object.keys(g.series).sort();
+      if(fcs.length>1&&series.length===fcs.length){
+        var asig={};fcs.forEach(function(fc,i){asig[fc]=series[i];});
+        var seen={};
+        fcData=fcData.filter(function(r){
+          if(fcs.indexOf(r.nro_documento)<0)return true;
+          if(seen[r.nro_documento])return false;
+          if(asig[r.nro_documento]&&r.numero_serie&&r.numero_serie!==asig[r.nro_documento])return false;
+          seen[r.nro_documento]=true;return true;
+        });
+      }
+    });
+    var s={};fcData=fcData.filter(function(r){if(s[r.nro_documento])return false;s[r.nro_documento]=true;return true;});
+  })();
+  fcData.forEach(function(r){
+    rows.push(fila(r,getBonif(r,bm),{per:per,seccion:'<span class="badge bg">FC VENTA</span>'}));
+  });
+
+  // 2. Anticipos
+  var antData=base.filter(function(r){
+    var esAntOdoo=r.es_anticipo;
+    var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+    var esAnulada=!r.vigente&&!!r.nro_nc_asociada&&!r.es_anticipo;
+    if(!esAntOdoo&&!esAntVta&&!esAnulada)return false;
+    if(esAntOdoo&&!r.vigente&&!r.nro_nc_asociada)return false;
+    if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+    return true;
+  }).sort(function(a,b){return a.fecha!==b.fecha?a.fecha<b.fecha?-1:1:(a.nro_documento<b.nro_documento?-1:1);});
+  antData.forEach(function(r){
+    var esAntOdoo=r.es_anticipo;
+    var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+    var esAnulada=!esAntOdoo&&!esAntVta;
+    var badge=esAntOdoo?'<span class="badge bp">ANT ODOO</span>':esAntVta?'<span class="badge by">ANT VENTA</span>':'<span class="badge br">FC ANULADA</span>';
+    var bonifAnt=getBonif(r,bm);
+    var ncCancAmt=r.nro_nc_asociada?Number(r.subtotal||0):0;
+    var ncBonifAmt=bonifAnt?Number(bonifAnt.subtotal||0):0;
+    var saldoNum=Number(r.subtotal||0)-ncCancAmt-ncBonifAmt;
+    var saldo=saldoNum>0?'<span style="color:var(--ye);font-weight:600">'+fm(saldoNum)+'</span>':'<span style="color:var(--gr)">'+fm(0)+'</span>';
+    rows.push(fila(r,getBonif(r,bm),{per:per,anulada:esAnulada,bgColor:'rgba(167,139,250,.03)',seccion:badge,lastCol:'<td class="r">'+saldo+'</td>'}));
+  });
+
+  // 3. Recupero (solo si hay periodo)
+  if(per){
+    base.forEach(function(r){
+      if(!r.nro_nc_asociada||!r.fecha_nc||r.es_anticipo)return;
+      var ncPer=r.fecha_nc.substring(0,7);var fcPer=r.fecha?r.fecha.substring(0,7):'';
+      if(ncPer===per&&fcPer<per){
+        rows.push('<tr style="background:rgba(59,130,246,.03)">'
+          +'<td><span class="badge bb">NC CANCEL.</span></td>'
+          +'<td class="m">'+fd(r.fecha_nc)+'</td>'
+          +'<td style="font-weight:600">'+esc(r.nro_ov)+'</td>'
+          +'<td class="mono">'+esc(r.nro_nc_asociada)+'</td>'
+          +'<td colspan="4"></td>'
+          +'<td colspan="6" style="font-size:9px;color:var(--mu)">Cancela '+esc(r.nro_documento)+' ('+fcPer+')</td>'
+          +'<td colspan="14"></td>'
+          +'<td class="r" style="color:var(--re);font-weight:600">'+fm(-Number(r.subtotal||0))+'</td>'
+          +'</tr>');
+      }
+    });
+    base.forEach(function(r){
+      if(!r.vigente||r.es_anticipo||!r.nro_factura_compra||!r.fecha_fc_compra)return;
+      var cpPer=r.fecha_fc_compra.substring(0,7);var vtPer=r.fecha?r.fecha.substring(0,7):'';
+      if(cpPer===per&&vtPer<per){
+        rows.push('<tr style="background:rgba(59,130,246,.03)">'
+          +'<td><span class="badge bb">FC CPRA DIF.</span></td>'
+          +'<td class="m">'+fd(r.fecha_fc_compra)+'</td>'
+          +'<td style="font-weight:600">'+esc(r.nro_ov)+'</td>'
+          +'<td class="mono">'+esc(r.nro_factura_compra)+'</td>'
+          +'<td colspan="4"></td>'
+          +'<td colspan="6" style="font-size:9px;color:var(--mu)">FC venta '+esc(r.nro_documento)+' ('+vtPer+')</td>'
+          +'<td colspan="14"></td>'
+          +'<td class="r" style="color:var(--re);font-weight:600">'+fm(-Number(r.subtotal_fc_compra||0))+'</td>'
+          +'</tr>');
+      }
+    });
+  }
+
+  document.getElementById('t-cnt').textContent=rows.length+' comprobantes';
+  document.getElementById('tb-res').innerHTML=rows.length?rows.join(''):'<tr><td colspan="29" class="empty">Sin datos para el periodo seleccionado</td></tr>';
+}
+
+// ============================================================
+// CSV
+// ============================================================
+function csvRow(arr){
+  return arr.map(function(v){
+    var s=String(v==null?'':v).replace(/\r?\n/g,' ');
+    return (s.indexOf(';')>=0||s.indexOf('"')>=0)?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(';');
+}
+function fdC(d){if(!d)return '';var dt=new Date(d+'T00:00:00');return (dt.getDate()<10?'0':'')+dt.getDate()+'/'+(dt.getMonth()<9?'0':'')+(dt.getMonth()+1)+'/'+dt.getFullYear();}
+
+function xCSV(){
+  var per=document.getElementById('f-per').value;
+  var base=getBase();
+  var bm=getNcBonifMap();
+
+  var HEADS=['Fecha','OV','N FC','Empresa','Cliente','CUIT','Estado Pago','Vigente',
+    'Fecha NC Cancelacion','NC Cancelacion','Importe NC Cancelacion',
+    'NC Bonificacion','Importe NC Bonificacion',
+    'Moneda','Subtotal Venta','IVA','Total Venta',
+    'N Serie','N Serie Previsto','Nuevo/Usado','Ref.','Producto',
+    'FC Compra','Fecha FC Compra','Moneda Compra','Subtotal Compra','Proveedor'];
+
+  function buildRow(r,bonif,anulada,per){
+    var ncFuera=per&&r.fecha_nc&&r.fecha_nc.substring(0,7)>per;
+    var ncCancAmt=(r.nro_nc_asociada&&!ncFuera)?Number(r.subtotal||0):0;
+    var ncBonifAmt=bonif?Number(bonif.subtotal||0):0;
+    var cpraAmt=Number(r.subtotal_fc_compra||0);
+    return [
+      fdC(r.fecha),r.nro_ov||'',r.nro_documento||'',
+      r.empresa||'',r.cliente||'',r.cuit_cliente||'',
+      r.payment_state||'',r.vigente?'SI':'NO',
+      fdC(r.fecha_nc),r.nro_nc_asociada||'',
+      (r.nro_nc_asociada&&!ncFuera)?Number(r.subtotal||0).toFixed(2):'',
+      bonif?bonif.ncs.join(' / '):'',bonif?bonif.subtotal.toFixed(2):'',
+      r.moneda_fc||'',
+      r.subtotal!=null?Number(r.subtotal).toFixed(2):'',
+      r.iva!=null?Number(r.iva).toFixed(2):'',
+      r.total!=null?Number(r.total).toFixed(2):'',
+      anulada?'':r.numero_serie||'',
+      anulada?'':r.numero_serie_previsto||'',
+      anulada?'':fCondTxt(r.condition),
+      anulada?'':r.ref_interna||'',
+      anulada?'':r.producto||'',
+      anulada?'':r.nro_factura_compra||'',
+      anulada?'':fdC(r.fecha_fc_compra),
+      anulada?'':r.moneda_fc_compra||'',
+      anulada?'':r.subtotal_fc_compra!=null?Number(r.subtotal_fc_compra).toFixed(2):'',
+      anulada?'':r.proveedor_fc||''
+    ];
+  }
+
+  var headers, rows;
+
+  if(TAB==='fc'){
+    headers=[...HEADS,'Spread'];
+    rows=base.filter(function(r){
+      if(!r.vigente||r.es_anticipo||!r.nro_factura_compra)return false;
+      if(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7))return false;
+      if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+      return true;
+    }).sort(function(a,b){return a.fecha!==b.fecha?a.fecha<b.fecha?-1:1:(a.nro_documento<b.nro_documento?-1:1);})
+    .filter(function(r,i,arr){
+      // Emparejar serie por posicion dentro de OV
+      var fcsOV=arr.filter(function(x){return x.nro_ov===r.nro_ov;}).map(function(x){return x.nro_documento;}).filter(function(v,j,a){return a.indexOf(v)===j;}).sort();
+      var seriesOV=arr.filter(function(x){return x.nro_ov===r.nro_ov&&x.numero_serie;}).map(function(x){return x.numero_serie;}).filter(function(v,j,a){return a.indexOf(v)===j;}).sort();
+      if(fcsOV.length>1&&seriesOV.length===fcsOV.length){
+        var asig={};fcsOV.forEach(function(fc,k){asig[fc]=seriesOV[k];});
+        if(asig[r.nro_documento]&&r.numero_serie&&r.numero_serie!==asig[r.nro_documento])return false;
+      }
+      return arr.findIndex(function(x){return x.nro_documento===r.nro_documento;})==i;
+    })
+    .map(function(r){
+      var bonif=getBonif(r,bm);
+      var ncFuera=per&&r.fecha_nc&&r.fecha_nc.substring(0,7)>per;
+      var spread=Number(r.subtotal||0)-(r.nro_nc_asociada&&!ncFuera?Number(r.subtotal||0):0)-(bonif?bonif.subtotal:0)-Number(r.subtotal_fc_compra||0);
+      return [...buildRow(r,bonif,false,per),spread.toFixed(2)];
+    });
+  }else if(TAB==='ant'){
+    headers=['Tipo',...HEADS,'Saldo Pendiente'];
+    rows=base.filter(function(r){
+      var esAntOdoo=r.es_anticipo;
+      var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+      var esAnulada=!r.vigente&&!!r.nro_nc_asociada&&!r.es_anticipo;
+      if(!esAntOdoo&&!esAntVta&&!esAnulada)return false;
+      if(esAntOdoo&&!r.vigente&&!r.nro_nc_asociada)return false;
+      if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+      return true;
+    }).sort(function(a,b){return a.fecha!==b.fecha?a.fecha<b.fecha?-1:1:(a.nro_documento<b.nro_documento?-1:1);})
+    .filter(function(r,i,arr){
+      // Emparejar serie por posicion dentro de OV
+      var fcsOV=arr.filter(function(x){return x.nro_ov===r.nro_ov;}).map(function(x){return x.nro_documento;}).filter(function(v,j,a){return a.indexOf(v)===j;}).sort();
+      var seriesOV=arr.filter(function(x){return x.nro_ov===r.nro_ov&&x.numero_serie;}).map(function(x){return x.numero_serie;}).filter(function(v,j,a){return a.indexOf(v)===j;}).sort();
+      if(fcsOV.length>1&&seriesOV.length===fcsOV.length){
+        var asig={};fcsOV.forEach(function(fc,k){asig[fc]=seriesOV[k];});
+        if(asig[r.nro_documento]&&r.numero_serie&&r.numero_serie!==asig[r.nro_documento])return false;
+      }
+      return arr.findIndex(function(x){return x.nro_documento===r.nro_documento;})==i;
+    })
+    .map(function(r){
+      var esAntOdoo=r.es_anticipo;
+      var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+      var esAnulada=!esAntOdoo&&!esAntVta;
+      var tipo=esAntOdoo?'ANT ODOO':esAntVta?'ANT VENTA':'FC ANULADA';
+      var saldo=!r.nro_nc_asociada?Number(r.subtotal||0).toFixed(2):0;
+      return [tipo,...buildRow(r,getBonif(r,bm),esAnulada,per),saldo];
+    });
+  }else if(TAB==='rec'){
+    headers=['Tipo','Fecha','OV','Documento','Referencia','Cliente','Impacto Spread'];
+    rows=[];
+    if(per){
+      base.forEach(function(r){
+        if(!r.nro_nc_asociada||!r.fecha_nc||r.es_anticipo)return;
+        var ncPer=r.fecha_nc.substring(0,7);var fcPer=r.fecha?r.fecha.substring(0,7):'';
+        if(ncPer===per&&fcPer<per)rows.push(['NC CANCEL.',fdC(r.fecha_nc),r.nro_ov||'',r.nro_nc_asociada||'','Cancela '+r.nro_documento+' ('+fcPer+')',r.cliente||'',(-Number(r.subtotal||0)).toFixed(2)]);
+      });
+      base.forEach(function(r){
+        if(!r.vigente||r.es_anticipo||!r.nro_factura_compra||!r.fecha_fc_compra)return;
+        var cpPer=r.fecha_fc_compra.substring(0,7);var vtPer=r.fecha?r.fecha.substring(0,7):'';
+        if(cpPer===per&&vtPer<per)rows.push(['FC CPRA DIF.',fdC(r.fecha_fc_compra),r.nro_ov||'',r.nro_factura_compra||'','FC venta '+r.nro_documento+' ('+vtPer+')',r.cliente||'',(-Number(r.subtotal_fc_compra||0)).toFixed(2)]);
+      });
+    }
+  }else if(TAB==='res'){
+    headers=['Seccion',...HEADS,'Spread/Saldo'];
+    rows=[];
+    // FC Vigentes
+    base.filter(function(r){
+      if(!r.vigente||r.es_anticipo||!r.nro_factura_compra)return false;
+      if(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7))return false;
+      if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+      return true;
+    }).forEach(function(r){
+      var bonif=getBonif(r,bm);var ncFuera=per&&r.fecha_nc&&r.fecha_nc.substring(0,7)>per;
+      var spread=Number(r.subtotal||0)-(r.nro_nc_asociada&&!ncFuera?Number(r.subtotal||0):0)-(bonif?bonif.subtotal:0)-Number(r.subtotal_fc_compra||0);
+      rows.push(['FC VENTA',...buildRow(r,bonif,false,per),spread.toFixed(2)]);
+    });
+    // Anticipos
+    base.filter(function(r){
+      var esAntOdoo=r.es_anticipo;
+      var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+      var esAnulada=!r.vigente&&!!r.nro_nc_asociada&&!r.es_anticipo;
+      if(!esAntOdoo&&!esAntVta&&!esAnulada)return false;
+      if(esAntOdoo&&!r.vigente&&!r.nro_nc_asociada)return false;
+      if(per&&r.fecha&&r.fecha.substring(0,7)!==per)return false;
+      return true;
+    }).forEach(function(r){
+      var esAntOdoo=r.es_anticipo;
+      var esAntVta=!r.es_anticipo&&(!r.nro_factura_compra||(r.fecha_fc_compra&&r.fecha_fc_compra.substring(0,7)>r.fecha.substring(0,7)));
+      var esAnulada=!esAntOdoo&&!esAntVta;
+      var tipo=esAntOdoo?'ANT ODOO':esAntVta?'ANT VENTA':'FC ANULADA';
+      var saldo=!r.nro_nc_asociada?Number(r.subtotal||0).toFixed(2):0;
+      rows.push([tipo,...buildRow(r,getBonif(r,bm),esAnulada,per),saldo]);
+    });
+  }else{headers=[];rows=[];}
+
+  var lines=['\uFEFF'+csvRow(headers||[])];
+  (rows||[]).forEach(function(r){lines.push(csvRow(r));});
+  var blob=new Blob([lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download='spread_'+TAB+'_'+(per||'todos')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+init();
+</script>
+</body>
+</html>
