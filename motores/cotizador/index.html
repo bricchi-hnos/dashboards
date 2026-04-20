@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cotizador de Motores - Bricchi Hnos S.A.</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: #f4f4f4;
+    color: #222;
+  }
+  .no-print header {
+    background: #fff;
+    border-bottom: 3px solid #c8220a;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .no-print header .title { display: flex; align-items: center; gap: 14px; }
+  .no-print header .title img { height: 48px; width: auto; }
+  .no-print header .title h1 { margin: 0; font-size: 18px; color: #c8220a; }
+  .no-print header .title p { margin: 2px 0 0; font-size: 12px; color: #666; }
+  .header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn-header {
+    background: #fff;
+    color: #c8220a;
+    border: 1px solid #c8220a;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-header:hover { background: #fff5f2; }
+
+  .vendedor-badge {
+    background: #fff5f2;
+    color: #c8220a;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid #c8220a;
+  }
+  .vendedor-badge strong { font-size: 13px; }
+  .vendedor-badge button {
+    background: #c8220a;
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .card h2 {
+    margin: 0 0 16px;
+    font-size: 15px;
+    text-transform: uppercase;
+    color: #c8220a;
+    border-bottom: 2px solid #c8220a;
+    padding-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card h2 .h2-hint {
+    font-size: 11px;
+    color: #888;
+    text-transform: none;
+    font-weight: normal;
+  }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field { flex: 1; min-width: 180px; margin-bottom: 12px; position: relative; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #555;
+  }
+  input, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: #c8220a;
+  }
+
+  /* --- Autocomplete --- */
+  .ac-wrap { position: relative; }
+  .ac-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #c8220a;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: none;
+  }
+  .ac-list.visible { display: block; }
+  .ac-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+  }
+  .ac-item:hover, .ac-item.selected { background: #fff5f2; }
+  .ac-item strong { color: #c8220a; }
+  .ac-item small { color: #888; display: block; font-size: 11px; }
+  .cliente-flag {
+    font-size: 11px;
+    color: #0a8c2a;
+    margin-top: 4px;
+    display: none;
+  }
+  .cliente-flag.visible { display: block; }
+
+  /* --- Selector de condición --- */
+  .cond-global {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .cond-opt {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+  }
+  .cond-opt input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cond-opt label {
+    display: block;
+    padding: 14px 16px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    margin: 0;
+    transition: all 0.15s;
+  }
+  .cond-opt input[type="radio"]:checked + label {
+    border-color: #c8220a;
+    background: #fff5f2;
+    color: #c8220a;
+  }
+  .cond-opt label small {
+    display: block;
+    font-weight: normal;
+    font-size: 11px;
+    margin-top: 4px;
+    text-transform: none;
+  }
+
+  /* --- Tabla de motores --- */
+  .motores-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .motores-table thead th {
+    background: #f4f4f4;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #555;
+    border-bottom: 2px solid #c8220a;
+  }
+  .motores-table thead th.num { text-align: right; }
+  .motores-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+  .motores-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .motores-table tbody tr.active { background: #fff5f2; }
+  .motores-table .col-ci { width: 40px; font-weight: 600; color: #c8220a; }
+  .motores-table .col-qty { width: 80px; }
+  .motores-table .col-qty input {
+    width: 70px;
+    text-align: center;
+    padding: 6px;
+  }
+  .precio-activo { color: #c8220a; font-weight: 600; }
+  .precio-inactivo { color: #aaa; }
+  .col-sub { width: 120px; font-weight: 600; color: #c8220a; }
+
+  /* --- Modal --- */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-bg.visible { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 6px;
+    padding: 24px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .modal.wide { max-width: 720px; }
+  .modal h2 {
+    margin: 0 0 6px;
+    color: #c8220a;
+    font-size: 18px;
+  }
+  .modal p {
+    font-size: 13px;
+    color: #555;
+    margin: 0 0 16px;
+  }
+
+  .abm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .abm-table th {
+    background: #f4f4f4;
+    padding: 8px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .abm-table td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  .abm-table .abm-actions { text-align: right; white-space: nowrap; }
+  .abm-table .abm-actions button {
+    padding: 4px 10px;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .abm-empty {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-size: 13px;
+  }
+  .abm-search { margin-bottom: 10px; }
+
+  /* --- Panel Totales --- */
+  .totales-panel {
+    position: sticky;
+    top: 16px;
+    background: #fff;
+    border-radius: 6px;
+    padding: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border-top: 4px solid #c8220a;
+  }
+  .totales-panel h2 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #c8220a;
+  }
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+  }
+  .total-line.big {
+    font-size: 15px;
+    font-weight: bold;
+    border-top: 2px solid #c8220a;
+    border-bottom: 2px solid #c8220a;
+    padding: 8px 0;
+    margin: 6px 0;
+    color: #c8220a;
+  }
+  .total-line small { color: #888; font-size: 11px; font-weight: normal; }
+
+  .cheques-mini {
+    background: #eef7ff;
+    border: 1px solid #bcd9f0;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-top: 10px;
+    font-size: 11px;
+  }
+  .cheques-mini h4 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #1e5a8a;
+  }
+  .cheques-mini .cheq-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .faltante-box {
+    background: #fff9e6;
+    border: 1px solid #f0c040;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+  }
+  .faltante-box label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #8a6d00;
+    margin-bottom: 6px;
+  }
+  .faltante-box input { font-weight: bold; font-size: 15px; }
+  .faltante-box .hint { font-size: 11px; color: #8a6d00; margin-top: 4px; }
+  .faltante-box.error { background: #fde7e2; border-color: #c8220a; }
+  .faltante-box.error label, .faltante-box.error .hint { color: #c8220a; }
+
+  .no-print .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .totales-panel .actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .totales-panel .actions button { width: 100%; }
+
+  button {
+    padding: 10px 20px;
+    background: #c8220a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.secondary { background: #666; }
+  button.danger { background: #a01010; }
+  button:hover { opacity: 0.9; }
+
+  /* --- Nota --- */
+  .nota {
+    display: none;
+    background: #fff;
+    padding: 32px;
+    max-width: 900px;
+    margin: 20px auto;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .nota.visible { display: block; }
+  .nota-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 3px solid #c8220a;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .nota-header .logo-wrap { display: flex; align-items: center; gap: 12px; }
+  .nota-header .logo-wrap img { height: 50px; width: auto; }
+  .nota-header .logo-wrap .logo-text { font-size: 20px; font-weight: bold; color: #c8220a; }
+  .nota-header .logo-wrap .logo-text small {
+    display: block; font-size: 11px; color: #555; font-weight: normal; margin-top: 2px;
+  }
+  .nota-header .meta { text-align: right; font-size: 12px; }
+  .nota-header .meta strong { display: block; font-size: 14px; }
+
+  .nota h3 {
+    font-size: 13px; text-transform: uppercase; color: #c8220a;
+    border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 16px 0 8px;
+  }
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px 20px; font-size: 13px;
+  }
+  .info-grid div span { color: #666; font-size: 11px; text-transform: uppercase; }
+
+  table.nota-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  table.nota-table th, table.nota-table td {
+    padding: 6px 8px; text-align: left; border-bottom: 1px solid #e0e0e0;
+  }
+  table.nota-table th { background: #f4f4f4; font-size: 11px; text-transform: uppercase; }
+  table.nota-table td.num, table.nota-table th.num { text-align: right; }
+
+  .totales-nota { margin-top: 12px; display: flex; justify-content: flex-end; }
+  .totales-nota table { width: auto; min-width: 340px; border-collapse: collapse; font-size: 12px; }
+  .totales-nota td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; }
+  .totales-nota td.num { text-align: right; }
+  .totales-nota .total-final { font-weight: bold; font-size: 14px; border-top: 2px solid #c8220a; }
+  .totales-nota .faltante-row { background: #fff9e6; font-weight: 600; }
+
+  .nota-footer {
+    margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd;
+    font-size: 11px; color: #666; text-align: center;
+  }
+  .firma { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .firma div { border-top: 1px solid #333; padding-top: 4px; text-align: center; font-size: 11px; }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .nota { box-shadow: none; padding: 0; margin: 0; }
+    .nota.visible { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Modal vendedor -->
+<div class="modal-bg" id="modal_vendedor">
+  <div class="modal">
+    <h2>Registrá tu usuario</h2>
+    <p>Estos datos quedan guardados en esta computadora y se usarán en todas las notas de pedido que generes.</p>
+    <div class="field">
+      <label>Nombre y Apellido *</label>
+      <input id="m_vend_nombre" placeholder="Ej: Álvaro Bricchi">
+    </div>
+    <div class="field">
+      <label>E-mail *</label>
+      <input id="m_vend_email" type="email" placeholder="vendedor@bricchi.com.ar">
+    </div>
+    <div class="field">
+      <label>Teléfono</label>
+      <input id="m_vend_tel" placeholder="358-xxx-xxxx">
+    </div>
+    <div class="actions" style="margin-top:10px">
+      <button onclick="guardarVendedor()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal clientes (ABM) -->
+<div class="modal-bg" id="modal_clientes">
+  <div class="modal wide">
+    <h2>Clientes guardados</h2>
+    <p>Los clientes se guardan automáticamente al generar una nota de pedido. Podés editarlos o eliminarlos desde acá.</p>
+    <div class="abm-search">
+      <input id="abm_search" placeholder="Buscar por nombre, CUIT o teléfono..." oninput="renderABM()">
+    </div>
+    <div id="abm_container"></div>
+    <div class="actions" style="margin-top:14px">
+      <button class="secondary" onclick="cerrarModal('modal_clientes')">Cerrar</button>
+      <button onclick="exportarClientes()">Exportar CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar cliente -->
+<div class="modal-bg" id="modal_editar_cliente">
+  <div class="modal">
+    <h2 id="edit_title">Editar cliente</h2>
+    <input type="hidden" id="edit_cuit_original">
+    <div class="field">
+      <label>Nombre / Razón Social *</label>
+      <input id="edit_nombre">
+    </div>
+    <div class="field">
+      <label>CUIT *</label>
+      <input id="edit_cuit">
+    </div>
+    <div class="field">
+      <label>Teléfono</label>
+      <input id="edit_tel">
+    </div>
+    <div class="field">
+      <label>E-mail</label>
+      <input id="edit_email" type="email">
+    </div>
+    <div class="actions" style="margin-top:10px">
+      <button class="secondary" onclick="cerrarModal('modal_editar_cliente')">Cancelar</button>
+      <button onclick="guardarEdicionCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="no-print">
+<header>
+  <div class="title">
+    <img src="https://www.bricchihnos.com/assets/bricchi-hnos-logotype.png" alt="Bricchi Hnos S.A."
+         onerror="this.style.display='none'">
+    <div>
+      <h1>Cotizador de Motores</h1>
+      <p>Bricchi Hnos S.A.</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-header" onclick="abrirModal('modal_clientes');renderABM()">
+      👥 Clientes <span id="clientes_count" style="background:#c8220a;color:#fff;padding:1px 6px;border-radius:8px;margin-left:4px;font-size:10px">0</span>
+    </button>
+    <div class="vendedor-badge" id="vendedor_badge" style="display:none">
+      <span>👤 <strong id="vb_nombre"></strong></span>
+      <button onclick="cambiarVendedor()">Cambiar</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<div class="col-izq">
+
+  <div class="card">
+    <h2>1. Condición de Pago</h2>
+    <div class="cond-global">
+      <div class="cond-opt">
+        <input type="radio" name="cond_global" id="cg_contado" value="contado" checked onchange="recalc()">
+        <label for="cg_contado">Contado<small>Precio de lista contado</small></label>
+      </div>
+      <div class="cond-opt">
+        <input type="radio" name="cond_global" id="cg_cheques" value="cheques" onchange="recalc()">
+        <label for="cg_cheques">4 E-cheques<small>0 / 30 / 60 / 90 días</small></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Elegí los Motores</h2>
+    <div style="overflow-x:auto">
+      <table class="motores-table">
+        <thead>
+          <tr>
+            <th>CI</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>N° Orden</th>
+            <th>Compatibilidad</th>
+            <th class="num">Contado USD</th>
+            <th class="num">4 E-cheqs USD</th>
+            <th class="num">Cant.</th>
+            <th class="num">Subtotal USD</th>
+          </tr>
+        </thead>
+        <tbody id="motores_tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>
+      3. Datos del Cliente
+      <span class="h2-hint">Empezá a tipear nombre o CUIT para autocompletar</span>
+    </h2>
+    <div class="row">
+      <div class="field ac-wrap">
+        <label>Nombre / Razón Social</label>
+        <input id="cli_nombre" placeholder="Ej: Juan Pérez S.A." autocomplete="off"
+               oninput="buscarCliente('nombre')" onfocus="buscarCliente('nombre')" onblur="cerrarACDelay()">
+        <div class="ac-list" id="ac_nombre"></div>
+        <div class="cliente-flag" id="flag_nombre">✓ Cliente existente — datos cargados</div>
+      </div>
+      <div class="field ac-wrap">
+        <label>CUIT</label>
+        <input id="cli_cuit" placeholder="30-xxxxxxxx-x" autocomplete="off"
+               oninput="buscarCliente('cuit')" onfocus="buscarCliente('cuit')" onblur="cerrarACDelay()">
+        <div class="ac-list" id="ac_cuit"></div>
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input id="cli_tel" placeholder="358-xxx-xxxx">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<aside class="totales-panel">
+  <h2>Resumen</h2>
+
+  <div class="row" style="margin-bottom: 8px;">
+    <div class="field" style="min-width:0">
+      <label>TC (ARS/USD)</label>
+      <input id="tc" type="number" value="1390" step="1">
+    </div>
+    <div class="field" style="min-width:0">
+      <label>IVA %</label>
+      <input id="iva" type="number" value="10.5" step="0.5">
+    </div>
+  </div>
+
+  <div class="total-line"><span>Condición</span><span id="t_cond">Contado</span></div>
+  <div class="total-line"><span>Ítems</span><span id="t_items">0</span></div>
+  <div class="total-line"><span>Subtotal s/IVA</span><span id="t_subtotal">USD 0,00</span></div>
+  <div class="total-line"><span>IVA <small id="t_iva_pct">10,5%</small></span><span id="t_iva">USD 0,00</span></div>
+  <div class="total-line big"><span>TOTAL</span><span id="t_total">USD 0,00</span></div>
+  <div class="total-line"><span><small>Equiv. en pesos</small></span><span id="t_total_ars"><small>$ 0,00</small></span></div>
+
+  <div class="cheques-mini" id="cheques_mini" style="display:none">
+    <h4>Caída de cheques (0/30/60/90)</h4>
+    <div id="cheques_mini_body"></div>
+  </div>
+
+  <div class="faltante-box" id="faltante_box">
+    <label>Faltante (sin IVA)</label>
+    <input id="faltante" type="number" value="0" step="0.01" min="0">
+    <div class="hint" id="faltante_hint">Máx: USD 0,00 (50% del subtotal s/IVA)</div>
+  </div>
+
+  <div class="total-line big" style="margin-top: 10px;"><span>A PAGAR</span><span id="t_pagar">USD 0,00</span></div>
+  <div class="total-line"><span><small>Equiv. en pesos</small></span><span id="t_pagar_ars"><small>$ 0,00</small></span></div>
+
+  <div class="actions">
+    <button onclick="generar()">Generar Nota de Pedido</button>
+    <button class="secondary" onclick="limpiar()">Limpiar</button>
+  </div>
+</aside>
+
+</main>
+</div>
+
+<!-- Nota de pedido -->
+<div class="nota" id="nota">
+  <div class="nota-header">
+    <div class="logo-wrap">
+      <img src="https://www.bricchihnos.com/assets/bricchi-hnos-logotype.png" alt="Bricchi"
+           onerror="this.style.display='none'">
+      <div class="logo-text">
+        BRICCHI HNOS S.A.
+        <small>Río Cuarto, Córdoba</small>
+      </div>
+    </div>
+    <div class="meta">
+      <strong>NOTA DE PEDIDO</strong>
+      <div id="nota_fecha"></div>
+      <div id="nota_nro"></div>
+    </div>
+  </div>
+  <h3>Vendedor</h3>
+  <div class="info-grid" id="nota_vendedor"></div>
+  <h3>Cliente</h3>
+  <div class="info-grid" id="nota_cliente"></div>
+  <h3>Detalle · <span id="nota_cond_label" style="font-weight:normal;color:#333"></span></h3>
+  <table class="nota-table">
+    <thead>
+      <tr>
+        <th>CI</th><th>Marca</th><th>Modelo</th><th>N° Orden</th><th>Compatibilidad</th>
+        <th class="num">Cant.</th><th class="num">P. Unit USD</th><th class="num">Subtotal USD</th>
+      </tr>
+    </thead>
+    <tbody id="nota_items"></tbody>
+  </table>
+  <div class="totales-nota"><table id="nota_totales"></table></div>
+  <div id="nota_cheques_wrap"></div>
+  <h3>Observaciones</h3>
+  <p style="font-size: 12px; margin: 4px 0;" id="nota_obs"></p>
+  <div class="firma">
+    <div>Firma Vendedor</div>
+    <div>Firma y Aclaración Cliente</div>
+  </div>
+  <div class="nota-footer">
+    Los precios están expresados en USD y se convertirán a pesos al tipo de cambio del día de la facturación.
+    Esta nota no constituye factura. Sujeto a disponibilidad de stock.
+  </div>
+  <div class="no-print actions">
+    <button class="secondary" onclick="volver()">Volver a Editar</button>
+    <button onclick="window.print()">Imprimir / PDF</button>
+  </div>
+</div>
+
+<script>
+const MOTORES = [
+  { ci: 1, marca: "Xinchai",  modelo: "A498BG",       orden: "522",          compat: "R45II",          contado: 3890,  cheques: 4330  },
+  { ci: 2, marca: "Xinchai",  modelo: "C490BPG",      orden: "225",          compat: "AUTOELEVADOR",   contado: 2990,  cheques: 3330  },
+  { ci: 3, marca: "Xinchai",  modelo: "A4K43G",       orden: "4",            compat: "R50C",           contado: 5890,  cheques: 6550  },
+  { ci: 4, marca: "Weichai",  modelo: "WP6G125E22",   orden: "DHB06G0235*01",compat: "M75 - LK833",    contado: 10500, cheques: 11670 },
+  { ci: 5, marca: "Yunnei",   modelo: "YN38GBZ1",     orden: "IBG042",       compat: "M50HD",          contado: 6290,  cheques: 6990  },
+  { ci: 6, marca: "Yunnei",   modelo: "YN38GBZ2",     orden: "IBG043",       compat: "M55HD",          contado: 6290,  cheques: 6990  },
+  { ci: 7, marca: "Laidong",  modelo: "KM385BT",      orden: "72C",          compat: "TRACTOR 25HP",   contado: 2900,  cheques: 3230  },
+  { ci: 8, marca: "Laidong",  modelo: "KM495BT",      orden: "53A",          compat: "TRACTOR 25HP",   contado: 3490,  cheques: 3880  },
+];
+
+const STORAGE_VENDEDOR = "bricchi_cotizador_motores_vendedor";
+const STORAGE_CLIENTES = "bricchi_cotizador_motores_clientes";
+
+function fmtUSD(n) {
+  return "USD " + n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtARS(n) {
+  return "$ " + n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function abrirModal(id) { document.getElementById(id).classList.add("visible"); }
+function cerrarModal(id) { document.getElementById(id).classList.remove("visible"); }
+
+// ============ VENDEDOR ============
+function getVendedor() {
+  try { const raw = localStorage.getItem(STORAGE_VENDEDOR); return raw ? JSON.parse(raw) : null; }
+  catch (e) { return null; }
+}
+function setVendedor(v) { localStorage.setItem(STORAGE_VENDEDOR, JSON.stringify(v)); }
+function mostrarBadgeVendedor(v) {
+  document.getElementById("vendedor_badge").style.display = "flex";
+  document.getElementById("vb_nombre").textContent = v.nombre;
+}
+function guardarVendedor() {
+  const nombre = document.getElementById("m_vend_nombre").value.trim();
+  const email = document.getElementById("m_vend_email").value.trim();
+  const tel = document.getElementById("m_vend_tel").value.trim();
+  if (!nombre) { alert("El nombre es obligatorio."); return; }
+  if (!email) { alert("El e-mail es obligatorio."); return; }
+  const v = { nombre, email, tel };
+  setVendedor(v);
+  mostrarBadgeVendedor(v);
+  cerrarModal("modal_vendedor");
+}
+function cambiarVendedor() {
+  const v = getVendedor();
+  if (v) {
+    document.getElementById("m_vend_nombre").value = v.nombre || "";
+    document.getElementById("m_vend_email").value = v.email || "";
+    document.getElementById("m_vend_tel").value = v.tel || "";
+  }
+  abrirModal("modal_vendedor");
+}
+
+// ============ CLIENTES (ABM) ============
+function getClientes() {
+  try { const raw = localStorage.getItem(STORAGE_CLIENTES); return raw ? JSON.parse(raw) : []; }
+  catch (e) { return []; }
+}
+function setClientes(cs) { localStorage.setItem(STORAGE_CLIENTES, JSON.stringify(cs)); updateClientesCount(); }
+function updateClientesCount() {
+  document.getElementById("clientes_count").textContent = getClientes().length;
+}
+
+// Clave única: CUIT si existe, si no nombre normalizado
+function normalizar(s) { return (s || "").toLowerCase().trim().replace(/\s+/g, " "); }
+function claveCliente(c) { return (c.cuit || "").trim() || "N:" + normalizar(c.nombre); }
+
+function upsertCliente(cliente) {
+  if (!cliente.nombre || !cliente.nombre.trim()) return;
+  const cs = getClientes();
+  const k = claveCliente(cliente);
+  const idx = cs.findIndex(c => claveCliente(c) === k);
+  const now = new Date().toISOString();
+  const nuevo = {
+    nombre: cliente.nombre.trim(),
+    cuit: (cliente.cuit || "").trim(),
+    tel: (cliente.tel || "").trim(),
+    email: (cliente.email || "").trim(),
+    actualizado: now,
+    creado: idx >= 0 ? cs[idx].creado : now,
+    cotizaciones: idx >= 0 ? (cs[idx].cotizaciones || 0) + 1 : 1
+  };
+  if (idx >= 0) cs[idx] = nuevo;
+  else cs.push(nuevo);
+  setClientes(cs);
+}
+
+function eliminarCliente(k) {
+  if (!confirm("¿Eliminar este cliente?")) return;
+  const cs = getClientes().filter(c => claveCliente(c) !== k);
+  setClientes(cs);
+  renderABM();
+}
+
+function editarCliente(k) {
+  const c = getClientes().find(c => claveCliente(c) === k);
+  if (!c) return;
+  document.getElementById("edit_cuit_original").value = k;
+  document.getElementById("edit_nombre").value = c.nombre || "";
+  document.getElementById("edit_cuit").value = c.cuit || "";
+  document.getElementById("edit_tel").value = c.tel || "";
+  document.getElementById("edit_email").value = c.email || "";
+  document.getElementById("edit_title").textContent = "Editar cliente";
+  abrirModal("modal_editar_cliente");
+}
+
+function guardarEdicionCliente() {
+  const kOriginal = document.getElementById("edit_cuit_original").value;
+  const nombre = document.getElementById("edit_nombre").value.trim();
+  if (!nombre) { alert("El nombre es obligatorio."); return; }
+  const cs = getClientes();
+  const idx = cs.findIndex(c => claveCliente(c) === kOriginal);
+  if (idx < 0) return;
+  cs[idx] = {
+    ...cs[idx],
+    nombre,
+    cuit: document.getElementById("edit_cuit").value.trim(),
+    tel: document.getElementById("edit_tel").value.trim(),
+    email: document.getElementById("edit_email").value.trim(),
+    actualizado: new Date().toISOString()
+  };
+  setClientes(cs);
+  cerrarModal("modal_editar_cliente");
+  renderABM();
+}
+
+function renderABM() {
+  const q = normalizar(document.getElementById("abm_search").value);
+  const cs = getClientes().filter(c =>
+    !q ||
+    normalizar(c.nombre).includes(q) ||
+    normalizar(c.cuit).includes(q) ||
+    normalizar(c.tel).includes(q)
+  );
+  cs.sort((a,b) => (b.actualizado || "").localeCompare(a.actualizado || ""));
+  const cont = document.getElementById("abm_container");
+  if (cs.length === 0) {
+    cont.innerHTML = `<div class="abm-empty">${getClientes().length === 0 ? "Aún no hay clientes guardados. Se agregan automáticamente al generar una nota de pedido." : "No hay clientes que coincidan con la búsqueda."}</div>`;
+    return;
+  }
+  cont.innerHTML = `
+    <div style="max-height:400px;overflow-y:auto">
+    <table class="abm-table">
+      <thead>
+        <tr>
+          <th>Nombre</th><th>CUIT</th><th>Teléfono</th><th>Cotiz.</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cs.map(c => `
+          <tr>
+            <td>${escapeHtml(c.nombre)}</td>
+            <td>${escapeHtml(c.cuit || "—")}</td>
+            <td>${escapeHtml(c.tel || "—")}</td>
+            <td style="text-align:center">${c.cotizaciones || 1}</td>
+            <td class="abm-actions">
+              <button onclick="editarCliente('${escapeAttr(claveCliente(c))}')">Editar</button>
+              <button class="danger" onclick="eliminarCliente('${escapeAttr(claveCliente(c))}')">Borrar</button>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+function escapeHtml(s) { return (s || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeAttr(s) { return (s || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
+
+function exportarClientes() {
+  const cs = getClientes();
+  if (cs.length === 0) { alert("No hay clientes para exportar."); return; }
+  const headers = ["Nombre","CUIT","Teléfono","E-mail","Cotizaciones","Creado","Última actualización"];
+  const rows = cs.map(c => [c.nombre, c.cuit || "", c.tel || "", c.email || "", c.cotizaciones || 1, c.creado || "", c.actualizado || ""]);
+  const csv = [headers, ...rows].map(r =>
+    r.map(v => {
+      const s = String(v).replace(/"/g, '""');
+      return /[",\n;]/.test(s) ? `"${s}"` : s;
+    }).join(";")
+  ).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "clientes_bricchi_" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============ AUTOCOMPLETE ============
+let acTimer = null;
+function cerrarACDelay() {
+  acTimer = setTimeout(() => {
+    document.getElementById("ac_nombre").classList.remove("visible");
+    document.getElementById("ac_cuit").classList.remove("visible");
+  }, 200);
+}
+
+function buscarCliente(campo) {
+  clearTimeout(acTimer);
+  const input = document.getElementById(campo === "nombre" ? "cli_nombre" : "cli_cuit");
+  const list = document.getElementById(campo === "nombre" ? "ac_nombre" : "ac_cuit");
+  const q = normalizar(input.value);
+  if (!q || q.length < 1) { list.classList.remove("visible"); return; }
+  const cs = getClientes().filter(c => {
+    const campo1 = normalizar(c.nombre);
+    const campo2 = normalizar(c.cuit);
+    return campo1.includes(q) || campo2.includes(q);
+  }).slice(0, 8);
+  if (cs.length === 0) { list.classList.remove("visible"); return; }
+  list.innerHTML = cs.map(c => `
+    <div class="ac-item" onmousedown="seleccionarCliente('${escapeAttr(claveCliente(c))}')">
+      <strong>${escapeHtml(c.nombre)}</strong>
+      <small>CUIT: ${escapeHtml(c.cuit || "—")} · Tel: ${escapeHtml(c.tel || "—")}</small>
+    </div>
+  `).join("");
+  list.classList.add("visible");
+}
+
+function seleccionarCliente(k) {
+  const c = getClientes().find(c => claveCliente(c) === k);
+  if (!c) return;
+  document.getElementById("cli_nombre").value = c.nombre || "";
+  document.getElementById("cli_cuit").value = c.cuit || "";
+  document.getElementById("cli_tel").value = c.tel || "";
+  document.getElementById("ac_nombre").classList.remove("visible");
+  document.getElementById("ac_cuit").classList.remove("visible");
+  document.getElementById("flag_nombre").classList.add("visible");
+  setTimeout(() => document.getElementById("flag_nombre").classList.remove("visible"), 3000);
+}
+
+// ============ CONDICIÓN ============
+function getCondGlobal() {
+  const r = document.querySelector('input[name="cond_global"]:checked');
+  return r ? r.value : "contado";
+}
+function getCondLabel() {
+  return getCondGlobal() === "cheques" ? "4 E-cheques (0/30/60/90)" : "Contado";
+}
+
+// ============ MOTORES ============
+function renderMotores() {
+  const tbody = document.getElementById("motores_tbody");
+  tbody.innerHTML = MOTORES.map(m => `
+    <tr data-ci="${m.ci}" id="row_${m.ci}">
+      <td class="col-ci">${m.ci}</td>
+      <td>${m.marca}</td>
+      <td><strong>${m.modelo}</strong></td>
+      <td>${m.orden}</td>
+      <td>${m.compat}</td>
+      <td class="num" id="pc_${m.ci}">${fmtUSD(m.contado)}</td>
+      <td class="num" id="ph_${m.ci}">${fmtUSD(m.cheques)}</td>
+      <td class="col-qty"><input type="number" min="0" value="0" id="qty_${m.ci}" oninput="recalc()"></td>
+      <td class="num col-sub" id="sub_${m.ci}">—</td>
+    </tr>
+  `).join("");
+}
+
+function recolectarItems() {
+  const cond = getCondGlobal();
+  const items = [];
+  for (const m of MOTORES) {
+    const qty = parseFloat(document.getElementById("qty_" + m.ci).value) || 0;
+    if (qty <= 0) continue;
+    const precio = cond === "contado" ? m.contado : m.cheques;
+    items.push({ ...m, qty, condicion: cond === "contado" ? "Contado" : "4 E-cheques", precio });
+  }
+  return items;
+}
+
+// ============ RECÁLCULO ============
+function recalc() {
+  const cond = getCondGlobal();
+  const items = recolectarItems();
+  const tc = parseFloat(document.getElementById("tc").value) || 0;
+  const ivaPct = parseFloat(document.getElementById("iva").value) || 0;
+
+  for (const m of MOTORES) {
+    const qty = parseFloat(document.getElementById("qty_" + m.ci).value) || 0;
+    const pc = document.getElementById("pc_" + m.ci);
+    const ph = document.getElementById("ph_" + m.ci);
+    const sub = document.getElementById("sub_" + m.ci);
+    const row = document.getElementById("row_" + m.ci);
+    pc.className = "num " + (cond === "contado" ? "precio-activo" : "precio-inactivo");
+    ph.className = "num " + (cond === "cheques" ? "precio-activo" : "precio-inactivo");
+    if (qty > 0) {
+      row.classList.add("active");
+      const precio = cond === "contado" ? m.contado : m.cheques;
+      sub.textContent = fmtUSD(precio * qty);
+    } else {
+      row.classList.remove("active");
+      sub.textContent = "—";
+    }
+  }
+
+  const subtotal = items.reduce((s, it) => s + it.precio * it.qty, 0);
+  const iva = subtotal * ivaPct / 100;
+  const total = subtotal + iva;
+
+  const topeFaltante = subtotal * 0.5;
+  const faltInput = document.getElementById("faltante");
+  let faltante = parseFloat(faltInput.value) || 0;
+  if (faltante < 0) faltante = 0;
+  if (faltante > topeFaltante + 0.001) {
+    faltante = topeFaltante;
+    faltInput.value = topeFaltante.toFixed(2);
+  }
+  if (subtotal === 0 && faltante > 0) { faltante = 0; faltInput.value = 0; }
+
+  const pagar = total - faltante;
+
+  document.getElementById("t_cond").textContent = cond === "contado" ? "Contado" : "4 E-cheques";
+  document.getElementById("t_items").textContent = items.reduce((s,i)=>s+i.qty,0);
+  document.getElementById("t_subtotal").textContent = fmtUSD(subtotal);
+  document.getElementById("t_iva_pct").textContent = ivaPct.toLocaleString("es-AR") + "%";
+  document.getElementById("t_iva").textContent = fmtUSD(iva);
+  document.getElementById("t_total").textContent = fmtUSD(total);
+  document.getElementById("t_total_ars").innerHTML = "<small>" + fmtARS(total * tc) + "</small>";
+  document.getElementById("t_pagar").textContent = fmtUSD(pagar);
+  document.getElementById("t_pagar_ars").innerHTML = "<small>" + fmtARS(pagar * tc) + "</small>";
+
+  const hint = document.getElementById("faltante_hint");
+  const box = document.getElementById("faltante_box");
+  hint.textContent = "Máx: " + fmtUSD(topeFaltante) + " (50% del subtotal s/IVA)";
+  box.classList.toggle("error", faltante >= topeFaltante && topeFaltante > 0);
+  faltInput.max = topeFaltante.toFixed(2);
+
+  renderMiniCheques(cond, total, faltante, tc);
+}
+
+function renderMiniCheques(cond, total, faltante, tc) {
+  const miniBox = document.getElementById("cheques_mini");
+  const miniBody = document.getElementById("cheques_mini_body");
+  if (cond !== "cheques" || total <= 0) { miniBox.style.display = "none"; return; }
+  const pagar = total - faltante;
+  const cuotaUSD = pagar / 4;
+  const cuotaARS = cuotaUSD * tc;
+  const hoy = new Date();
+  const fechas = [0,30,60,90].map(d => {
+    const f = new Date(hoy); f.setDate(f.getDate() + d);
+    return f.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit" });
+  });
+  miniBox.style.display = "block";
+  miniBody.innerHTML = [1,2,3,4].map((n,i) => `
+    <div class="cheq-row"><span>Cheque ${n} · ${fechas[i]}</span><span>${fmtARS(cuotaARS)}</span></div>
+  `).join("") + `
+    <div class="cheq-row" style="border-top:1px solid #bcd9f0;margin-top:4px;padding-top:4px;font-weight:600">
+      <span>Cuota c/u</span><span>${fmtUSD(cuotaUSD)}</span>
+    </div>
+  `;
+}
+
+// ============ INIT ============
+document.addEventListener("DOMContentLoaded", () => {
+  renderMotores();
+  document.getElementById("tc").addEventListener("input", recalc);
+  document.getElementById("iva").addEventListener("input", recalc);
+  document.getElementById("faltante").addEventListener("input", recalc);
+  updateClientesCount();
+  recalc();
+
+  const v = getVendedor();
+  if (!v || !v.nombre) abrirModal("modal_vendedor");
+  else mostrarBadgeVendedor(v);
+});
+
+function limpiar() {
+  if (!confirm("¿Limpiar los ítems y datos del cliente?")) return;
+  document.querySelectorAll("input[id^=qty_]").forEach(i => i.value = "0");
+  document.getElementById("cg_contado").checked = true;
+  ["cli_nombre","cli_cuit","cli_tel"].forEach(id => { document.getElementById(id).value = ""; });
+  document.getElementById("faltante").value = 0;
+  recalc();
+}
+
+function volver() {
+  document.getElementById("nota").classList.remove("visible");
+  document.querySelectorAll(".no-print").forEach(e => e.style.display = "");
+  window.scrollTo(0,0);
+}
+
+function generar() {
+  const vend = getVendedor();
+  if (!vend || !vend.nombre) {
+    alert("Falta registrar el vendedor.");
+    abrirModal("modal_vendedor");
+    return;
+  }
+
+  const cliNombre = document.getElementById("cli_nombre").value.trim();
+  if (!cliNombre) { alert("Faltan los datos del cliente."); return; }
+
+  const items = recolectarItems();
+  if (items.length === 0) {
+    alert("No hay motores seleccionados. Cargá al menos una cantidad > 0.");
+    return;
+  }
+
+  const cond = getCondGlobal();
+  const tc = parseFloat(document.getElementById("tc").value) || 0;
+  const ivaPct = parseFloat(document.getElementById("iva").value) || 0;
+  const faltante = parseFloat(document.getElementById("faltante").value) || 0;
+
+  const subtotal = items.reduce((s, it) => s + it.precio * it.qty, 0);
+  const iva = subtotal * ivaPct / 100;
+  const total = subtotal + iva;
+  const pagar = total - faltante;
+
+  // Guardado automático del cliente
+  upsertCliente({
+    nombre: cliNombre,
+    cuit: document.getElementById("cli_cuit").value,
+    tel: document.getElementById("cli_tel").value
+  });
+
+  const hoy = new Date();
+  const fechaStr = hoy.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const nroNota = "NP-" + hoy.getFullYear() + (hoy.getMonth()+1).toString().padStart(2,"0") + hoy.getDate().toString().padStart(2,"0") + "-" + Math.floor(Math.random()*9000+1000);
+
+  document.getElementById("nota_fecha").textContent = "Fecha: " + fechaStr;
+  document.getElementById("nota_nro").textContent = nroNota;
+  document.getElementById("nota_cond_label").textContent = "Condición: " + getCondLabel();
+
+  document.getElementById("nota_vendedor").innerHTML = `
+    <div><span>Nombre</span><br>${escapeHtml(vend.nombre)}</div>
+    <div><span>E-mail</span><br>${escapeHtml(vend.email || "—")}</div>
+    <div><span>Teléfono</span><br>${escapeHtml(vend.tel || "—")}</div>
+    <div></div>
+  `;
+
+  document.getElementById("nota_cliente").innerHTML = `
+    <div><span>Razón Social / Nombre</span><br>${escapeHtml(cliNombre)}</div>
+    <div><span>CUIT</span><br>${escapeHtml(document.getElementById("cli_cuit").value || "—")}</div>
+    <div><span>Teléfono</span><br>${escapeHtml(document.getElementById("cli_tel").value || "—")}</div>
+    <div></div>
+  `;
+
+  document.getElementById("nota_items").innerHTML = items.map(it => `
+    <tr>
+      <td>${it.ci}</td><td>${it.marca}</td><td>${it.modelo}</td>
+      <td>${it.orden}</td><td>${it.compat}</td>
+      <td class="num">${it.qty}</td>
+      <td class="num">${it.precio.toLocaleString("es-AR")}</td>
+      <td class="num">${(it.precio * it.qty).toLocaleString("es-AR")}</td>
+    </tr>
+  `).join("");
+
+  let totalesHtml = `
+    <tr><td>Subtotal (sin IVA)</td><td class="num">${fmtUSD(subtotal)}</td></tr>
+    <tr><td>IVA ${ivaPct}%</td><td class="num">${fmtUSD(iva)}</td></tr>
+    <tr class="total-final"><td>TOTAL OPERACIÓN</td><td class="num">${fmtUSD(total)}</td></tr>
+  `;
+  if (faltante > 0) {
+    totalesHtml += `
+      <tr class="faltante-row"><td>Faltante (sin IVA)</td><td class="num">- ${fmtUSD(faltante)}</td></tr>
+      <tr class="total-final"><td>A PAGAR</td><td class="num">${fmtUSD(pagar)}</td></tr>
+    `;
+  }
+  totalesHtml += `<tr><td>Equiv. pesos (TC ${tc})</td><td class="num">${fmtARS(pagar * tc)}</td></tr>`;
+  document.getElementById("nota_totales").innerHTML = totalesHtml;
+
+  const wrap = document.getElementById("nota_cheques_wrap");
+  if (cond === "cheques") {
+    const cuotaUSD = pagar / 4;
+    const fechas = [0,30,60,90].map(d => {
+      const f = new Date(hoy); f.setDate(f.getDate() + d);
+      return f.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit", year:"numeric" });
+    });
+    wrap.innerHTML = `
+      <h3>Plan de Pago · E-cheques (0/30/60/90)</h3>
+      <table class="nota-table">
+        <thead><tr><th>Cheque</th><th>Vencimiento</th><th class="num">USD</th><th class="num">Pesos (TC ${tc})</th></tr></thead>
+        <tbody>
+          ${[1,2,3,4].map((n,i) => `
+            <tr><td>Cheque ${n}</td><td>${fechas[i]}</td>
+              <td class="num">${fmtUSD(cuotaUSD)}</td>
+              <td class="num">${fmtARS(cuotaUSD * tc)}</td></tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <p style="font-size:11px;color:#666;margin-top:4px">Plan calculado sobre el monto a pagar (total de la operación con IVA, descontando el faltante si lo hubiera).</p>
+    `;
+  } else {
+    wrap.innerHTML = "";
+  }
+
+  const obsExtra = faltante > 0
+    ? ` Se consigna un faltante de ${fmtUSD(faltante)} sin IVA, que representa el saldo pendiente por definir condición de pago.`
+    : "";
+  document.getElementById("nota_obs").textContent =
+    `Precios expresados en USD, IVA ${ivaPct}% discriminado. Facturación en pesos al TC del día de emisión de la factura.` + obsExtra;
+
+  document.querySelectorAll(".no-print").forEach(e => {
+    if (!e.closest(".nota")) e.style.display = "none";
+  });
+  document.getElementById("nota").classList.add("visible");
+  window.scrollTo(0,0);
+}
+</script>
+
+</body>
+</html>
