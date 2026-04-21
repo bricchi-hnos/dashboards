@@ -106,7 +106,7 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
 </header>
 <div class="toolbar">
   <span class="tb-label">Buscar:</span>
-  <input type="text" id="f-buscar" placeholder="Nombre, ref, marca, N serie, OC, FC..." oninput="applyFilter()">
+  <input type="text" id="f-buscar" placeholder="Nombre, ref o marca..." oninput="applyFilter()">
   <span class="tb-label">Marca:</span>
   <select id="f-marca" onchange="applyFilter()"><option value="">Todas</option></select>
   <div class="sep"></div>
@@ -148,7 +148,7 @@ const U='https://rvumvnslydaobvvsywtu.supabase.co';
 const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dW12bnNseWRhb2J2dnN5d3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzM3NDksImV4cCI6MjA4NzQ0OTc0OX0.rE06TXMzBhvX0Uwzh2UquSFJs6CP18d81xrCC7MmX3c';
 const H={'apikey':K,'Authorization':'Bearer '+K};
 
-let FLAT=[],OC=[],SOL=[];
+let FLAT=[],OC=[],SOL=[],EXQ=[];
 let RESUMEN=[];
 let sortCol='producto', sortAsc=true;
 let expandedPid=null;
@@ -177,10 +177,16 @@ async function init(){
     }
     return all;
   };
-  FLAT=await get(`${U}/rest/v1/vista_maquinaria_flat?select=*&order=numero_serie.asc`,25,'Cargando maquinaria...');
-  OC=await get(`${U}/rest/v1/vista_oc_maquinaria?select=*&order=fecha_oc.desc`,60,'Cargando OC...');
-  SOL=await get(`${U}/rest/v1/vista_sol_sin_asignar?select=*&order=fecha_ov.desc`,85,'Cargando OV...');
+  FLAT=await get(`${U}/rest/v1/vista_maquinaria_flat?select=*&order=numero_serie.asc`,20,'Cargando maquinaria...');
+  OC=await get(`${U}/rest/v1/vista_oc_maquinaria?select=*&order=fecha_oc.desc`,50,'Cargando OC...');
+  SOL=await get(`${U}/rest/v1/vista_sol_sin_asignar?select=*&order=fecha_ov.desc`,75,'Cargando OV...');
+  EXQ=await get(`${U}/rest/v1/vista_existencia_con_ov?select=*&order=nro_ov.asc`,90,'Cargando existencia con OV...');
 
+  // Normalizar product_id a numero en todos los datasets
+  FLAT.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
+  OC.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
+  SOL.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
+  EXQ.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
   buildResumen();
   document.getElementById('h-ts').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   // Poblar marcas
@@ -209,6 +215,7 @@ function buildResumen(){
       demanda_sin_cobertura:0,fecha_oc_mas_reciente:null
     });
     const p=pmap.get(r.product_id);
+    // Actualizar marca si el producto no tiene una todavia
     if(r.marca&&!p.marca)p.marca=r.marca;
     if(r.cantidad_stock>0&&!r.en_customer){
       p.existencia_total++;
@@ -261,28 +268,7 @@ function applyFilter(){
   const marca=document.getElementById('f-marca').value;
   const disp=document.getElementById('f-disp').value;
   let data=RESUMEN.filter(p=>{
-    if(q){
-      var matchProd=p.producto.toLowerCase().includes(q)||p.ref_interna.toLowerCase().includes(q)||(p.marca||'').toLowerCase().includes(q);
-      // Buscar en series en stock para este producto
-      var matchSerie=!matchProd&&FLAT.some(function(r){
-        return r.product_id===p.product_id&&(
-          (r.numero_serie||'').toLowerCase().includes(q)||
-          (r.nro_ov||'').toLowerCase().includes(q)||
-          (r.nro_factura_compra||'').toLowerCase().includes(q)
-        );
-      });
-      // Buscar en OC pendientes para este producto
-      var matchOC=!matchProd&&!matchSerie&&OC.some(function(r){
-        return r.product_id===p.product_id&&(
-          (r.nro_oc||'').toLowerCase().includes(q)||
-          (r.nro_factura_compra||'').toLowerCase().includes(q)||
-          (r.nro_serie_prev||'').toLowerCase().includes(q)||
-          (r.nro_ov_vinculada||'').toLowerCase().includes(q)||
-          (r.cliente_ov||'').toLowerCase().includes(q)
-        );
-      });
-      if(!matchProd&&!matchSerie&&!matchOC)return false;
-    }
+    if(q&&!p.producto.toLowerCase().includes(q)&&!p.ref_interna.toLowerCase().includes(q)&&!p.marca.toLowerCase().includes(q))return false;
     if(marca&&p.marca!==marca)return false;
     if(disp==='stock'&&p.existencia_total===0)return false;
     if(disp==='proveedor'&&p.en_proveedor_total===0)return false;
@@ -328,6 +314,10 @@ function toggleDet(pid){
   if(inner)inner.innerHTML=buildDet(pid);
 }
 
+function esPendienteRecibir(r){
+  return r.estado_recepcion==='pending'||(r.estado_recepcion==='partial'&&(r.qty_received||0)<(r.qty_pedida||1));
+}
+
 function buildDet(pid){
   const p=RESUMEN.find(x=>x.product_id===pid);
   if(!p)return '';
@@ -344,6 +334,9 @@ function buildDet(pid){
     ocPend.push(r);
   });
   const ocConOV=ocPend.filter(r=>r.nro_ov_vinculada&&r.nro_ov_vinculada!=='');
+  // Series provisorias: detectar duplicados en TODO OC pendiente del mismo producto
+  const todasSeriesPrev=OC.filter(r=>r.product_id===pid&&r.nro_serie_prev&&esPendienteRecibir(r)).map(r=>r.nro_serie_prev);
+  const seriesRepetidas=new Set(todasSeriesPrev.filter((s,i)=>todasSeriesPrev.indexOf(s)!==i));
   const ocLibre=ocPend.filter(r=>!r.nro_ov_vinculada||r.nro_ov_vinculada==='');
   // OC libre agrupadas por nro_oc con conteo
   const ocLibreMap=new Map();
@@ -352,55 +345,82 @@ function buildDet(pid){
   // Demanda sin cobertura
   const solSin=SOL.filter(r=>r.product_id===pid&&!r.asignada&&(!r.oc_vinculada||r.oc_vinculada===''));
 
+  const exqPid=EXQ.filter(r=>Number(r.product_id)===Number(pid));
+  // Calcular inconsistencias sin IIFE
+  const ocPendPid2=OC.filter(r=>r.product_id===pid&&(r.estado_recepcion==='pending'||(r.estado_recepcion==='partial'&&r.qty_received<r.qty_pedida)));
+  const incList=[];
+  ocPendPid2.forEach(function(oc){
+    if(!oc.nro_ov_vinculada||!oc.nro_serie_prev)return;
+    exqPid.forEach(function(e){
+      if(e.numero_serie===oc.nro_serie_prev&&e.nro_ov&&e.nro_ov!==oc.nro_ov_vinculada){
+        incList.push({serie:oc.nro_serie_prev,oc:oc.nro_oc,ovOC:oc.nro_ov_vinculada,clienteOC:oc.cliente_ov||'-',ovEXQ:e.nro_ov,clienteEXQ:e.cliente||'-'});
+      }
+    });
+  });
+  const incHtml=incList.length?`<div class="dsec" style="border-color:var(--red)"><div class="dsec-head" style="color:var(--red)"><span class="dot" style="background:var(--red)"></span>&#9888; Inconsistencias &mdash; ${incList.length} serie${incList.length!==1?'s':''} cruzada${incList.length!==1?'s':''}</div><div class="dsec-body"><table><thead><tr><th>Serie</th><th>OC</th><th>OV en OC</th><th>Cliente OC</th><th>OV en Entrega</th><th>Cliente Entrega</th></tr></thead><tbody>${incList.map(function(i){return '<tr style="background:rgba(239,68,68,.06)"><td class="tg">'+i.serie+'</td><td class="tb">'+i.oc+'</td><td class="tr">'+i.ovOC+'</td><td>'+i.clienteOC+'</td><td class="ty">'+i.ovEXQ+'</td><td>'+i.clienteEXQ+'</td></tr>';}).join('')}</tbody></table></div></div>`:'';
   return `
     <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px">
       &#9654; ${p.producto}${p.marca?' &mdash; '+p.marca:''} &nbsp;|&nbsp; Ref: ${p.ref_interna||'&#8212;'}
     </div>
     <div class="det-grid">
-      <!-- EXISTENCIAS -->
+      <!-- EXISTENCIAS LIBRE -->
       <div class="dsec">
-        <div class="dsec-head"><span class="dot" style="background:var(--green)"></span>En Stock &mdash; ${enStock.length} unidad${enStock.length!==1?'es':''}</div>
-        ${enStock.length?`<div class="dsec-body"><table>
-          <thead><tr><th>Serie</th><th>Dep&oacute;sito</th><th>Tipo</th><th>OV</th><th>Cliente</th><th>Estado</th></tr></thead>
-          <tbody>${enStock.map(r=>`<tr>
+        <div class="dsec-head"><span class="dot" style="background:var(--green)"></span>En Stock Libre &mdash; ${enStock.filter(r=>!r.nro_ov).length} unidad${enStock.filter(r=>!r.nro_ov).length!==1?'es':''}</div>
+        ${enStock.filter(r=>!r.nro_ov).length?`<div class="dsec-body"><table>
+          <thead><tr><th>Serie</th><th>Dep&oacute;sito</th><th>Tipo</th></tr></thead>
+          <tbody>${enStock.filter(r=>!r.nro_ov).map(r=>`<tr>
             <td class="tg">${r.numero_serie}</td>
             <td>${r.deposito||'&#8212;'}</td>
             <td>${(r.tipo_operacion||'').indexOf('Consign')>=0?'<span class="badge bp">Consig.</span>':'<span class="badge bg">Propia</span>'}</td>
-            <td>${r.nro_ov?`<span class="tb">${r.nro_ov}</span>`:'<span class="tm">&#8212;</span>'}</td>
-            <td>${r.cliente||'<span class="tm">Disponible</span>'}</td>
-            <td>${r.nro_ov?`<span class="badge by">${r.estado_facturacion_ov||r.estado_ov||'&#8212;'}</span>`:'<span class="badge bg">Libre</span>'}</td>
           </tr>`).join('')}</tbody>
-        </table></div>`:'<div class="np">Sin stock en dep&oacute;sito</div>'}
+        </table></div>`:'<div class="np">Sin stock libre en dep&oacute;sito</div>'}
+      </div>
+      <!-- EXISTENCIAS CON OV -->
+      <div class="dsec">
+        <div class="dsec-head"><span class="dot" style="background:var(--yellow)"></span>En Stock con OV &mdash; ${exqPid.length} unidad${exqPid.length!==1?'es':''}</div>
+        ${exqPid.length?`<div class="dsec-body"><table>
+          <thead><tr><th>Serie</th><th>OV</th><th>Cliente</th><th>Vendedor</th><th>Entrega</th><th>FC Emitida</th></tr></thead>
+          <tbody>${exqPid.map(r=>`<tr>
+            <td class="tg">${r.numero_serie}</td>
+            <td><span class="tb">${r.nro_ov||'&#8212;'}</span></td>
+            <td>${r.cliente||'&#8212;'}</td>
+            <td style="font-size:9px">${(r.vendedor||'').replace(' (Bricchi Hnos SA)','')}</td>
+            <td class="tm">${r.entrega_out||'&#8212;'}</td>
+            <td>${r.fc_emitida?'<span class="badge bg">'+r.fc_emitida+'</span>':'<span class="badge by">Sin FC</span>'}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>`:'<div class="np">Sin stock asignado a OV</div>'}
       </div>
       <!-- EN PROVEEDOR CON OV -->
       <div class="dsec">
         <div class="dsec-head"><span class="dot" style="background:var(--accent)"></span>En Proveedor con OV &mdash; ${ocConOV.length} unidad${ocConOV.length!==1?'es':''}</div>
         ${ocConOV.length?`<div class="dsec-body"><table>
-          <thead><tr><th>OC</th><th class="nm">Fila</th><th>Fecha OC</th><th>N&#176; Serie Prov.</th><th>FC Compra</th><th>OV</th><th>Cliente</th></tr></thead>
-          <tbody>${ocConOV.map(r=>`<tr>
-            <td class="tb">${r.nro_oc}</td>
-            <td class="nm tm">${r.fila_oc||'&#8212;'}</td>
-            <td>${fd(r.fecha_oc)}</td>
-            <td class="tg">${r.nro_serie_prev||'&#8212;'}</td>
-            <td class="tm" style="font-size:9px">${r.nro_factura_compra||'&#8212;'}</td>
-            <td class="tb">${r.nro_ov_vinculada}</td>
-            <td>${r.cliente_ov||'&#8212;'}</td>
-          </tr>`).join('')}</tbody>
+          <thead><tr><th>OC</th><th>Fecha OC</th><th>N&#176; Serie Prov.</th><th>FC Compra</th><th>OV</th><th>Cliente</th><th>Inc.</th></tr></thead>
+          <tbody>${ocConOV.map(r=>{
+            const serieRepetida=r.nro_serie_prev&&OC.some(x=>x.nro_serie_prev===r.nro_serie_prev&&x.pol_id!==r.pol_id&&esPendienteRecibir(x));
+            return `<tr${serieRepetida?' style="background:rgba(239,68,68,.08)"':''}>
+              <td class="tb">${r.nro_oc}</td>
+              <td>${fd(r.fecha_oc)}</td>
+              <td class="tg">${r.nro_serie_prev||'<span class="tm">&#8212;</span>'}</td>
+              <td class="tm" style="font-size:9px">${r.nro_factura_compra||'<span class="tr">Sin FC</span>'}</td>
+              <td class="tb">${r.nro_ov_vinculada}</td>
+              <td>${r.cliente_ov||'&#8212;'}</td>
+              <td>${serieRepetida?'<span class="badge br" title="Serie duplicada en otra OC">&#9888;</span>':'<span class="tm">&#8212;</span>'}</td>
+            </tr>`;
+          }).join('')}</tbody>
         </table></div>`:'<div class="np">Sin OC con OV vinculada</div>'}
       </div>
       <!-- EN PROVEEDOR LIBRE -->
       <div class="dsec">
         <div class="dsec-head"><span class="dot" style="background:var(--orange)"></span>En Proveedor Libre &mdash; ${ocLibre.length} unidad${ocLibre.length!==1?'es':''}</div>
-        ${ocLibreList.length?`<div class="dsec-body"><table>
-          <thead><tr><th>OC</th><th class="nm">Fila</th><th>Fecha OC</th><th>N&#176; Serie Prov.</th><th>FC Compra</th><th>Proveedor</th><th class="nm">Cant.</th></tr></thead>
-          <tbody>${ocLibreList.map(r=>`<tr>
+        ${ocLibre.length?`<div class="dsec-body"><table>
+          <thead><tr><th>OC</th><th>Fila</th><th>Fecha OC</th><th>N&#176; Serie Prov.</th><th>FC Compra</th><th>Proveedor</th></tr></thead>
+          <tbody>${ocLibre.map(r=>`<tr>
             <td class="to">${r.nro_oc}</td>
-            <td class="nm tm">${r.fila_oc||'&#8212;'}</td>
+            <td class="tm">${r.fila_oc||'&#8212;'}</td>
             <td>${fd(r.fecha_oc)}</td>
-            <td class="tg">${r.nro_serie_prev||'&#8212;'}</td>
-            <td class="tm" style="font-size:9px">${r.nro_factura_compra||'&#8212;'}</td>
-            <td>${r.proveedor||'&#8212;'}</td>
-            <td class="nm to">${r.cnt}</td>
+            <td class="tg">${r.nro_serie_prev||'<span class="tm">&#8212;</span>'}</td>
+            <td class="tm" style="font-size:9px">${r.nro_factura_compra||'<span class="tr">Sin FC</span>'}</td>
+            <td style="font-size:9px">${r.proveedor||'&#8212;'}</td>
           </tr>`).join('')}</tbody>
         </table></div>`:'<div class="np">Sin OC libres pendientes</div>'}
       </div>
@@ -417,6 +437,8 @@ function buildDet(pid){
           </tr>`).join('')}</tbody>
         </table></div>`:'<div class="np">Sin demanda descubierta &#10003;</div>'}
       </div>
+      <!-- INCONSISTENCIAS: serie asignada a OV diferente a la OC -->
+      ${incHtml}
     </div>`;
 }
 
