@@ -268,7 +268,27 @@ function applyFilter(){
   const marca=document.getElementById('f-marca').value;
   const disp=document.getElementById('f-disp').value;
   let data=RESUMEN.filter(p=>{
-    if(q&&!p.producto.toLowerCase().includes(q)&&!p.ref_interna.toLowerCase().includes(q)&&!p.marca.toLowerCase().includes(q))return false;
+    if(q){
+      const prod=p.producto.toLowerCase();
+      const ref=(p.ref_interna||'').toLowerCase();
+      const marca=(p.marca||'').toLowerCase();
+      // Buscar tambien en series, clientes y OVs de FLAT y EXQ
+      const enFlat=FLAT.filter(r=>Number(r.product_id)===Number(p.product_id));
+      const enExq=EXQ.filter(r=>Number(r.product_id)===Number(p.product_id));
+      const matchFlat=enFlat.some(r=>
+        (r.numero_serie||'').toLowerCase().includes(q)||
+        (r.cliente||'').toLowerCase().includes(q)||
+        (r.nro_ov||'').toLowerCase().includes(q)||
+        (r.deposito||'').toLowerCase().includes(q)
+      );
+      const matchExq=enExq.some(r=>
+        (r.numero_serie||'').toLowerCase().includes(q)||
+        (r.cliente||'').toLowerCase().includes(q)||
+        (r.nro_ov||'').toLowerCase().includes(q)||
+        (r.vendedor||'').toLowerCase().includes(q)
+      );
+      if(!prod.includes(q)&&!ref.includes(q)&&!marca.includes(q)&&!matchFlat&&!matchExq)return false;
+    }
     if(marca&&p.marca!==marca)return false;
     if(disp==='stock'&&p.existencia_total===0)return false;
     if(disp==='proveedor'&&p.en_proveedor_total===0)return false;
@@ -365,10 +385,10 @@ function buildDet(pid){
     <div class="det-grid">
       <!-- EXISTENCIAS LIBRE -->
       <div class="dsec">
-        <div class="dsec-head"><span class="dot" style="background:var(--green)"></span>En Stock Libre &mdash; ${enStock.filter(r=>!r.nro_ov).length} unidad${enStock.filter(r=>!r.nro_ov).length!==1?'es':''}</div>
-        ${enStock.filter(r=>!r.nro_ov).length?`<div class="dsec-body"><table>
+        <div class="dsec-head"><span class="dot" style="background:var(--green)"></span>En Stock Libre &mdash; ${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length} unidad${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length!==1?'es':''}</div>
+        ${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length?`<div class="dsec-body"><table>
           <thead><tr><th>Serie</th><th>Dep&oacute;sito</th><th>Tipo</th></tr></thead>
-          <tbody>${enStock.filter(r=>!r.nro_ov).map(r=>`<tr>
+          <tbody>${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).map(r=>`<tr>
             <td class="tg">${r.numero_serie}</td>
             <td>${r.deposito||'&#8212;'}</td>
             <td>${(r.tipo_operacion||'').indexOf('Consign')>=0?'<span class="badge bp">Consig.</span>':'<span class="badge bg">Propia</span>'}</td>
