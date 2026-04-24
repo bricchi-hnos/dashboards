@@ -89,6 +89,63 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
 .bo{background:rgba(251,146,60,.15);color:var(--orange)}
 .bp{background:rgba(167,139,250,.15);color:var(--purple)}
 .row-mark td:first-child{border-left:3px solid var(--accent)}
+/* TABS */
+.tabs{display:flex;gap:0;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center}
+.tab-btn{background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:12px 18px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;position:relative}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+.tab-btn .tb-count{display:inline-block;margin-left:6px;background:var(--surface3);color:var(--muted);padding:1px 6px;border-radius:8px;font-size:9px}
+.tab-btn.active .tb-count{background:rgba(59,130,246,.15);color:var(--accent)}
+.view{display:none}
+.view.active{display:block}
+/* Estado badges para pendiente */
+.est-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.est-lista-cobrada{background:rgba(34,197,94,.18);color:var(--green);border:1px solid rgba(34,197,94,.35)}
+.est-lista-okalvaro{background:rgba(34,197,94,.18);color:var(--green);border:1px solid rgba(34,197,94,.35);font-weight:600}
+.est-lista-pend{background:rgba(245,158,11,.15);color:var(--yellow);border:1px solid rgba(245,158,11,.3)}
+.est-prov-cobrada{background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.3)}
+.est-prov-pend{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.25)}
+.est-sinasig-pend{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.est-sinasig-cobrada{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.pay-yes{color:var(--green);font-weight:600}
+.pay-no{color:var(--red);font-weight:600}
+/* OK Alvaro */
+.ok-alvaro{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 6px;border-radius:3px;font-size:9px;font-family:var(--mono);font-weight:600;background:rgba(167,139,250,.18);color:var(--purple);border:1px solid rgba(167,139,250,.4);white-space:nowrap}
+.ok-alvaro-full{padding:2px 8px;font-weight:600}
+/* Estado combinado "entregable" - autorizada por Alvaro aunque no cobrada */
+.est-lista-okalvaro{background:rgba(167,139,250,.18);color:var(--purple);border:1px solid rgba(167,139,250,.4);font-weight:600}
+.pend-tip{padding:10px 20px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted)}
+.pend-tip b{color:var(--text)}
+/* Criticidad por OV */
+.row-partida td:first-child{border-left:3px solid var(--orange)}
+.row-critica td:first-child{border-left:3px solid var(--red)}
+.row-partida td{background:rgba(251,146,60,.04)}
+.row-critica td{background:rgba(239,68,68,.06)}
+.ov-group-mark{border-left:3px solid var(--orange) !important}
+.ov-group-mark-critical{border-left:3px solid var(--red) !important}
+.completa-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:3px;font-size:9px;font-family:var(--mono);white-space:nowrap}
+.cb-ok{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.cb-partida{background:rgba(251,146,60,.15);color:var(--orange);border:1px solid rgba(251,146,60,.35)}
+.cb-partida-crit{background:rgba(239,68,68,.18);color:var(--red);border:1px solid rgba(239,68,68,.4);font-weight:600}
+.cb-solo-prov{background:rgba(90,100,128,.12);color:var(--muted);border:1px solid var(--border2)}
+/* Estado por OV (3° solapa) */
+.crit-critico{background:rgba(239,68,68,.18);color:var(--red);border:1px solid rgba(239,68,68,.4);font-weight:600}
+.crit-alerta{background:rgba(251,146,60,.15);color:var(--orange);border:1px solid rgba(251,146,60,.35)}
+.crit-entregable{background:rgba(34,197,94,.22);color:var(--green);border:1px solid rgba(34,197,94,.45);font-weight:600}
+.crit-informativo{background:rgba(59,130,246,.12);color:var(--accent);border:1px solid rgba(59,130,246,.25)}
+.crit-ok{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.alvaro-yes{color:var(--green);font-weight:600}
+.alvaro-no{color:var(--muted)}
+.row-entregable td:first-child{border-left:3px solid var(--green)}
+.row-entregable td{background:rgba(34,197,94,.05)}
+/* Serie verificada vs sin verificar */
+.serie-badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:8px;font-family:var(--mono);margin-left:4px;vertical-align:middle}
+.sb-verif{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.sb-sinv{background:rgba(245,158,11,.15);color:var(--yellow);border:1px solid rgba(245,158,11,.35)}
+.sb-dup{background:rgba(239,68,68,.18);color:var(--red);border:1px solid rgba(239,68,68,.4);font-weight:600;margin-left:3px}
+.mini-bar{display:inline-flex;gap:2px;align-items:center;margin-left:6px}
+.mini-seg{height:10px;border-radius:2px;min-width:4px}
+.ms-green{background:var(--green)}.ms-orange{background:var(--orange)}.ms-red{background:var(--red)}.ms-muted{background:var(--surface3)}
 </style>
 </head>
 <body>
@@ -104,6 +161,13 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
   <div class="h-logo">BRICCHI HNOS SA &middot; <b>Disponibilidad de Maquinaria</b></div>
   <div class="h-meta"><span><span class="h-dot"></span><span id="h-ts">--:--</span></span><span id="h-tot"></span></div>
 </header>
+<div class="tabs">
+  <button class="tab-btn active" id="tab-btn-disp" onclick="switchTab('disp')">Disponibilidad <span class="tb-count" id="cnt-disp">0</span></button>
+  <button class="tab-btn" id="tab-btn-pend" onclick="switchTab('pend')">Pendiente Entrega/Cobro <span class="tb-count" id="cnt-pend">0</span></button>
+  <button class="tab-btn" id="tab-btn-ov" onclick="switchTab('ov')">Estado por OV <span class="tb-count" id="cnt-ov">0</span></button>
+</div>
+<!-- ========== VIEW DISPONIBILIDAD ========== -->
+<div class="view active" id="view-disp">
 <div class="toolbar">
   <span class="tb-label">Buscar:</span>
   <input type="text" id="f-buscar" placeholder="Nombre, ref o marca..." oninput="applyFilter()">
@@ -142,21 +206,232 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
     </div>
   </div>
 </main>
+</div>
+<!-- ========== VIEW PENDIENTE ENTREGA/COBRO ========== -->
+<div class="view" id="view-pend">
+<div class="toolbar">
+  <span class="tb-label">Buscar:</span>
+  <input type="text" id="fp-buscar" placeholder="OV, cliente, CUIT, serie..." oninput="applyFilterPend()">
+  <div class="sep"></div>
+  <span class="tb-label">Estado:</span>
+  <select id="fp-estado" onchange="applyFilterPend()">
+    <option value="">Todos</option>
+    <option value="lista-cobrada">Lista para entregar &amp; cobrada (urgente)</option>
+    <option value="lista-okalvaro">Lista para entregar - OK Alvaro (autorizada)</option>
+    <option value="lista-pend">Lista para entregar, sin cobrar</option>
+    <option value="prov-cobrada">Cobrada, en proveedor</option>
+    <option value="prov-pend">En proveedor, sin cobrar</option>
+    <option value="sinasig">Sin asignar (demanda S/C)</option>
+    <option value="pend-cobro">Todas pendientes de cobro</option>
+  </select>
+  <div class="sep"></div>
+  <span class="tb-label">Cobro:</span>
+  <select id="fp-pago" onchange="applyFilterPend()">
+    <option value="">Todos</option>
+    <option value="si">Cobradas</option>
+    <option value="no">Pendientes</option>
+  </select>
+  <div class="sep"></div>
+  <span id="cnt-lbl-p"></span>
+</div>
+<div class="pend-tip">
+  <b>&#9432;</b> Esta vista combina m&aacute;quinas en stock con OV asignada, OC con OV vinculada y demanda sin cobertura. El estado de cobro viene del campo <b>paid</b> en la OV. <br>
+  <span class="alvaro-yes">&#10003; OK</span> <b>OK Alvaro</b>: autorizada a entregar aunque no est&eacute; cobrada.
+</div>
+<main>
+  <div class="tbl-box">
+    <div class="tw">
+      <table id="tbl-pend">
+        <thead>
+          <tr>
+            <th onclick="sortByP('nro_ov')" id="thp-nro_ov">OV</th>
+            <th onclick="sortByP('cliente')" id="thp-cliente">Cliente</th>
+            <th onclick="sortByP('cuit')" id="thp-cuit">CUIT</th>
+            <th onclick="sortByP('vendedor')" id="thp-vendedor">Vendedor</th>
+            <th onclick="sortByP('producto')" id="thp-producto">Producto</th>
+            <th onclick="sortByP('ref_interna')" id="thp-ref_interna">Ref.</th>
+            <th onclick="sortByP('numero_serie')" id="thp-numero_serie">N&#176; Serie</th>
+            <th onclick="sortByP('ubicacion')" id="thp-ubicacion">Ubicaci&oacute;n</th>
+            <th onclick="sortByP('estado_entrega')" id="thp-estado_entrega">Entrega</th>
+            <th onclick="sortByP('estado_cobro')" id="thp-estado_cobro">Cobro</th>
+            <th onclick="sortByP('ov_ok_alvaro')" id="thp-ov_ok_alvaro">OK Alvaro</th>
+            <th onclick="sortByP('estado_combo')" id="thp-estado_combo">Estado</th>
+            <th onclick="sortByP('completa_sort')" id="thp-completa_sort">OV Completa?</th>
+            <th onclick="sortByP('fecha_ov')" id="thp-fecha_ov">Fecha OV</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body-p"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+<!-- ========== VIEW ESTADO POR OV ========== -->
+<div class="view" id="view-ov">
+<div class="toolbar">
+  <span class="tb-label">Buscar:</span>
+  <input type="text" id="fo-buscar" placeholder="OV, cliente, vendedor..." oninput="applyFilterOv()">
+  <div class="sep"></div>
+  <span class="tb-label">Criticidad:</span>
+  <select id="fo-crit" onchange="applyFilterOv()">
+    <option value="">Todas</option>
+    <option value="critico">&#9888; Cr&iacute;tico (partida + cobrada)</option>
+    <option value="alerta">Alerta (partida, sin cobrar)</option>
+    <option value="entregable">&#9733; Entregable (en dep + cobrada u OK Alvaro)</option>
+    <option value="ok-alvaro">Con OK Alvaro</option>
+    <option value="partidas">Solo OV partidas</option>
+    <option value="informativo">Informativo (todo en prov.)</option>
+    <option value="ok">OK (en dep, sin cobrar)</option>
+  </select>
+  <div class="sep"></div>
+  <span class="tb-label">Cobro:</span>
+  <select id="fo-pago" onchange="applyFilterOv()">
+    <option value="">Todos</option>
+    <option value="si">Cobradas</option>
+    <option value="no">Pendientes</option>
+  </select>
+  <div class="sep"></div>
+  <span id="cnt-lbl-o"></span>
+</div>
+<div class="pend-tip">
+  <b>&#9888;</b> OV <b>partida</b> = tiene m&aacute;quinas en dep&oacute;sito Y m&aacute;quinas pendientes (proveedor o sin cobertura). Decisi&oacute;n: esperar a que llegue todo o mandar flete parcial.<br>
+  <b>Dep&oacute;sito</b>: lista para entregar. <b>Proveedor</b>: OC abierta, aguardando llegada. <b>S/Cob</b>: m&aacute;quina pedida por el cliente sin OC generada a&uacute;n (falta gestionar compra).<br>
+  <span class="alvaro-yes">&#10003; OK</span> <b>OK Alvaro</b>: autorizada a entregar aunque no est&eacute; cobrada (queda en estado <span class="completa-badge crit-entregable">&#9733; ENTREGABLE</span>).<br>
+  Junto a cada serie: <span class="serie-badge sb-verif">&#10003; verif</span> chasis cargado en Odoo &middot; <span class="serie-badge sb-sinv">&#9888; prov?</span> formato de provisorio y chasis vac&iacute;o &middot; <span class="serie-badge sb-dup">&#9888; DUP N</span> existen N lots con esa misma serie (puede ser leg&iacute;timo si son productos distintos).
+  Barra: <span class="mini-bar"><span class="mini-seg ms-green" style="width:12px"></span><span class="mini-seg ms-orange" style="width:8px"></span><span class="mini-seg ms-red" style="width:4px"></span></span>
+  verde=dep&oacute;sito, naranja=proveedor, rojo=sin cobertura.
+</div>
+<main>
+  <div class="tbl-box">
+    <div class="tw">
+      <table id="tbl-ov">
+        <thead>
+          <tr>
+            <th onclick="sortByO('criticidad_rank')" id="tho-criticidad_rank">Crit.</th>
+            <th onclick="sortByO('nro_ov')" id="tho-nro_ov">OV</th>
+            <th onclick="sortByO('cliente')" id="tho-cliente">Cliente</th>
+            <th onclick="sortByO('cuit_cliente')" id="tho-cuit_cliente">CUIT</th>
+            <th onclick="sortByO('vendedor')" id="tho-vendedor">Vendedor</th>
+            <th onclick="sortByO('total_maquinas')" class="nm" id="tho-total_maquinas" title="Total de m&aacute;quinas en la OV">Total</th>
+            <th onclick="sortByO('en_deposito')" class="nm" id="tho-en_deposito" title="M&aacute;quinas f&iacute;sicamente en dep&oacute;sito, listas para entregar">Dep&oacute;sito</th>
+            <th onclick="sortByO('en_proveedor')" class="nm" id="tho-en_proveedor" title="M&aacute;quinas con OC abierta al proveedor, esperando recepci&oacute;n">Proveedor</th>
+            <th onclick="sortByO('sin_cobertura')" class="nm" id="tho-sin_cobertura" title="M&aacute;quinas en la OV que NO tienen stock ni OC generada - falta gestionar la compra">S/Cob.</th>
+            <th>Distribuci&oacute;n</th>
+            <th onclick="sortByO('ov_paid')" id="tho-ov_paid">Cobro</th>
+            <th onclick="sortByO('ov_ok_alvaro')" id="tho-ov_ok_alvaro">OK Alvaro</th>
+            <th onclick="sortByO('fecha_ov')" id="tho-fecha_ov">Fecha OV</th>
+            <th>Recomendaci&oacute;n</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body-o"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
 
+<script>
+function switchTab(t){
+  ['disp','pend','ov'].forEach(function(k){
+    var btn=document.getElementById('tab-btn-'+k);
+    var view=document.getElementById('view-'+k);
+    if(btn)btn.classList.toggle('active',t===k);
+    if(view)view.classList.toggle('active',t===k);
+  });
+  var sub=document.querySelector('.h-logo b');
+  if(sub){
+    if(t==='disp')sub.textContent='Disponibilidad de Maquinaria';
+    else if(t==='pend')sub.textContent='Pendiente de Entrega / Cobro';
+    else if(t==='ov')sub.textContent='Estado por Orden de Venta';
+  }
+}
+</script>
 <script>
 const U='https://rvumvnslydaobvvsywtu.supabase.co';
 const K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2dW12bnNseWRhb2J2dnN5d3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzM3NDksImV4cCI6MjA4NzQ0OTc0OX0.rE06TXMzBhvX0Uwzh2UquSFJs6CP18d81xrCC7MmX3c';
 const H={'apikey':K,'Authorization':'Bearer '+K};
 
 let FLAT=[],OC=[],SOL=[],EXQ=[];
+let PAID=[];
+let OVC=[];
+let LOT=[];
+let PEND=[];
 let RESUMEN=[];
 let sortCol='producto', sortAsc=true;
+let sortColP='fecha_ov', sortAscP=false;
+let sortColO='criticidad_rank', sortAscO=true;
 let expandedPid=null;
 
 const setL=(p,m)=>{document.getElementById('lfill').style.width=p+'%';document.getElementById('lmsg').textContent=m;};
 const fd=d=>d?new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'&#8212;';
 const pr=s=>(s||'').replace(/^\[[^\]]+\]\s*/,'').replace(/^MARCA:\s*/i,'').trim();
 const nb=(n,cls)=>n>0?`<span class="n-badge ${cls}">${n}</span>`:`<span class="n-badge nb-muted">0</span>`;
+
+// Busca el lot por (numero_serie, product_id). Retorna todos los lots que matchean
+// (porque pueden existir duplicados legitimos: misma serie en productos distintos, etc.).
+function lotsByKey(numero_serie,product_id){
+  if(!numero_serie)return [];
+  var pid=product_id!=null?Number(product_id):null;
+  return LOT.filter(function(l){
+    if(l.numero_serie!==numero_serie)return false;
+    if(pid!=null&&Number(l.product_id)!==pid)return false;
+    return true;
+  });
+}
+
+// Busca TODOS los lots con la misma serie (sin filtrar por producto) para detectar
+// duplicados en toda la DB. Sirve para marcar con badge "DUP" cuando corresponda.
+function lotsSameName(numero_serie){
+  if(!numero_serie)return [];
+  return LOT.filter(function(l){return l.numero_serie===numero_serie;});
+}
+
+// Detecta si el name de un lot tiene "pinta" de provisorio (formato LETRAS-NUMERO).
+// Esto es heuristico - no hay convencion garantizada, pero cubre los casos mas comunes
+// (MAR160-5, KM150-3, KM180-1, DZ150-1, SW220-1, HY-300, etc.).
+function pareceProvisorio(name){
+  if(!name)return false;
+  return /^[A-Z]{2,}[A-Z0-9]*-\d+$/i.test(name);
+}
+
+// Genera badges HTML para una serie:
+// - "verif" (verde) si el lot tiene chasis = name
+// - "s/verif" (amarillo) SOLO si el lot existe pero chasis vacio Y el name tiene pinta de provisorio
+//   (p.ej. MAR160-5 sin chasis cargado -> posible provisorio nunca actualizado)
+// - "DUP N" (rojo) si hay mas de un lot con la misma serie en toda la DB (reporta sin interpretar)
+// No muestra nada si la serie no tiene lot (aun no recibida, normal).
+function serieBadges(numero_serie,product_id){
+  if(!numero_serie)return '';
+  var ls=lotsByKey(numero_serie,product_id);
+  var all=lotsSameName(numero_serie);
+  var out='';
+  if(ls.length>0){
+    var verif=ls.filter(function(l){return l.estado_serie==='verificada';}).length;
+    var sinv =ls.filter(function(l){return l.estado_serie==='sin_verificar';}).length;
+    if(verif>0){
+      var tip='Chasis cargado en Odoo';
+      if(ls.length===1&&ls[0].chasis){tip='Chasis: '+ls[0].chasis+(ls[0].motor?' | Motor: '+ls[0].motor:'');}
+      out+='<span class="serie-badge sb-verif" title="'+tip+'">&#10003; verif</span>';
+    }
+    if(sinv>0&&pareceProvisorio(numero_serie)){
+      out+='<span class="serie-badge sb-sinv" title="Formato de serie sugiere provisorio y el chasis real no est&aacute; cargado en Odoo">&#9888; prov?</span>';
+    }
+  }
+  // Marcar duplicados globales (mismo name con distinto lot_id) - reporte puro, sin interpretar
+  if(all.length>1){
+    var otros=all.filter(function(l){
+      var esteLot=ls.find(function(x){return x.lot_id===l.lot_id;});
+      return !esteLot;
+    });
+    if(otros.length>0){
+      var productos=otros.map(function(l){return l.producto_nombre||('product_id='+l.product_id);}).join(' | ');
+      out+='<span class="serie-badge sb-dup" title="Existe(n) otro(s) lot(s) con la misma serie en: '+productos+'">&#9888; DUP '+all.length+'</span>';
+    }else if(ls.length>1){
+      out+='<span class="serie-badge sb-dup" title="Hay '+ls.length+' lots con mismo name y mismo product_id">&#9888; DUP '+ls.length+'</span>';
+    }
+  }
+  return out;
+}
 
 async function init(){
   // Funcion con paginacion para superar limite de 1000 filas del REST API
@@ -167,13 +442,26 @@ async function init(){
     var limit=1000;
     while(true){
       var url=base+(base.indexOf('?')>=0?'&':'?')+'limit='+limit+'&offset='+offset;
-      var r=await fetch(url,{headers:H});
-      if(!r.ok)return all;
-      var d=await r.json();
-      if(!Array.isArray(d))return all;
-      all=all.concat(d);
-      if(d.length<limit)break;
-      offset+=limit;
+      try{
+        var r=await fetch(url,{headers:H});
+        if(!r.ok){
+          var body='';
+          try{body=await r.text();}catch(_){}
+          console.warn('[get] HTTP',r.status,'en',url.split('?')[0],'-',body.substring(0,200));
+          return all;
+        }
+        var d=await r.json();
+        if(!Array.isArray(d)){
+          console.warn('[get] respuesta no-array en',url.split('?')[0],d);
+          return all;
+        }
+        all=all.concat(d);
+        if(d.length<limit)break;
+        offset+=limit;
+      }catch(err){
+        console.error('[get] exception en',url.split('?')[0],err);
+        return all;
+      }
     }
     return all;
   };
@@ -181,13 +469,54 @@ async function init(){
   OC=await get(`${U}/rest/v1/vista_oc_maquinaria?select=*&order=fecha_oc.desc`,50,'Cargando OC...');
   SOL=await get(`${U}/rest/v1/vista_sol_sin_asignar?select=*&order=fecha_ov.desc`,75,'Cargando OV...');
   EXQ=await get(`${U}/rest/v1/vista_existencia_con_ov?select=*&order=nro_ov.asc`,90,'Cargando existencia con OV...');
+  PAID=await get(`${U}/rest/v1/vista_ov_paid?select=*`,93,'Cargando estado de cobro...');
+  LOT=await get(`${U}/rest/v1/vista_lot_detalle?select=*`,99,'Cargando detalle de series...');
 
   // Normalizar product_id a numero en todos los datasets
   FLAT.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
   OC.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
   SOL.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
   EXQ.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
+  LOT.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
+
+  // Enriquecer EXQ: agregar maquinas de FLAT que tienen nro_ov pero EXQ no incluye.
+  // Esto cubre bugs donde vista_existencia_con_ov pierde filas (ej. 26H5238 de M00037).
+  // Reporta lo que hay, no corrige. Si ambas vistas lo tienen, se mantiene la de EXQ
+  // (que trae mas info: entrega_out, fc_emitida, cuit_cliente, vendedor).
+  var exqKeys=new Set();
+  EXQ.forEach(function(r){
+    if(r.numero_serie&&r.product_id)exqKeys.add(r.numero_serie+'|'+r.product_id);
+  });
+  var extras=0;
+  FLAT.forEach(function(r){
+    if(!r.nro_ov)return;
+    if(!(r.cantidad_stock>0)||r.en_customer)return;
+    var k=r.numero_serie+'|'+r.product_id;
+    if(exqKeys.has(k))return;
+    // Construir fila con el schema de EXQ (campos faltantes quedan en null - la UI los muestra como "-")
+    EXQ.push({
+      producto:r.producto,
+      product_tmpl_id_str:null,
+      product_id:Number(r.product_id),
+      numero_serie:r.numero_serie,
+      condition:null,
+      ubicacion:r.deposito,
+      entrega_out:null,
+      nro_ov:r.nro_ov,
+      cliente:r.cliente,
+      cuit_cliente:null,
+      vendedor:null,
+      fc_emitida:null,
+      fecha_ov:null,
+      _desde_flat:true // flag para que la UI pueda mostrar un aviso si quiere
+    });
+    extras++;
+  });
+  if(extras>0)console.info('[dashboard] EXQ enriquecido con '+extras+' maquina(s) de FLAT que no estaban en vista_existencia_con_ov');
+
   buildResumen();
+  buildOvc();
+  buildPendiente();
   document.getElementById('h-ts').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   // Poblar marcas
   const sel=document.getElementById('f-marca');
@@ -195,11 +524,24 @@ async function init(){
   const marcas=[...new Set(RESUMEN.map(r=>r.marca).filter(Boolean))].sort();
   marcas.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
   applyFilter();
+  applyFilterPend();
+  applyFilterOv();
   setL(100,'Listo');
   setTimeout(()=>document.getElementById('loader').classList.add('out'),300);
 }
 
 function buildResumen(){
+  // Set de series que estan en EXQ (stock con OV) - usado para reconciliar FLAT
+  // Bug conocido en vista_maquinaria_flat: a veces no detecta la OV asignada.
+  // EXQ es la fuente de verdad para series asignadas a OV.
+  var exqSeriesByPid=new Map();
+  EXQ.forEach(function(r){
+    if(!r.product_id||!r.numero_serie)return;
+    var pid=Number(r.product_id);
+    if(!exqSeriesByPid.has(pid))exqSeriesByPid.set(pid,new Set());
+    exqSeriesByPid.get(pid).add(r.numero_serie);
+  });
+
   // Agrupar FLAT por product_id
   const pmap=new Map();
   FLAT.forEach(r=>{
@@ -219,7 +561,9 @@ function buildResumen(){
     if(r.marca&&!p.marca)p.marca=r.marca;
     if(r.cantidad_stock>0&&!r.en_customer){
       p.existencia_total++;
-      if(r.nro_ov)p.existencia_con_ov++;
+      // La serie tiene OV si FLAT dice que si, O si aparece en EXQ (fuente de verdad)
+      var serieEnExq=exqSeriesByPid.has(r.product_id)&&exqSeriesByPid.get(r.product_id).has(r.numero_serie);
+      if(r.nro_ov||serieEnExq)p.existencia_con_ov++;
       else p.existencia_libre++;
     }
   });
@@ -389,7 +733,7 @@ function buildDet(pid){
         ${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length?`<div class="dsec-body"><table>
           <thead><tr><th>Serie</th><th>Dep&oacute;sito</th><th>Tipo</th></tr></thead>
           <tbody>${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).map(r=>`<tr>
-            <td class="tg">${r.numero_serie}</td>
+            <td class="tg">${r.numero_serie}${serieBadges(r.numero_serie,r.product_id)}</td>
             <td>${r.deposito||'&#8212;'}</td>
             <td>${(r.tipo_operacion||'').indexOf('Consign')>=0?'<span class="badge bp">Consig.</span>':'<span class="badge bg">Propia</span>'}</td>
           </tr>`).join('')}</tbody>
@@ -401,7 +745,7 @@ function buildDet(pid){
         ${exqPid.length?`<div class="dsec-body"><table>
           <thead><tr><th>Serie</th><th>OV</th><th>Cliente</th><th>Vendedor</th><th>Entrega</th><th>FC Emitida</th></tr></thead>
           <tbody>${exqPid.map(r=>`<tr>
-            <td class="tg">${r.numero_serie}</td>
+            <td class="tg">${r.numero_serie}${serieBadges(r.numero_serie,r.product_id)}</td>
             <td><span class="tb">${r.nro_ov||'&#8212;'}</span></td>
             <td>${r.cliente||'&#8212;'}</td>
             <td style="font-size:9px">${(r.vendedor||'').replace(' (Bricchi Hnos SA)','')}</td>
@@ -420,7 +764,7 @@ function buildDet(pid){
             return `<tr${serieRepetida?' style="background:rgba(239,68,68,.08)"':''}>
               <td class="tb">${r.nro_oc}</td>
               <td>${fd(r.fecha_oc)}</td>
-              <td class="tg">${r.nro_serie_prev||'<span class="tm">&#8212;</span>'}</td>
+              <td class="tg">${r.nro_serie_prev?r.nro_serie_prev+serieBadges(r.nro_serie_prev,r.product_id):'<span class="tm">&#8212;</span>'}</td>
               <td class="tm" style="font-size:9px">${r.nro_factura_compra||'<span class="tr">Sin FC</span>'}</td>
               <td class="tb">${r.nro_ov_vinculada}</td>
               <td>${r.cliente_ov||'&#8212;'}</td>
@@ -438,7 +782,7 @@ function buildDet(pid){
             <td class="to">${r.nro_oc}</td>
             <td class="tm">${r.fila_oc||'&#8212;'}</td>
             <td>${fd(r.fecha_oc)}</td>
-            <td class="tg">${r.nro_serie_prev||'<span class="tm">&#8212;</span>'}</td>
+            <td class="tg">${r.nro_serie_prev?r.nro_serie_prev+serieBadges(r.nro_serie_prev,r.product_id):'<span class="tm">&#8212;</span>'}</td>
             <td class="tm" style="font-size:9px">${r.nro_factura_compra||'<span class="tr">Sin FC</span>'}</td>
             <td style="font-size:9px">${r.proveedor||'&#8212;'}</td>
           </tr>`).join('')}</tbody>
@@ -470,6 +814,493 @@ function sortBy(col){
   const th=document.getElementById('th-'+col);
   if(th)th.classList.add(sortAsc?'asc':'desc');
   applyFilter();
+}
+
+// ================== SOLAPA PENDIENTE ENTREGA/COBRO ==================
+function ovMap(){
+  // Indexa vista_ov_paid por nro_ov -> {paid, ok_alvaro, cliente, cuit, vendedor, fecha_ov}
+  var m=new Map();
+  PAID.forEach(function(r){
+    if(!r.nro_ov)return;
+    m.set(r.nro_ov,{
+      paid:!!r.ov_paid,
+      ok_alvaro:!!r.ov_ok_alvaro,
+      cliente:r.cliente||'',
+      cuit:r.cuit_cliente||'',
+      vendedor:(r.vendedor||'').replace(' (Bricchi Hnos SA)',''),
+      fecha_ov:r.fecha_ov||null
+    });
+  });
+  return m;
+}
+
+function buildOvc(){
+  // Calcula estado consolidado por OV a partir de los datasets en memoria.
+  // Sustituye vista_ov_estado_consolidado (que causaba timeout en Supabase).
+  // Fuentes:
+  //   - EXQ (vista_existencia_con_ov): stock con OV asignada
+  //   - FLAT (vista_maquinaria_flat, cantidad_stock>0, nro_ov): para cubrir casos que EXQ omite
+  //   - OC (vista_oc_maquinaria): OC pendiente con OV vinculada
+  //   - SOL (vista_sol_sin_asignar): demanda sin cobertura
+  //   - PAID (vista_ov_paid): datos de cliente/cobro/ok_alvaro
+
+  var byOv=new Map(); // nro_ov -> {en_deposito, en_proveedor, sin_cobertura}
+  var getOrInit=function(ov){
+    if(!byOv.has(ov))byOv.set(ov,{en_deposito:0,en_proveedor:0,sin_cobertura:0});
+    return byOv.get(ov);
+  };
+
+  // (1) Depósito: UNION de EXQ y FLAT(nro_ov) por (numero_serie, product_id, nro_ov) sin duplicar
+  var depositoKeys=new Set();
+  EXQ.forEach(function(r){
+    if(!r.nro_ov||!r.numero_serie)return;
+    var k=r.nro_ov+'|'+r.numero_serie+'|'+r.product_id;
+    if(depositoKeys.has(k))return;
+    depositoKeys.add(k);
+    getOrInit(r.nro_ov).en_deposito++;
+  });
+  FLAT.forEach(function(r){
+    if(!r.nro_ov||!r.numero_serie)return;
+    if(!(r.cantidad_stock>0)||r.en_customer)return;
+    var k=r.nro_ov+'|'+r.numero_serie+'|'+r.product_id;
+    if(depositoKeys.has(k))return;
+    depositoKeys.add(k);
+    getOrInit(r.nro_ov).en_deposito++;
+  });
+
+  // (2) Proveedor: OC con OV vinculada pendiente, dedupe por pol_id
+  var ocSeenPol=new Set();
+  OC.forEach(function(r){
+    if(!r.nro_ov_vinculada||r.nro_ov_vinculada==='')return;
+    if(!esPendienteRecibir(r))return;
+    var k=r.pol_id!=null?('pol|'+r.pol_id):(r.nro_oc+'|'+r.nro_ov_vinculada+'|'+(r.proveedor||''));
+    if(ocSeenPol.has(k))return;
+    ocSeenPol.add(k);
+    getOrInit(r.nro_ov_vinculada).en_proveedor++;
+  });
+
+  // (3) Sin cobertura: SOL sin asignar y sin oc_vinculada
+  SOL.forEach(function(r){
+    if(!r.nro_ov)return;
+    if(r.asignada)return;
+    if(r.oc_vinculada&&r.oc_vinculada!=='')return;
+    getOrInit(r.nro_ov).sin_cobertura++;
+  });
+
+  // Enriquecer con datos de PAID y calcular criticidad
+  var pmap=new Map();
+  PAID.forEach(function(r){if(r.nro_ov)pmap.set(r.nro_ov,r);});
+
+  var out=[];
+  byOv.forEach(function(counts,nro_ov){
+    var p=pmap.get(nro_ov)||{};
+    var en_deposito=counts.en_deposito;
+    var en_proveedor=counts.en_proveedor;
+    var sin_cobertura=counts.sin_cobertura;
+    var total=en_deposito+en_proveedor+sin_cobertura;
+    var ov_paid=!!p.ov_paid;
+    var ov_ok_alvaro=!!p.ov_ok_alvaro;
+    var ov_partida=en_deposito>0&&(en_proveedor>0||sin_cobertura>0);
+    var criticidad;
+    if(ov_partida&&ov_paid)criticidad='critico';
+    else if(ov_partida)criticidad='alerta';
+    else if(en_deposito>0&&(ov_paid||ov_ok_alvaro))criticidad='entregable';
+    else if(en_proveedor>0||sin_cobertura>0)criticidad='informativo';
+    else criticidad='ok';
+    out.push({
+      nro_ov:nro_ov,
+      cliente:p.cliente||'',
+      cuit_cliente:p.cuit_cliente||'',
+      vendedor:p.vendedor||'',
+      fecha_ov:p.fecha_ov||null,
+      ov_paid:ov_paid,
+      ov_ok_alvaro:ov_ok_alvaro,
+      en_deposito:en_deposito,
+      en_proveedor:en_proveedor,
+      sin_cobertura:sin_cobertura,
+      total_maquinas:total,
+      ov_partida:ov_partida,
+      criticidad:criticidad
+    });
+  });
+  OVC=out;
+}
+
+function buildPendiente(){
+  // Arma lista unificada usando vista_ov_paid como fuente canonica de cliente/cuit/vendedor.
+  // Cada fila ademas se enriquece con datos de OVC (vista_ov_estado_consolidado)
+  // para saber si la OV esta partida y su criticidad.
+  var om=ovMap();
+  // Mapa OVC por nro_ov
+  var ovcMap=new Map();
+  OVC.forEach(function(r){if(r.nro_ov)ovcMap.set(r.nro_ov,r);});
+  var out=[];
+
+  function enrichWithOvc(row){
+    var c=ovcMap.get(row.nro_ov);
+    if(c){
+      row.ov_partida=!!c.ov_partida;
+      row.criticidad=c.criticidad||'ok';
+      row.ov_ok_alvaro=!!c.ov_ok_alvaro;
+      row.en_deposito=c.en_deposito||0;
+      row.en_proveedor=c.en_proveedor||0;
+      row.sin_cobertura=c.sin_cobertura||0;
+      row.total_maquinas=c.total_maquinas||0;
+    }else{
+      row.ov_partida=false;
+      row.criticidad='ok';
+      row.ov_ok_alvaro=false;
+      row.en_deposito=0;row.en_proveedor=0;row.sin_cobertura=0;row.total_maquinas=0;
+    }
+    row.completa_sort=row.ov_partida?(row.criticidad==='critico'?0:1):2;
+    return row;
+  }
+
+  // (1) Stock con OV (lista para entregar)
+  EXQ.forEach(function(r){
+    if(!r.nro_ov)return;
+    var ov=om.get(r.nro_ov)||{paid:false,cliente:r.cliente||'',cuit:r.cuit_cliente||'',vendedor:(r.vendedor||'').replace(' (Bricchi Hnos SA)',''),fecha_ov:r.fecha_ov||null};
+    var flatRef=FLAT.find(function(f){return Number(f.product_id)===Number(r.product_id);});
+    out.push(enrichWithOvc({
+      key:'exq|'+r.numero_serie+'|'+r.nro_ov,
+      nro_ov:r.nro_ov,
+      product_id:Number(r.product_id),
+      cliente:ov.cliente||r.cliente||'',
+      cuit:ov.cuit||r.cuit_cliente||'',
+      vendedor:ov.vendedor||(r.vendedor||'').replace(' (Bricchi Hnos SA)',''),
+      producto:pr(flatRef?flatRef.producto:''),
+      ref_interna:flatRef?(flatRef.ref_interna||''):'',
+      marca:flatRef?(flatRef.marca||''):'',
+      numero_serie:r.numero_serie||'',
+      ubicacion:r.ubicacion||'DEPCE',
+      fc_emitida:r.fc_emitida||'',
+      fecha_ov:ov.fecha_ov||r.fecha_ov||null,
+      entrega_out:r.entrega_out||'',
+      estado_entrega:'lista',
+      ok_alvaro:ov.ok_alvaro,
+      estado_cobro:ov.paid?'cobrada':'pend',
+      // estado_combo: si cobrada=lista-cobrada; si ok_alvaro sin paid=lista-okalvaro; sino=lista-pend
+      estado_combo: ov.paid ? 'lista-cobrada' : (ov.ok_alvaro ? 'lista-okalvaro' : 'lista-pend')
+    }));
+  });
+
+  // (2) OC con OV vinculada y pendiente de recepcion - dedupe por pol_id
+  var ocSeen=new Set();
+  OC.forEach(function(r){
+    if(!r.nro_ov_vinculada||r.nro_ov_vinculada==='')return;
+    if(r.serie_asignada==='t'||r.serie_asignada===true)return;
+    var esPend=esPendienteRecibir(r);
+    if(!esPend)return;
+    var key=r.pol_id!=null?('pol|'+r.pol_id):(r.nro_oc+'|'+r.nro_ov_vinculada+'|'+(r.proveedor||'')+'|'+(r.nro_serie_prev||''));
+    if(ocSeen.has(key))return;
+    ocSeen.add(key);
+    var ov=om.get(r.nro_ov_vinculada)||{paid:false,cliente:r.cliente_ov||'',cuit:'',vendedor:'',fecha_ov:r.fecha_oc||null};
+    var refMatch=(r.producto||'').match(/^\[([^\s\]]+)/);
+    var refOC=refMatch?refMatch[1]:'';
+    out.push(enrichWithOvc({
+      key:'oc|'+key,
+      nro_ov:r.nro_ov_vinculada,
+      product_id:Number(r.product_id),
+      cliente:ov.cliente||r.cliente_ov||'',
+      cuit:ov.cuit||'',
+      vendedor:ov.vendedor||'',
+      producto:pr(r.producto||''),
+      ref_interna:refOC,
+      marca:'',
+      numero_serie:r.nro_serie_prev||'',
+      ubicacion:'Proveedor ('+(r.proveedor||'s/d')+')',
+      fc_emitida:'',
+      fecha_ov:ov.fecha_ov||r.fecha_oc||null,
+      entrega_out:'',
+      estado_entrega:'proveedor',
+      ok_alvaro:ov.ok_alvaro,
+      estado_cobro:ov.paid?'cobrada':'pend',
+      estado_combo:ov.paid?'prov-cobrada':'prov-pend'
+    }));
+  });
+
+  // (3) Demanda sin cobertura
+  SOL.forEach(function(r){
+    if(r.asignada)return;
+    if(r.oc_vinculada&&r.oc_vinculada!=='')return;
+    var ov=om.get(r.nro_ov)||{paid:false,cliente:r.cliente||'',cuit:'',vendedor:(r.vendedor||'').replace(' (Bricchi Hnos SA)',''),fecha_ov:r.fecha_ov||null};
+    var flatRef=FLAT.find(function(f){return Number(f.product_id)===Number(r.product_id);});
+    out.push(enrichWithOvc({
+      key:'sol|'+r.nro_ov+'|'+r.product_id,
+      nro_ov:r.nro_ov||'',
+      product_id:Number(r.product_id),
+      cliente:ov.cliente||r.cliente||'',
+      cuit:ov.cuit||'',
+      vendedor:ov.vendedor||(r.vendedor||'').replace(' (Bricchi Hnos SA)',''),
+      producto:pr(r.producto||(flatRef?flatRef.producto:'')),
+      ref_interna:flatRef?(flatRef.ref_interna||''):'',
+      marca:flatRef?(flatRef.marca||''):'',
+      numero_serie:'',
+      ubicacion:'&#8212;',
+      fc_emitida:'',
+      fecha_ov:ov.fecha_ov||r.fecha_ov||null,
+      entrega_out:'',
+      estado_entrega:'sinasig',
+      ok_alvaro:ov.ok_alvaro,
+      estado_cobro:ov.paid?'cobrada':'pend',
+      estado_combo:ov.paid?'sinasig-cobrada':'sinasig-pend'
+    }));
+  });
+
+  PEND=out;
+  // Contador en tab
+  var cDisp=RESUMEN.length;
+  var cPend=PEND.length;
+  var cOv=OVC.length;
+  var el1=document.getElementById('cnt-disp'); if(el1)el1.textContent=cDisp;
+  var el2=document.getElementById('cnt-pend'); if(el2)el2.textContent=cPend;
+  var el3=document.getElementById('cnt-ov');   if(el3)el3.textContent=cOv;
+}
+
+function applyFilterPend(){
+  var q=(document.getElementById('fp-buscar').value||'').toLowerCase();
+  var estado=document.getElementById('fp-estado').value;
+  var pago=document.getElementById('fp-pago').value;
+  var data=PEND.filter(function(r){
+    if(q){
+      var campos=(r.nro_ov+' '+r.cliente+' '+r.cuit+' '+r.vendedor+' '+r.producto+' '+r.ref_interna+' '+r.numero_serie+' '+r.ubicacion).toLowerCase();
+      if(campos.indexOf(q)<0)return false;
+    }
+    if(estado){
+      if(estado==='sinasig'){
+        if(r.estado_entrega!=='sinasig')return false;
+      }else if(estado==='pend-cobro'){
+        if(r.estado_cobro!=='pend')return false;
+      }else{
+        if(r.estado_combo!==estado)return false;
+      }
+    }
+    if(pago==='si'&&r.estado_cobro!=='cobrada')return false;
+    if(pago==='no'&&r.estado_cobro!=='pend')return false;
+    return true;
+  });
+  data.sort(function(a,b){
+    var va=a[sortColP]||'',vb=b[sortColP]||'';
+    var primary;
+    if(sortColP==='fecha_ov'){
+      va=va||''; vb=vb||'';
+      primary=sortAscP?(va>vb?1:-1):(va<vb?1:-1);
+    }else{
+      primary=sortAscP?(va>vb?1:-1):(va<vb?1:-1);
+    }
+    if(primary!==0)return primary;
+    // Tie-breaker: agrupar filas de la misma OV
+    if(sortColP!=='nro_ov'){
+      if(a.nro_ov>b.nro_ov)return 1;
+      if(a.nro_ov<b.nro_ov)return -1;
+    }
+    return 0;
+  });
+  document.getElementById('cnt-lbl-p').textContent=data.length+' registro'+(data.length!==1?'s':'');
+  renderTablaPend(data);
+}
+
+function renderTablaPend(data){
+  var tbody=document.getElementById('tbl-body-p');
+  var badgeClass={
+    'lista-cobrada':'est-lista-cobrada',
+    'lista-pend':'est-lista-pend',
+    'lista-okalvaro':'est-lista-okalvaro',
+    'prov-cobrada':'est-prov-cobrada',
+    'prov-pend':'est-prov-pend',
+    'sinasig-pend':'est-sinasig-pend',
+    'sinasig-cobrada':'est-sinasig-cobrada'
+  };
+  var badgeText={
+    'lista-cobrada':'&#9733; Entregar YA',
+    'lista-pend':'Lista, sin cobrar',
+    'lista-okalvaro':'&#9733; Entregar (OK Alvaro)',
+    'prov-cobrada':'Cobrada, en prov.',
+    'prov-pend':'Prov. sin cobrar',
+    'sinasig-pend':'Sin asignar',
+    'sinasig-cobrada':'S/asig, cobrada'
+  };
+  tbody.innerHTML=data.map(function(r){
+    // Badge de OV completa
+    var compBadge;
+    if(r.ov_partida){
+      var pendientes=(r.en_proveedor||0)+(r.sin_cobertura||0);
+      var listas=r.en_deposito||0;
+      var titulo='OV con '+listas+' m&aacute;quina'+(listas!==1?'s':'')+' en dep&oacute;sito y '+pendientes+' pendiente'+(pendientes!==1?'s':'')+'. Posible flete partido.';
+      if(r.criticidad==='critico'){
+        compBadge='<span class="completa-badge cb-partida-crit" title="'+titulo+'">&#9888; '+listas+'/'+r.total_maquinas+' - COBRADA</span>';
+      }else{
+        compBadge='<span class="completa-badge cb-partida" title="'+titulo+'">&#9888; '+listas+'/'+r.total_maquinas+' listas</span>';
+      }
+    }else if(r.estado_entrega==='lista'){
+      compBadge='<span class="completa-badge cb-ok" title="OV completa en dep&oacute;sito">&#10003; completa</span>';
+    }else if(r.total_maquinas>1){
+      compBadge='<span class="completa-badge cb-solo-prov" title="'+r.total_maquinas+' m&aacute;quinas, todas pendientes">'+r.total_maquinas+' pend.</span>';
+    }else{
+      compBadge='<span class="tm">&#8212;</span>';
+    }
+    // Clase de fila
+    var rowClass='';
+    if(r.criticidad==='critico')rowClass=' class="row-critica"';
+    else if(r.ov_partida)rowClass=' class="row-partida"';
+    else if(r.ov_ok_alvaro&&r.estado_entrega==='lista'&&r.estado_cobro!=='cobrada')rowClass=' class="row-entregable"';
+    return '<tr'+rowClass+'>'+
+      '<td class="tb">'+(r.nro_ov||'&#8212;')+'</td>'+
+      '<td>'+(r.cliente||'&#8212;')+'</td>'+
+      '<td class="tm" style="font-size:10px">'+(r.cuit||'&#8212;')+'</td>'+
+      '<td style="font-size:10px">'+(r.vendedor||'&#8212;')+'</td>'+
+      '<td>'+(r.producto||'&#8212;')+'</td>'+
+      '<td class="tb">'+(r.ref_interna||'&#8212;')+'</td>'+
+      '<td class="tg">'+(r.numero_serie?r.numero_serie+serieBadges(r.numero_serie,r.product_id):'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td class="tm" style="font-size:10px">'+(r.ubicacion||'&#8212;')+'</td>'+
+      '<td>'+(r.estado_entrega==='lista'?'<span class="badge bg">En dep&oacute;sito</span>':r.estado_entrega==='proveedor'?'<span class="badge bo">En proveedor</span>':'<span class="badge br">Sin asignar</span>')+'</td>'+
+      '<td>'+(r.estado_cobro==='cobrada'?'<span class="pay-yes">&#10003; Cobrada</span>':'<span class="pay-no">&#10007; Pendiente</span>')+'</td>'+
+      '<td>'+(r.ov_ok_alvaro?'<span class="alvaro-yes" title="OV autorizada por Alvaro - se puede entregar aunque no est&eacute; cobrada">&#10003; OK</span>':'<span class="alvaro-no">&#10007;</span>')+'</td>'+
+      '<td><span class="est-badge '+(badgeClass[r.estado_combo]||'')+'">'+(badgeText[r.estado_combo]||r.estado_combo)+'</span></td>'+
+      '<td>'+compBadge+'</td>'+
+      '<td class="tm">'+fd(r.fecha_ov)+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function sortByP(col){
+  if(sortColP===col)sortAscP=!sortAscP;
+  else{sortColP=col;sortAscP=true;}
+  document.querySelectorAll('#tbl-pend thead th').forEach(function(th){th.classList.remove('asc','desc');});
+  var th=document.getElementById('thp-'+col);
+  if(th)th.classList.add(sortAscP?'asc':'desc');
+  applyFilterPend();
+}
+
+// ================== SOLAPA ESTADO POR OV ==================
+function critRank(c){
+  // Orden: critico (0) > entregable (1) > alerta (2) > informativo (3) > ok (4)
+  // "entregable" va antes que "alerta" porque es accionable ya
+  return c==='critico'?0:c==='entregable'?1:c==='alerta'?2:c==='informativo'?3:4;
+}
+
+function applyFilterOv(){
+  var q=(document.getElementById('fo-buscar').value||'').toLowerCase();
+  var crit=document.getElementById('fo-crit').value;
+  var pago=document.getElementById('fo-pago').value;
+  var data=OVC.slice().filter(function(r){
+    if(q){
+      var campos=((r.nro_ov||'')+' '+(r.cliente||'')+' '+(r.cuit_cliente||'')+' '+(r.vendedor||'')).toLowerCase();
+      if(campos.indexOf(q)<0)return false;
+    }
+    if(crit){
+      if(crit==='partidas'){
+        if(!r.ov_partida)return false;
+      }else if(crit==='ok-alvaro'){
+        if(!r.ov_ok_alvaro)return false;
+      }else if(r.criticidad!==crit)return false;
+    }
+    if(pago==='si'&&!r.ov_paid)return false;
+    if(pago==='no'&&r.ov_paid)return false;
+    return true;
+  });
+  // enriquecer con rank para ordenar
+  data.forEach(function(r){r.criticidad_rank=critRank(r.criticidad);});
+  data.sort(function(a,b){
+    var va=a[sortColO],vb=b[sortColO];
+    if(va==null)va='';if(vb==null)vb='';
+    var p=sortAscO?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
+    if(p!==0)return p;
+    // tie-breaker: criticidad primero, fecha despues
+    if(a.criticidad_rank!==b.criticidad_rank)return a.criticidad_rank-b.criticidad_rank;
+    return (b.fecha_ov||'')>(a.fecha_ov||'')?1:-1;
+  });
+  document.getElementById('cnt-lbl-o').textContent=data.length+' OV'+(data.length!==1?'s':'');
+  renderTablaOv(data);
+}
+
+function renderTablaOv(data){
+  var tbody=document.getElementById('tbl-body-o');
+  var critBadge={
+    'critico':{cls:'crit-critico',txt:'&#9888; CR&Iacute;TICO'},
+    'alerta':{cls:'crit-alerta',txt:'ALERTA'},
+    'entregable':{cls:'crit-entregable',txt:'&#9733; ENTREGABLE'},
+    'informativo':{cls:'crit-informativo',txt:'Info'},
+    'ok':{cls:'crit-ok',txt:'OK'}
+  };
+  tbody.innerHTML=data.map(function(r){
+    var cb=critBadge[r.criticidad]||critBadge.ok;
+    // Distribucion visual (mini barra)
+    var total=r.total_maquinas||1;
+    var scale=120/Math.max(total,1); // 120px de ancho total
+    var segs='';
+    if(r.en_deposito>0)segs+='<span class="mini-seg ms-green" style="width:'+Math.max(4,r.en_deposito*scale)+'px" title="'+r.en_deposito+' en dep&oacute;sito"></span>';
+    if(r.en_proveedor>0)segs+='<span class="mini-seg ms-orange" style="width:'+Math.max(4,r.en_proveedor*scale)+'px" title="'+r.en_proveedor+' en proveedor"></span>';
+    if(r.sin_cobertura>0)segs+='<span class="mini-seg ms-red" style="width:'+Math.max(4,r.sin_cobertura*scale)+'px" title="'+r.sin_cobertura+' sin cobertura"></span>';
+    // Recomendacion (considera cobro y ok_alvaro)
+    var reco;
+    if(r.criticidad==='critico'){
+      reco='<span class="tr">&#9888; Decidir ya: esperar o flete parcial</span>';
+    }else if(r.criticidad==='alerta'){
+      if(r.ov_paid){
+        reco='<span class="tr">&#9888; Decidir flete: partida y cobrada</span>';
+      }else if(r.ov_ok_alvaro){
+        reco='<span style="color:var(--purple)">&#9733; Entregar lo recibido (OK Alvaro)</span>';
+      }else{
+        reco='<span class="to">Cobrar + decidir flete</span>';
+      }
+    }else if(r.en_deposito>0&&r.total_maquinas===r.en_deposito){
+      // Todo en deposito
+      if(r.ov_paid){
+        reco='<span class="tg">&#10003; Entregar ya</span>';
+      }else if(r.ov_ok_alvaro){
+        reco='<span style="color:var(--purple)">&#9733; Entregar ya (OK Alvaro)</span>';
+      }else{
+        reco='<span class="ty">Cobrar y entregar</span>';
+      }
+    }else if(r.en_proveedor>0&&r.en_deposito===0&&r.sin_cobertura===0){
+      if(r.ov_paid){
+        reco='<span class="tm">Aguardar llegada</span>';
+      }else{
+        reco='<span class="tm">Cobrar + aguardar llegada</span>';
+      }
+    }else if(r.sin_cobertura>0&&r.en_deposito===0&&r.en_proveedor===0){
+      reco='<span class="tr">Gestionar OC (sin cobertura)</span>';
+    }else if(r.sin_cobertura>0&&r.en_proveedor>0&&r.en_deposito===0){
+      if(r.ov_paid){
+        reco='<span class="to">Gestionar OC faltante</span>';
+      }else{
+        reco='<span class="to">Gestionar OC + cobrar</span>';
+      }
+    }else{
+      reco='<span class="tm">&#8212;</span>';
+    }
+    // Clase de fila
+    var rowClass='';
+    if(r.criticidad==='critico')rowClass=' class="row-critica"';
+    else if(r.ov_partida)rowClass=' class="row-partida"';
+    else if(r.criticidad==='entregable')rowClass=' class="row-entregable"';
+    return '<tr'+rowClass+'>'+
+      '<td><span class="completa-badge '+cb.cls+'">'+cb.txt+'</span></td>'+
+      '<td class="tb">'+(r.nro_ov||'&#8212;')+'</td>'+
+      '<td>'+(r.cliente||'&#8212;')+'</td>'+
+      '<td class="tm" style="font-size:10px">'+(r.cuit_cliente||'&#8212;')+'</td>'+
+      '<td style="font-size:10px">'+((r.vendedor||'').replace(' (Bricchi Hnos SA)','')||'&#8212;')+'</td>'+
+      '<td class="nm"><b>'+(r.total_maquinas||0)+'</b></td>'+
+      '<td class="nm">'+((r.en_deposito||0)>0?'<span class="tg">'+r.en_deposito+'</span>':'<span class="tm">0</span>')+'</td>'+
+      '<td class="nm">'+((r.en_proveedor||0)>0?'<span class="to">'+r.en_proveedor+'</span>':'<span class="tm">0</span>')+'</td>'+
+      '<td class="nm">'+((r.sin_cobertura||0)>0?'<span class="tr">'+r.sin_cobertura+'</span>':'<span class="tm">0</span>')+'</td>'+
+      '<td><div class="mini-bar">'+segs+'</div></td>'+
+      '<td>'+(r.ov_paid?'<span class="pay-yes">&#10003;</span>':'<span class="pay-no">&#10007;</span>')+'</td>'+
+      '<td>'+(r.ov_ok_alvaro?'<span class="alvaro-yes" title="OV autorizada por Alvaro - se puede entregar aunque no est&eacute; cobrada">&#10003; OK</span>':'<span class="alvaro-no">&#10007;</span>')+'</td>'+
+      '<td class="tm">'+fd(r.fecha_ov)+'</td>'+
+      '<td style="font-size:10px">'+reco+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function sortByO(col){
+  if(sortColO===col)sortAscO=!sortAscO;
+  else{sortColO=col;sortAscO=true;}
+  document.querySelectorAll('#tbl-ov thead th').forEach(function(th){th.classList.remove('asc','desc');});
+  var th=document.getElementById('tho-'+col);
+  if(th)th.classList.add(sortAscO?'asc':'desc');
+  applyFilterOv();
 }
 
 init().catch(e=>{document.getElementById('lmsg').textContent='Error: '+e.message;document.getElementById('lmsg').style.color='#ef4444';});
