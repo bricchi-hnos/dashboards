@@ -493,7 +493,6 @@ async function init(){
     if(!(r.cantidad_stock>0)||r.en_customer)return;
     var k=r.numero_serie+'|'+r.product_id;
     if(exqKeys.has(k))return;
-    // Construir fila con el schema de EXQ (campos faltantes quedan en null - la UI los muestra como "-")
     EXQ.push({
       producto:r.producto,
       product_tmpl_id_str:null,
@@ -508,11 +507,39 @@ async function init(){
       vendedor:null,
       fc_emitida:null,
       fecha_ov:null,
-      _desde_flat:true // flag para que la UI pueda mostrar un aviso si quiere
+      _desde_flat:true
     });
     extras++;
   });
   if(extras>0)console.info('[dashboard] EXQ enriquecido con '+extras+' maquina(s) de FLAT que no estaban en vista_existencia_con_ov');
+
+  // ============ CORRECCION DE EXQ USANDO FLAT COMO FUENTE DE VERDAD ============
+  // BUG conocido: vista_existencia_con_ov a veces resuelve mal la OV/cliente cuando
+  // se recibe una serie con OV asignada por fila_oc. La verdad esta en FLAT (que
+  // resuelve la OV correcta correlacionando con purchase_order_line.id -> sale_order).
+  // Cuando una misma serie+producto aparece en ambas vistas con OV distinta:
+  //   - FLAT manda (sobrescribimos nro_ov y cliente en la fila de EXQ)
+  //   - Mantenemos los campos extra de EXQ (entrega_out, fc_emitida) si los hay
+  var flatBySerieProd=new Map();
+  FLAT.forEach(function(r){
+    if(!r.numero_serie||!r.nro_ov)return;
+    if(!(r.cantidad_stock>0)||r.en_customer)return;
+    flatBySerieProd.set(r.numero_serie+'|'+r.product_id,{nro_ov:r.nro_ov,cliente:r.cliente||''});
+  });
+  var corregidos=0;
+  EXQ.forEach(function(r){
+    if(r._desde_flat)return;
+    if(!r.numero_serie||!r.product_id)return;
+    var fl=flatBySerieProd.get(r.numero_serie+'|'+r.product_id);
+    if(!fl)return;
+    if(fl.nro_ov!==r.nro_ov){
+      console.info('[dashboard] Corrigiendo serie '+r.numero_serie+': EXQ dec\u00eda '+r.nro_ov+' ('+r.cliente+') -> FLAT dice '+fl.nro_ov+' ('+fl.cliente+')');
+      r.nro_ov=fl.nro_ov;
+      r.cliente=fl.cliente;
+      r._corregido_por_flat=true;
+    }
+    corregidos++;
+  });
 
   buildResumen();
   buildOvc();
@@ -571,7 +598,9 @@ function buildResumen(){
   // OC pendientes deduplicadas - por pol_id (cada linea es unica)
   const ocSeen=new Set();
   OC.forEach(r=>{
-    if(!r.product_id||r.serie_asignada)return;
+    if(!r.product_id)return;
+    // BUG AITIC: serie_asignada queda con valor pegado en filas que NO recibieron.
+    // Ignoramos ese campo y nos guiamos solo por qty_received < qty_pedida.
     // Incluir 'pending' y 'partial' con qty_received < qty_pedida (aun no recibida)
     var esPendiente=r.estado_recepcion==='pending'||(r.estado_recepcion==='partial'&&(r.qty_received||0)<(r.qty_pedida||1));
     if(!esPendiente)return;
@@ -691,7 +720,7 @@ function buildDet(pid){
   // OC pendientes por este producto
   const ocSeen=new Set();
   const ocPend=[];
-  OC.filter(r=>r.product_id===pid&&!r.serie_asignada&&(r.estado_recepcion==='pending'||(r.estado_recepcion==='partial'&&(r.qty_received||0)<(r.qty_pedida||1)))).forEach(r=>{
+  OC.filter(r=>r.product_id===pid&&(r.estado_recepcion==='pending'||(r.estado_recepcion==='partial'&&(r.qty_received||0)<(r.qty_pedida||1)))).forEach(r=>{
     const key=r.pol_id!=null?('pol|'+r.pol_id):(r.nro_oc+'|'+(r.nro_ov_vinculada||'')+'|'+(r.proveedor||''));
     if(ocSeen.has(key))return;
     ocSeen.add(key);
@@ -988,7 +1017,7 @@ function buildPendiente(){
   var ocSeen=new Set();
   OC.forEach(function(r){
     if(!r.nro_ov_vinculada||r.nro_ov_vinculada==='')return;
-    if(r.serie_asignada==='t'||r.serie_asignada===true)return;
+    // BUG AITIC: serie_asignada queda con valor pegado. Ignoramos ese campo.
     var esPend=esPendienteRecibir(r);
     if(!esPend)return;
     var key=r.pol_id!=null?('pol|'+r.pol_id):(r.nro_oc+'|'+r.nro_ov_vinculada+'|'+(r.proveedor||'')+'|'+(r.nro_serie_prev||''));
