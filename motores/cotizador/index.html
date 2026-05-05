@@ -369,8 +369,9 @@
   }
   .faltante-box input { font-weight: bold; font-size: 15px; }
   .faltante-box .hint { font-size: 11px; color: #8a6d00; margin-top: 4px; }
+  .faltante-box .equiv { font-size: 11px; color: #8a6d00; margin-top: 4px; font-weight: 600; }
   .faltante-box.error { background: #fde7e2; border-color: #c8220a; }
-  .faltante-box.error label, .faltante-box.error .hint { color: #c8220a; }
+  .faltante-box.error label, .faltante-box.error .hint, .faltante-box.error .equiv { color: #c8220a; }
 
   .no-print .actions {
     display: flex;
@@ -445,9 +446,10 @@
   table.nota-table td.num, table.nota-table th.num { text-align: right; }
 
   .totales-nota { margin-top: 12px; display: flex; justify-content: flex-end; }
-  .totales-nota table { width: auto; min-width: 340px; border-collapse: collapse; font-size: 12px; }
+  .totales-nota table { width: auto; min-width: 380px; border-collapse: collapse; font-size: 12px; }
   .totales-nota td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; }
   .totales-nota td.num { text-align: right; }
+  .totales-nota td.sub-pesos { font-size: 10px; color: #888; padding-top: 0; padding-bottom: 6px; border: none; }
   .totales-nota .total-final { font-weight: bold; font-size: 14px; border-top: 2px solid #c8220a; }
   .totales-nota .faltante-row { background: #fff9e6; font-weight: 600; }
 
@@ -641,19 +643,20 @@
   <div class="total-line"><span>Condición</span><span id="t_cond">Contado</span></div>
   <div class="total-line"><span>Ítems</span><span id="t_items">0</span></div>
   <div class="total-line"><span>Subtotal s/IVA</span><span id="t_subtotal">USD 0,00</span></div>
-  <div class="total-line"><span>IVA <small id="t_iva_pct">10,5%</small></span><span id="t_iva">USD 0,00</span></div>
-  <div class="total-line big"><span>TOTAL</span><span id="t_total">USD 0,00</span></div>
-  <div class="total-line"><span><small>Equiv. en pesos</small></span><span id="t_total_ars"><small>$ 0,00</small></span></div>
-
-  <div class="cheques-mini" id="cheques_mini" style="display:none">
-    <h4>Caída de cheques (0/30/60/90)</h4>
-    <div id="cheques_mini_body"></div>
-  </div>
 
   <div class="faltante-box" id="faltante_box">
     <label>Faltante (sin IVA)</label>
     <input id="faltante" type="number" value="0" step="0.01" min="0">
+    <div class="equiv" id="faltante_equiv">≈ $ 0,00</div>
     <div class="hint" id="faltante_hint">Máx: USD 0,00 (50% del subtotal s/IVA)</div>
+  </div>
+
+  <div class="total-line" style="margin-top:8px"><span>Base imponible</span><span id="t_base">USD 0,00</span></div>
+  <div class="total-line"><span>IVA <small id="t_iva_pct">10,5%</small></span><span id="t_iva">USD 0,00</span></div>
+
+  <div class="cheques-mini" id="cheques_mini" style="display:none">
+    <h4>Caída de cheques (0/30/60/90)</h4>
+    <div id="cheques_mini_body"></div>
   </div>
 
   <div class="total-line big" style="margin-top: 10px;"><span>A PAGAR</span><span id="t_pagar">USD 0,00</span></div>
@@ -782,7 +785,6 @@ function updateClientesCount() {
   document.getElementById("clientes_count").textContent = getClientes().length;
 }
 
-// Clave única: CUIT si existe, si no nombre normalizado
 function normalizar(s) { return (s || "").toLowerCase().trim().replace(/\s+/g, " "); }
 function claveCliente(c) { return (c.cuit || "").trim() || "N:" + normalizar(c.nombre); }
 
@@ -990,35 +992,16 @@ function recolectarItems() {
   return items;
 }
 
-// ============ RECÁLCULO ============
-function recalc() {
+// ============ CÁLCULO CENTRAL (única fuente de verdad) ============
+function calcular() {
   const cond = getCondGlobal();
   const items = recolectarItems();
   const tc = parseFloat(document.getElementById("tc").value) || 0;
   const ivaPct = parseFloat(document.getElementById("iva").value) || 0;
 
-  for (const m of MOTORES) {
-    const qty = parseFloat(document.getElementById("qty_" + m.ci).value) || 0;
-    const pc = document.getElementById("pc_" + m.ci);
-    const ph = document.getElementById("ph_" + m.ci);
-    const sub = document.getElementById("sub_" + m.ci);
-    const row = document.getElementById("row_" + m.ci);
-    pc.className = "num " + (cond === "contado" ? "precio-activo" : "precio-inactivo");
-    ph.className = "num " + (cond === "cheques" ? "precio-activo" : "precio-inactivo");
-    if (qty > 0) {
-      row.classList.add("active");
-      const precio = cond === "contado" ? m.contado : m.cheques;
-      sub.textContent = fmtUSD(precio * qty);
-    } else {
-      row.classList.remove("active");
-      sub.textContent = "—";
-    }
-  }
-
   const subtotal = items.reduce((s, it) => s + it.precio * it.qty, 0);
-  const iva = subtotal * ivaPct / 100;
-  const total = subtotal + iva;
 
+  // Faltante con tope 50% del subtotal sin IVA
   const topeFaltante = subtotal * 0.5;
   const faltInput = document.getElementById("faltante");
   let faltante = parseFloat(faltInput.value) || 0;
@@ -1029,34 +1012,64 @@ function recalc() {
   }
   if (subtotal === 0 && faltante > 0) { faltante = 0; faltInput.value = 0; }
 
-  const pagar = total - faltante;
+  // NUEVA LÓGICA: faltante descuenta del subtotal ANTES del IVA
+  const baseImponible = subtotal - faltante;
+  const iva = baseImponible * ivaPct / 100;
+  const pagar = baseImponible + iva;
 
-  document.getElementById("t_cond").textContent = cond === "contado" ? "Contado" : "4 E-cheques";
-  document.getElementById("t_items").textContent = items.reduce((s,i)=>s+i.qty,0);
-  document.getElementById("t_subtotal").textContent = fmtUSD(subtotal);
-  document.getElementById("t_iva_pct").textContent = ivaPct.toLocaleString("es-AR") + "%";
-  document.getElementById("t_iva").textContent = fmtUSD(iva);
-  document.getElementById("t_total").textContent = fmtUSD(total);
-  document.getElementById("t_total_ars").innerHTML = "<small>" + fmtARS(total * tc) + "</small>";
-  document.getElementById("t_pagar").textContent = fmtUSD(pagar);
-  document.getElementById("t_pagar_ars").innerHTML = "<small>" + fmtARS(pagar * tc) + "</small>";
-
-  const hint = document.getElementById("faltante_hint");
-  const box = document.getElementById("faltante_box");
-  hint.textContent = "Máx: " + fmtUSD(topeFaltante) + " (50% del subtotal s/IVA)";
-  box.classList.toggle("error", faltante >= topeFaltante && topeFaltante > 0);
-  faltInput.max = topeFaltante.toFixed(2);
-
-  renderMiniCheques(cond, total, faltante, tc);
+  return { cond, items, tc, ivaPct, subtotal, faltante, topeFaltante, baseImponible, iva, pagar };
 }
 
-function renderMiniCheques(cond, total, faltante, tc) {
+// ============ RECÁLCULO EN VIVO ============
+function recalc() {
+  const c = calcular();
+
+  // Marcar fila activa + columna activa + subtotal por línea
+  for (const m of MOTORES) {
+    const qty = parseFloat(document.getElementById("qty_" + m.ci).value) || 0;
+    const pc = document.getElementById("pc_" + m.ci);
+    const ph = document.getElementById("ph_" + m.ci);
+    const sub = document.getElementById("sub_" + m.ci);
+    const row = document.getElementById("row_" + m.ci);
+    pc.className = "num " + (c.cond === "contado" ? "precio-activo" : "precio-inactivo");
+    ph.className = "num " + (c.cond === "cheques" ? "precio-activo" : "precio-inactivo");
+    if (qty > 0) {
+      row.classList.add("active");
+      const precio = c.cond === "contado" ? m.contado : m.cheques;
+      sub.textContent = fmtUSD(precio * qty);
+    } else {
+      row.classList.remove("active");
+      sub.textContent = "—";
+    }
+  }
+
+  document.getElementById("t_cond").textContent = c.cond === "contado" ? "Contado" : "4 E-cheques";
+  document.getElementById("t_items").textContent = c.items.reduce((s,i)=>s+i.qty,0);
+  document.getElementById("t_subtotal").textContent = fmtUSD(c.subtotal);
+  document.getElementById("t_base").textContent = fmtUSD(c.baseImponible);
+  document.getElementById("t_iva_pct").textContent = c.ivaPct.toLocaleString("es-AR") + "%";
+  document.getElementById("t_iva").textContent = fmtUSD(c.iva);
+  document.getElementById("t_pagar").textContent = fmtUSD(c.pagar);
+  document.getElementById("t_pagar_ars").innerHTML = "<small>" + fmtARS(c.pagar * c.tc) + "</small>";
+
+  // Faltante: hint + equiv en pesos + estado de error
+  const hint = document.getElementById("faltante_hint");
+  const box = document.getElementById("faltante_box");
+  const equiv = document.getElementById("faltante_equiv");
+  hint.textContent = "Máx: " + fmtUSD(c.topeFaltante) + " (50% del subtotal s/IVA)";
+  equiv.textContent = "≈ " + fmtARS(c.faltante * c.tc);
+  box.classList.toggle("error", c.faltante >= c.topeFaltante && c.topeFaltante > 0);
+  document.getElementById("faltante").max = c.topeFaltante.toFixed(2);
+
+  renderMiniCheques(c);
+}
+
+function renderMiniCheques(c) {
   const miniBox = document.getElementById("cheques_mini");
   const miniBody = document.getElementById("cheques_mini_body");
-  if (cond !== "cheques" || total <= 0) { miniBox.style.display = "none"; return; }
-  const pagar = total - faltante;
-  const cuotaUSD = pagar / 4;
-  const cuotaARS = cuotaUSD * tc;
+  if (c.cond !== "cheques" || c.pagar <= 0) { miniBox.style.display = "none"; return; }
+  const cuotaUSD = c.pagar / 4;
+  const cuotaARS = cuotaUSD * c.tc;
   const hoy = new Date();
   const fechas = [0,30,60,90].map(d => {
     const f = new Date(hoy); f.setDate(f.getDate() + d);
@@ -1112,21 +1125,11 @@ function generar() {
   const cliNombre = document.getElementById("cli_nombre").value.trim();
   if (!cliNombre) { alert("Faltan los datos del cliente."); return; }
 
-  const items = recolectarItems();
-  if (items.length === 0) {
+  const c = calcular();
+  if (c.items.length === 0) {
     alert("No hay motores seleccionados. Cargá al menos una cantidad > 0.");
     return;
   }
-
-  const cond = getCondGlobal();
-  const tc = parseFloat(document.getElementById("tc").value) || 0;
-  const ivaPct = parseFloat(document.getElementById("iva").value) || 0;
-  const faltante = parseFloat(document.getElementById("faltante").value) || 0;
-
-  const subtotal = items.reduce((s, it) => s + it.precio * it.qty, 0);
-  const iva = subtotal * ivaPct / 100;
-  const total = subtotal + iva;
-  const pagar = total - faltante;
 
   // Guardado automático del cliente
   upsertCliente({
@@ -1157,7 +1160,7 @@ function generar() {
     <div></div>
   `;
 
-  document.getElementById("nota_items").innerHTML = items.map(it => `
+  document.getElementById("nota_items").innerHTML = c.items.map(it => `
     <tr>
       <td>${it.ci}</td><td>${it.marca}</td><td>${it.modelo}</td>
       <td>${it.orden}</td><td>${it.compat}</td>
@@ -1167,23 +1170,28 @@ function generar() {
     </tr>
   `).join("");
 
+  // Tabla de totales con la NUEVA lógica:
+  // Subtotal s/IVA → Faltante s/IVA → Base imponible → IVA → A pagar
   let totalesHtml = `
-    <tr><td>Subtotal (sin IVA)</td><td class="num">${fmtUSD(subtotal)}</td></tr>
-    <tr><td>IVA ${ivaPct}%</td><td class="num">${fmtUSD(iva)}</td></tr>
-    <tr class="total-final"><td>TOTAL OPERACIÓN</td><td class="num">${fmtUSD(total)}</td></tr>
+    <tr><td>Subtotal (sin IVA)</td><td class="num">${fmtUSD(c.subtotal)}</td></tr>
   `;
-  if (faltante > 0) {
+  if (c.faltante > 0) {
     totalesHtml += `
-      <tr class="faltante-row"><td>Faltante (sin IVA)</td><td class="num">- ${fmtUSD(faltante)}</td></tr>
-      <tr class="total-final"><td>A PAGAR</td><td class="num">${fmtUSD(pagar)}</td></tr>
+      <tr class="faltante-row"><td>Faltante (sin IVA)</td><td class="num">- ${fmtUSD(c.faltante)}</td></tr>
+      <tr class="faltante-row"><td class="sub-pesos" colspan="2" style="text-align:right">Equiv. pesos: ${fmtARS(c.faltante * c.tc)}</td></tr>
+      <tr><td>Base imponible</td><td class="num">${fmtUSD(c.baseImponible)}</td></tr>
     `;
   }
-  totalesHtml += `<tr><td>Equiv. pesos (TC ${tc})</td><td class="num">${fmtARS(pagar * tc)}</td></tr>`;
+  totalesHtml += `
+    <tr><td>IVA ${c.ivaPct}%</td><td class="num">${fmtUSD(c.iva)}</td></tr>
+    <tr class="total-final"><td>A PAGAR</td><td class="num">${fmtUSD(c.pagar)}</td></tr>
+    <tr><td class="sub-pesos" colspan="2" style="text-align:right">Equiv. pesos (TC ${c.tc}): ${fmtARS(c.pagar * c.tc)}</td></tr>
+  `;
   document.getElementById("nota_totales").innerHTML = totalesHtml;
 
   const wrap = document.getElementById("nota_cheques_wrap");
-  if (cond === "cheques") {
-    const cuotaUSD = pagar / 4;
+  if (c.cond === "cheques") {
+    const cuotaUSD = c.pagar / 4;
     const fechas = [0,30,60,90].map(d => {
       const f = new Date(hoy); f.setDate(f.getDate() + d);
       return f.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit", year:"numeric" });
@@ -1191,26 +1199,26 @@ function generar() {
     wrap.innerHTML = `
       <h3>Plan de Pago · E-cheques (0/30/60/90)</h3>
       <table class="nota-table">
-        <thead><tr><th>Cheque</th><th>Vencimiento</th><th class="num">USD</th><th class="num">Pesos (TC ${tc})</th></tr></thead>
+        <thead><tr><th>Cheque</th><th>Vencimiento</th><th class="num">USD</th><th class="num">Pesos (TC ${c.tc})</th></tr></thead>
         <tbody>
           ${[1,2,3,4].map((n,i) => `
             <tr><td>Cheque ${n}</td><td>${fechas[i]}</td>
               <td class="num">${fmtUSD(cuotaUSD)}</td>
-              <td class="num">${fmtARS(cuotaUSD * tc)}</td></tr>
+              <td class="num">${fmtARS(cuotaUSD * c.tc)}</td></tr>
           `).join("")}
         </tbody>
       </table>
-      <p style="font-size:11px;color:#666;margin-top:4px">Plan calculado sobre el monto a pagar (total de la operación con IVA, descontando el faltante si lo hubiera).</p>
+      <p style="font-size:11px;color:#666;margin-top:4px">Plan calculado sobre el monto a pagar (base imponible más IVA, descontando el faltante del subtotal antes del cálculo del IVA).</p>
     `;
   } else {
     wrap.innerHTML = "";
   }
 
-  const obsExtra = faltante > 0
-    ? ` Se consigna un faltante de ${fmtUSD(faltante)} sin IVA, que representa el saldo pendiente por definir condición de pago.`
+  const obsExtra = c.faltante > 0
+    ? ` Se consigna un faltante de ${fmtUSD(c.faltante)} sin IVA (≈ ${fmtARS(c.faltante * c.tc)} al TC ${c.tc}), que se descuenta del subtotal antes del cálculo del IVA. Saldo pendiente por definir condición de pago.`
     : "";
   document.getElementById("nota_obs").textContent =
-    `Precios expresados en USD, IVA ${ivaPct}% discriminado. Facturación en pesos al TC del día de emisión de la factura.` + obsExtra;
+    `Precios expresados en USD, IVA ${c.ivaPct}% discriminado. Facturación en pesos al TC del día de emisión de la factura.` + obsExtra;
 
   document.querySelectorAll(".no-print").forEach(e => {
     if (!e.closest(".nota")) e.style.display = "none";
