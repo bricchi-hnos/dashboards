@@ -433,6 +433,17 @@ function serieBadges(numero_serie,product_id){
   return out;
 }
 
+// Badge Nuevo/Usado a partir del campo tipo_vehiculo de FLAT.
+// Si el dato no esta cargado en Odoo, muestra "?" tenue para que se note la falta.
+function nuBadge(tipo_vehiculo){
+  if(!tipo_vehiculo)return '<span class="serie-badge" style="background:rgba(148,163,184,.1);color:var(--muted);border:1px solid rgba(148,163,184,.3)" title="Tipo no cargado en Odoo">?</span>';
+  var t=String(tipo_vehiculo).toUpperCase();
+  if(t.indexOf('USADO')>=0)return '<span class="serie-badge" style="background:rgba(245,158,11,.18);color:var(--yellow);border:1px solid rgba(245,158,11,.4)">USADO</span>';
+  if(t.indexOf('NUEVO')>=0)return '<span class="serie-badge" style="background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.35)">NUEVO</span>';
+  // fallback: mostrar la categoria que vino (TRACTOR, etc) tenue, sin asumir N/U
+  return '<span class="serie-badge" style="background:rgba(148,163,184,.1);color:var(--muted);border:1px solid rgba(148,163,184,.25)" title="'+tipo_vehiculo+'">'+t.substring(0,4)+'</span>';
+}
+
 async function init(){
   // Funcion con paginacion para superar limite de 1000 filas del REST API
   const get=async(base,p,m)=>{
@@ -504,9 +515,10 @@ async function init(){
       nro_ov:r.nro_ov,
       cliente:r.cliente,
       cuit_cliente:null,
-      vendedor:null,
-      fc_emitida:null,
+      vendedor:r.vendedor||null,
+      fc_emitida:r.nro_factura_venta||null,
       fecha_ov:null,
+      tipo_vehiculo:r.tipo_vehiculo||null,
       _desde_flat:true
     });
     extras++;
@@ -540,6 +552,43 @@ async function init(){
     }
     corregidos++;
   });
+
+  // ============ ENRIQUECIMIENTO DESDE FLAT (vendedor, deposito, tipo_vehiculo) ============
+  // EXQ a veces no trae vendedor o deposito. FLAT si los tiene. Cuando coinciden serie+pid,
+  // tomamos esos datos de FLAT para completar lo que falte en EXQ.
+  var flatExtraBySerieProd=new Map();
+  FLAT.forEach(function(r){
+    if(!r.numero_serie||!r.product_id)return;
+    flatExtraBySerieProd.set(r.numero_serie+'|'+r.product_id,{
+      vendedor:r.vendedor||null,
+      deposito:r.deposito||null,
+      tipo_vehiculo:r.tipo_vehiculo||null,
+      nro_factura_venta:r.nro_factura_venta||null
+    });
+  });
+  EXQ.forEach(function(r){
+    var fl=flatExtraBySerieProd.get(r.numero_serie+'|'+r.product_id);
+    if(!fl)return;
+    if(!r.vendedor)r.vendedor=fl.vendedor;
+    if(!r.ubicacion)r.ubicacion=fl.deposito;
+    if(!r.tipo_vehiculo)r.tipo_vehiculo=fl.tipo_vehiculo;
+    if(!r.fc_emitida&&fl.nro_factura_venta)r.fc_emitida=fl.nro_factura_venta;
+  });
+
+  // ============ DEDUPLICACION DE EXQ ============
+  // Bug FLAT/EXQ: a veces se duplican filas con misma serie+producto+OV. Quedarnos con la
+  // primera ocurrencia (preferimos las originales de EXQ sobre las que sumamos desde FLAT).
+  var seenExq=new Set();
+  var exqDed=[];
+  EXQ.forEach(function(r){
+    var k=(r.numero_serie||'')+'|'+(r.product_id||'')+'|'+(r.nro_ov||'');
+    if(seenExq.has(k))return;
+    seenExq.add(k);
+    exqDed.push(r);
+  });
+  var dupesQuitados=EXQ.length-exqDed.length;
+  if(dupesQuitados>0)console.info('[dashboard] EXQ deduplicado: '+dupesQuitados+' fila(s) duplicada(s) eliminadas');
+  EXQ=exqDed;
 
   buildResumen();
   buildOvc();
@@ -760,9 +809,10 @@ function buildDet(pid){
       <div class="dsec">
         <div class="dsec-head"><span class="dot" style="background:var(--green)"></span>En Stock Libre &mdash; ${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length} unidad${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length!==1?'es':''}</div>
         ${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).length?`<div class="dsec-body"><table>
-          <thead><tr><th>Serie</th><th>Dep&oacute;sito</th><th>Tipo</th></tr></thead>
+          <thead><tr><th>Serie</th><th>N/U</th><th>Dep&oacute;sito</th><th>Tipo</th></tr></thead>
           <tbody>${enStock.filter(r=>!r.nro_ov&&!exqPid.some(e=>e.numero_serie===r.numero_serie)).map(r=>`<tr>
             <td class="tg">${r.numero_serie}${serieBadges(r.numero_serie,r.product_id)}</td>
+            <td>${nuBadge(r.tipo_vehiculo)}</td>
             <td>${r.deposito||'&#8212;'}</td>
             <td>${(r.tipo_operacion||'').indexOf('Consign')>=0?'<span class="badge bp">Consig.</span>':'<span class="badge bg">Propia</span>'}</td>
           </tr>`).join('')}</tbody>
@@ -772,12 +822,14 @@ function buildDet(pid){
       <div class="dsec">
         <div class="dsec-head"><span class="dot" style="background:var(--yellow)"></span>En Stock con OV &mdash; ${exqPid.length} unidad${exqPid.length!==1?'es':''}</div>
         ${exqPid.length?`<div class="dsec-body"><table>
-          <thead><tr><th>Serie</th><th>OV</th><th>Cliente</th><th>Vendedor</th><th>Entrega</th><th>FC Emitida</th></tr></thead>
+          <thead><tr><th>Serie</th><th>N/U</th><th>OV</th><th>Cliente</th><th>Vendedor</th><th>Dep&oacute;sito</th><th>Entrega</th><th>FC Emitida</th></tr></thead>
           <tbody>${exqPid.map(r=>`<tr>
             <td class="tg">${r.numero_serie}${serieBadges(r.numero_serie,r.product_id)}</td>
+            <td>${nuBadge(r.tipo_vehiculo)}</td>
             <td><span class="tb">${r.nro_ov||'&#8212;'}</span></td>
             <td>${r.cliente||'&#8212;'}</td>
-            <td style="font-size:9px">${(r.vendedor||'').replace(' (Bricchi Hnos SA)','')}</td>
+            <td style="font-size:9px">${(r.vendedor||'').replace(' (Bricchi Hnos SA)','')||'<span class="tm">&#8212;</span>'}</td>
+            <td style="font-size:9px">${r.ubicacion||'<span class="tm">&#8212;</span>'}</td>
             <td class="tm">${r.entrega_out||'&#8212;'}</td>
             <td>${r.fc_emitida?'<span class="badge bg">'+r.fc_emitida+'</span>':'<span class="badge by">Sin FC</span>'}</td>
           </tr>`).join('')}</tbody>
@@ -787,17 +839,22 @@ function buildDet(pid){
       <div class="dsec">
         <div class="dsec-head"><span class="dot" style="background:var(--accent)"></span>En Proveedor con OV &mdash; ${ocConOV.length} unidad${ocConOV.length!==1?'es':''}</div>
         ${ocConOV.length?`<div class="dsec-body"><table>
-          <thead><tr><th>OC</th><th>Fecha OC</th><th>N&#176; Serie Prov.</th><th>FC Compra</th><th>OV</th><th>Cliente</th><th>Inc.</th></tr></thead>
+          <thead><tr><th>OC</th><th>Fila</th><th>Fecha OC</th><th>N&#176; Serie Prov.</th><th>FC Compra</th><th>Proveedor</th><th>OV</th><th>Cliente</th><th>Inc.</th></tr></thead>
           <tbody>${ocConOV.map(r=>{
             const serieRepetida=r.nro_serie_prev&&OC.some(x=>x.nro_serie_prev===r.nro_serie_prev&&x.pol_id!==r.pol_id&&esPendienteRecibir(x));
-            return `<tr${serieRepetida?' style="background:rgba(239,68,68,.08)"':''}>
+            // Detectar si la MISMA OV esta vinculada a otra OC distinta y pendiente (asignacion duplicada por error)
+            const ovDuplicada=r.nro_ov_vinculada&&OC.some(x=>x.nro_ov_vinculada===r.nro_ov_vinculada&&x.nro_oc!==r.nro_oc&&esPendienteRecibir(x));
+            const tieneAlerta=serieRepetida||ovDuplicada;
+            return `<tr${tieneAlerta?' style="background:rgba(239,68,68,.08)"':''}>
               <td class="tb">${r.nro_oc}</td>
+              <td class="tm">${r.fila_oc||'&#8212;'}</td>
               <td>${fd(r.fecha_oc)}</td>
               <td class="tg">${r.nro_serie_prev?r.nro_serie_prev+serieBadges(r.nro_serie_prev,r.product_id):'<span class="tm">&#8212;</span>'}</td>
               <td class="tm" style="font-size:9px">${r.nro_factura_compra||'<span class="tr">Sin FC</span>'}</td>
+              <td style="font-size:9px">${r.proveedor||'<span class="tm">&#8212;</span>'}</td>
               <td class="tb">${r.nro_ov_vinculada}</td>
               <td>${r.cliente_ov||'&#8212;'}</td>
-              <td>${serieRepetida?'<span class="badge br" title="Serie duplicada en otra OC">&#9888;</span>':'<span class="tm">&#8212;</span>'}</td>
+              <td>${ovDuplicada?'<span class="badge br" title="Esta OV esta vinculada a mas de una OC pendiente. Verificar y desasignar la incorrecta en Odoo.">&#9888; OV en N OCs</span>':serieRepetida?'<span class="badge br" title="Serie provisoria duplicada en otra OC">&#9888; Serie dup</span>':'<span class="tm">&#8212;</span>'}</td>
             </tr>`;
           }).join('')}</tbody>
         </table></div>`:'<div class="np">Sin OC con OV vinculada</div>'}
