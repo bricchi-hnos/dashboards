@@ -650,10 +650,15 @@ function buildResumen(){
     exqSeriesByPid.get(pid).add(r.numero_serie);
   });
 
-  // Agrupar FLAT por product_id
+  // Agrupar FLAT por product_id - DEDUP por (lot_id+numero_serie+nro_ov) para evitar
+  // contar dos veces filas duplicadas que devuelve la vista (bug FLAT conocido).
+  var flatSeen=new Set();
   const pmap=new Map();
   FLAT.forEach(r=>{
     if(!r.product_id)return;
+    var dk=(r.lot_id||'')+'|'+(r.numero_serie||'')+'|'+(r.nro_ov||'')+'|'+(r.product_id||'');
+    if(flatSeen.has(dk))return;
+    flatSeen.add(dk);
     if(!pmap.has(r.product_id))pmap.set(r.product_id,{
       product_id:r.product_id,
       producto:pr(r.producto||''),
