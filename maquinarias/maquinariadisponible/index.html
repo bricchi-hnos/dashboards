@@ -517,6 +517,41 @@ async function init(){
   EXQ.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
   LOT.forEach(r=>{if(r.product_id!=null)r.product_id=Number(r.product_id);});
 
+  // ============ DEDUPLICACION DE OC + RECALCULO DE fila_oc ============
+  // BUG vista_oc_maquinaria: cada purchase.order.line aparece N veces (una por cada
+  // stock_move relacionado). Una linea real de OC se ve repetida 5-7 veces, inflando
+  // los conteos y mostrando "filas raras" como 26, 41, 61.
+  // 1) Deduplicar por pol_id (id real de la linea en Odoo) → una fila por linea real.
+  // 2) Recalcular fila_oc: ordenar las pol_id dentro de cada OC y asignar 1,2,3,...
+  //    Esto reproduce el numero de linea real que se ve al abrir la OC en Odoo.
+  if(OC.length){
+    var ocSeenIds=new Set();
+    var ocDed=[];
+    OC.forEach(function(r){
+      if(r.pol_id==null){ocDed.push(r);return;}
+      var pid=Number(r.pol_id);
+      if(ocSeenIds.has(pid))return;
+      ocSeenIds.add(pid);
+      ocDed.push(r);
+    });
+    var ocDupes=OC.length-ocDed.length;
+    if(ocDupes>0)console.info('[dashboard] OC deduplicada: '+ocDupes+' fila(s) duplicada(s) eliminadas (bug vista_oc_maquinaria)');
+
+    // Recalcular fila_oc real: agrupar por nro_oc, ordenar por pol_id, numerar 1..N
+    var ocByName=new Map();
+    ocDed.forEach(function(r){
+      if(!r.nro_oc||r.pol_id==null)return;
+      if(!ocByName.has(r.nro_oc))ocByName.set(r.nro_oc,[]);
+      ocByName.get(r.nro_oc).push(r);
+    });
+    ocByName.forEach(function(rows){
+      rows.sort(function(a,b){return Number(a.pol_id)-Number(b.pol_id);});
+      rows.forEach(function(r,idx){r.fila_oc=idx+1;});
+    });
+
+    OC=ocDed;
+  }
+
   // Enriquecer EXQ: agregar maquinas de FLAT que tienen nro_ov pero EXQ no incluye.
   // Esto cubre bugs donde vista_existencia_con_ov pierde filas (ej. 26H5238 de M00037).
   // Reporta lo que hay, no corrige. Si ambas vistas lo tienen, se mantiene la de EXQ
