@@ -146,6 +146,25 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
 .mini-bar{display:inline-flex;gap:2px;align-items:center;margin-left:6px}
 .mini-seg{height:10px;border-radius:2px;min-width:4px}
 .ms-green{background:var(--green)}.ms-orange{background:var(--orange)}.ms-red{background:var(--red)}.ms-muted{background:var(--surface3)}
+/* Botones de exportar */
+.export-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:3px;cursor:pointer;transition:.15s}
+.export-btn:hover{background:var(--surface3);border-color:var(--accent);color:var(--accent)}
+/* Impresion / PDF: oculta navegacion, muestra solo la tabla activa */
+@media print {
+  body{background:#fff !important;color:#000 !important;font-size:9px}
+  header, .tabs, .toolbar, .pend-tip, #loader{display:none !important}
+  .view{display:none !important}
+  .view.active{display:block !important}
+  main{padding:0 !important}
+  .tbl-box{background:#fff !important;border:none !important}
+  table{font-size:9px}
+  thead th{background:#eee !important;color:#000 !important;position:static !important}
+  tbody tr{break-inside:avoid;border-bottom:1px solid #ccc !important}
+  tbody td{color:#000 !important;padding:3px 5px !important}
+  .badge,.serie-badge{border:1px solid #888 !important;color:#000 !important;background:#fff !important}
+  .tg,.tr,.ty,.to,.tb,.tm{color:#000 !important}
+  @page{size:A4 landscape;margin:1cm}
+}
 </style>
 </head>
 <body>
@@ -165,6 +184,8 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
   <button class="tab-btn active" id="tab-btn-disp" onclick="switchTab('disp')">Disponibilidad <span class="tb-count" id="cnt-disp">0</span></button>
   <button class="tab-btn" id="tab-btn-pend" onclick="switchTab('pend')">Pendiente Entrega/Cobro <span class="tb-count" id="cnt-pend">0</span></button>
   <button class="tab-btn" id="tab-btn-ov" onclick="switchTab('ov')">Estado por OV <span class="tb-count" id="cnt-ov">0</span></button>
+  <button class="tab-btn" id="tab-btn-inv" onclick="switchTab('inv')">Inventario por Serie <span class="tb-count" id="cnt-inv">0</span></button>
+  <button class="tab-btn" id="tab-btn-prov" onclick="switchTab('prov')">Pendiente Recibir <span class="tb-count" id="cnt-prov">0</span></button>
 </div>
 <!-- ========== VIEW DISPONIBILIDAD ========== -->
 <div class="view active" id="view-disp">
@@ -336,10 +357,126 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
   </div>
 </main>
 </div>
+<!-- ========== VIEW INVENTARIO POR SERIE ========== -->
+<div class="view" id="view-inv">
+<div class="toolbar">
+  <span class="tb-label">Buscar:</span>
+  <input type="text" id="fi-buscar" placeholder="Serie, chasis, motor, producto..." oninput="applyFilterInv()">
+  <div class="sep"></div>
+  <span class="tb-label">Categoría:</span>
+  <select id="fi-categoria" onchange="applyFilterInv()">
+    <option value="">Todas</option>
+    <option value="maquinaria">Maquinarias</option>
+    <option value="motores">Motores</option>
+  </select>
+  <span class="tb-label">N/U:</span>
+  <select id="fi-condition" onchange="applyFilterInv()">
+    <option value="">Todos</option>
+    <option value="new">Nuevo</option>
+    <option value="used">Usado</option>
+  </select>
+  <span class="tb-label">Tipo:</span>
+  <select id="fi-tipo" onchange="applyFilterInv()">
+    <option value="">Todos</option>
+    <option value="propia">Propia</option>
+    <option value="consignacion">Consignación</option>
+  </select>
+  <span class="tb-label">Depósito:</span>
+  <select id="fi-deposito" onchange="applyFilterInv()"><option value="">Todos</option></select>
+  <div class="sep"></div>
+  <span id="cnt-lbl-i"></span>
+  <div class="sep"></div>
+  <button class="export-btn" onclick="exportInv('csv')">⇣ Excel</button>
+  <button class="export-btn" onclick="exportInv('pdf')">⇣ PDF</button>
+</div>
+<main>
+  <div class="tbl-box">
+    <div class="tw">
+      <table id="tbl-inv">
+        <thead>
+          <tr>
+            <th onclick="sortByI('numero_serie')" id="thi-numero_serie">N° Serie</th>
+            <th onclick="sortByI('condition')" id="thi-condition">N/U</th>
+            <th onclick="sortByI('tipo_operacion')" id="thi-tipo_operacion">Tipo</th>
+            <th onclick="sortByI('dueno')" id="thi-dueno">Dueño</th>
+            <th onclick="sortByI('deposito')" id="thi-deposito">Depósito</th>
+            <th onclick="sortByI('ref_interna')" id="thi-ref_interna">Ref. Int.</th>
+            <th onclick="sortByI('producto')" id="thi-producto">Producto</th>
+            <th onclick="sortByI('marca')" id="thi-marca">Marca</th>
+            <th onclick="sortByI('modelo')" id="thi-modelo">Modelo</th>
+            <th onclick="sortByI('chasis')" id="thi-chasis">Chasis</th>
+            <th onclick="sortByI('motor')" id="thi-motor">Motor</th>
+            <th onclick="sortByI('nro_ov')" id="thi-nro_ov">OV asignada</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body-i"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+<!-- ========== VIEW PENDIENTE RECIBIR (PROVEEDOR) ========== -->
+<div class="view" id="view-prov">
+<div class="toolbar">
+  <span class="tb-label">Buscar:</span>
+  <input type="text" id="fp2-buscar" placeholder="OC, producto, serie prov., OV..." oninput="applyFilterProv()">
+  <div class="sep"></div>
+  <span class="tb-label">Categoría:</span>
+  <select id="fp2-categoria" onchange="applyFilterProv()">
+    <option value="">Todas</option>
+    <option value="maquinaria">Maquinarias</option>
+    <option value="motores">Motores</option>
+    <option value="anticipos">Anticipos</option>
+  </select>
+  <span class="tb-label">Proveedor:</span>
+  <select id="fp2-proveedor" onchange="applyFilterProv()"><option value="">Todos</option></select>
+  <span class="tb-label">Estado:</span>
+  <select id="fp2-estado" onchange="applyFilterProv()">
+    <option value="">Todos</option>
+    <option value="pending">Pending (sin recibir)</option>
+    <option value="partial">Parcial</option>
+  </select>
+  <span class="tb-label">OV vinculada:</span>
+  <select id="fp2-ov" onchange="applyFilterProv()">
+    <option value="">Todos</option>
+    <option value="si">Con OV</option>
+    <option value="no">Sin OV</option>
+  </select>
+  <div class="sep"></div>
+  <span id="cnt-lbl-p2"></span>
+  <div class="sep"></div>
+  <button class="export-btn" onclick="exportProv('csv')">⇣ Excel</button>
+  <button class="export-btn" onclick="exportProv('pdf')">⇣ PDF</button>
+</div>
+<main>
+  <div class="tbl-box">
+    <div class="tw">
+      <table id="tbl-prov">
+        <thead>
+          <tr>
+            <th onclick="sortByP2('ref_interna')" id="thp2-ref_interna">Ref. Int.</th>
+            <th onclick="sortByP2('producto')" id="thp2-producto">Producto</th>
+            <th onclick="sortByP2('categoria')" id="thp2-categoria">Categoría</th>
+            <th onclick="sortByP2('total_lineas')" class="nm" id="thp2-total_lineas" title="Total de líneas pendientes de este producto">Líneas</th>
+            <th onclick="sortByP2('con_ov')" class="nm" id="thp2-con_ov" title="Líneas con OV vinculada">Con OV</th>
+            <th onclick="sortByP2('sin_ov')" class="nm" id="thp2-sin_ov" title="Líneas libres (sin OV)">Libres</th>
+            <th onclick="sortByP2('partial')" class="nm" id="thp2-partial" title="Líneas con recepción parcial">Parcial</th>
+            <th onclick="sortByP2('demanda_sc')" class="nm" id="thp2-demanda_sc" title="OVs de este producto sin stock asignado ni OC vinculada (demanda descubierta)">Dem. S/C</th>
+            <th onclick="sortByP2('proveedores')" id="thp2-proveedores">Proveedor(es)</th>
+            <th onclick="sortByP2('ultima_fecha_oc')" id="thp2-ultima_fecha_oc">Última OC</th>
+            <th onclick="sortByP2('dias_prom')" class="nm" id="thp2-dias_prom" title="Promedio ponderado de días transcurridos desde fecha OC, ponderado por cantidad pedida">Días prom.</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body-p2"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
 
 <script>
 function switchTab(t){
-  ['disp','pend','ov'].forEach(function(k){
+  ['disp','pend','ov','inv','prov'].forEach(function(k){
     var btn=document.getElementById('tab-btn-'+k);
     var view=document.getElementById('view-'+k);
     if(btn)btn.classList.toggle('active',t===k);
@@ -350,6 +487,8 @@ function switchTab(t){
     if(t==='disp')sub.textContent='Disponibilidad de Maquinaria';
     else if(t==='pend')sub.textContent='Pendiente de Entrega / Cobro';
     else if(t==='ov')sub.textContent='Estado por Orden de Venta';
+    else if(t==='inv')sub.textContent='Inventario por Número de Serie';
+    else if(t==='prov')sub.textContent='Pendiente de Recibir de Proveedores';
   }
 }
 </script>
@@ -672,6 +811,8 @@ async function init(){
   buildResumen();
   buildOvc();
   buildPendiente();
+  buildInv();
+  buildProv();
   document.getElementById('h-ts').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   // Poblar marcas
   const sel=document.getElementById('f-marca');
@@ -681,6 +822,8 @@ async function init(){
   applyFilter();
   applyFilterPend();
   applyFilterOv();
+  applyFilterInv();
+  applyFilterProv();
   setL(100,'Listo');
   setTimeout(()=>document.getElementById('loader').classList.add('out'),300);
 }
@@ -1266,6 +1409,375 @@ function buildPendiente(){
   var el1=document.getElementById('cnt-disp'); if(el1)el1.textContent=cDisp;
   var el2=document.getElementById('cnt-pend'); if(el2)el2.textContent=cPend;
   var el3=document.getElementById('cnt-ov');   if(el3)el3.textContent=cOv;
+}
+
+// ================== SOLAPA INVENTARIO POR SERIE ==================
+let INV=[];
+let sortColI='numero_serie', sortAscI=true;
+function buildInv(){
+  // Una fila por unidad fisica en mi deposito (propia + consignacion).
+  // Excluye entregadas (tipo_operacion='entregada' o usage='customer').
+  INV = FLAT.filter(function(r){
+    return r && r.cantidad_stock>0 && r.tipo_operacion!=='entregada' && !r.en_customer;
+  });
+  var el=document.getElementById('cnt-inv'); if(el)el.textContent=INV.length;
+  // Popula dropdown de depositos con valores reales
+  var sel=document.getElementById('fi-deposito');
+  if(sel){
+    var existentes=new Set();
+    Array.prototype.forEach.call(sel.options, function(o){existentes.add(o.value);});
+    var deps=[...new Set(INV.map(function(r){return r.deposito||'';}).filter(function(d){return d;}))].sort();
+    deps.forEach(function(d){
+      if(!existentes.has(d)){
+        var op=document.createElement('option'); op.value=d; op.textContent=d; sel.appendChild(op);
+      }
+    });
+  }
+}
+function sortByI(col){
+  if(sortColI===col)sortAscI=!sortAscI; else{sortColI=col;sortAscI=true;}
+  document.querySelectorAll('#tbl-inv thead th').forEach(function(th){th.classList.remove('asc','desc');});
+  var th=document.getElementById('thi-'+col); if(th)th.classList.add(sortAscI?'asc':'desc');
+  applyFilterInv();
+}
+function applyFilterInv(){
+  var q=(document.getElementById('fi-buscar').value||'').toLowerCase();
+  var cat=document.getElementById('fi-categoria').value;
+  var cond=document.getElementById('fi-condition').value;
+  var tipo=document.getElementById('fi-tipo').value;
+  var dep=document.getElementById('fi-deposito').value;
+  var data=INV.filter(function(r){
+    if(q){
+      var c=((r.numero_serie||'')+' '+(r.chasis||'')+' '+(r.motor||'')+' '+(r.producto||'')+' '+(r.marca||'')+' '+(r.modelo||'')+' '+(r.ref_interna||'')+' '+(r.dueno||'')+' '+(r.deposito||'')+' '+(r.nro_ov||'')+' '+(r.cliente||'')).toLowerCase();
+      if(c.indexOf(q)<0)return false;
+    }
+    if(cat==='maquinaria' && !((r.categoria||'').toLowerCase().includes('maquinaria')))return false;
+    if(cat==='motores'    && !((r.categoria||'').toLowerCase().includes('motores')))return false;
+    if(cond && (r.condition||'')!==cond)return false;
+    if(tipo && (r.tipo_operacion||'')!==tipo)return false;
+    if(dep  && (r.deposito||'')!==dep)return false;
+    return true;
+  });
+  data.sort(function(a,b){
+    var va=a[sortColI], vb=b[sortColI];
+    if(va==null)va=''; if(vb==null)vb='';
+    if(typeof va==='string')va=va.toLowerCase();
+    if(typeof vb==='string')vb=vb.toLowerCase();
+    if(va<vb)return sortAscI?-1:1;
+    if(va>vb)return sortAscI?1:-1;
+    return 0;
+  });
+  renderInv(data);
+}
+function renderInv(data){
+  var lbl=document.getElementById('cnt-lbl-i'); if(lbl)lbl.textContent=data.length+' / '+INV.length+' unidades';
+  var tipoLabel=function(t){
+    if(t==='consignacion')return '<span class="badge bp">Consig.</span>';
+    if(t==='propia')return '<span class="badge bg">Propia</span>';
+    return '<span class="tm">&#8212;</span>';
+  };
+  var nu=function(c){
+    if(c==='new')return '<span class="serie-badge sb-verif">NUEVO</span>';
+    if(c==='used')return '<span class="serie-badge sb-sinv">USADO</span>';
+    return '<span class="tm">?</span>';
+  };
+  var html=data.map(function(r){
+    return '<tr>'+
+      '<td class="tg">'+(r.numero_serie||'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td>'+nu(r.condition)+'</td>'+
+      '<td>'+tipoLabel(r.tipo_operacion)+'</td>'+
+      '<td>'+(r.dueno||'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td style="font-size:9px">'+(r.deposito||'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td class="tm">'+(r.ref_interna||'&#8212;')+'</td>'+
+      '<td>'+(r.producto||'')+'</td>'+
+      '<td>'+(r.marca||'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td>'+(r.modelo||'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td class="tm">'+(r.chasis||'&#8212;')+'</td>'+
+      '<td class="tm">'+(r.motor||'&#8212;')+'</td>'+
+      '<td class="tb">'+(r.nro_ov?r.nro_ov+(r.fila_ov?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov+'</span>':''):'<span class="tm">&#8212;</span>')+'</td>'+
+      '</tr>';
+  }).join('');
+  document.getElementById('tbl-body-i').innerHTML=html||'<tr><td colspan="12" class="np">Sin resultados</td></tr>';
+}
+
+// ================== SOLAPA PENDIENTE RECIBIR (PROVEEDOR) ==================
+let PROV=[];
+let sortColP2='fecha_oc', sortAscP2=false;
+function buildProv(){
+  // Una fila por linea de OC con estado_recepcion pending o partial.
+  PROV = OC.filter(function(r){return r && (r.estado_recepcion==='pending' || r.estado_recepcion==='partial');});
+  var el=document.getElementById('cnt-prov'); if(el)el.textContent=PROV.length;
+  // Popula dropdown de proveedores
+  var sel=document.getElementById('fp2-proveedor');
+  if(sel){
+    var existentes=new Set();
+    Array.prototype.forEach.call(sel.options, function(o){existentes.add(o.value);});
+    var provs=[...new Set(PROV.map(function(r){return r.proveedor||'';}).filter(function(p){return p;}))].sort();
+    provs.forEach(function(p){
+      if(!existentes.has(p)){
+        var op=document.createElement('option'); op.value=p; op.textContent=p; sel.appendChild(op);
+      }
+    });
+  }
+}
+let expandedProvPid = null;     // product_id de la fila expandida
+
+// Días transcurridos desde una fecha hasta hoy
+function diasDesde(fecha){
+  if(!fecha)return null;
+  var d=new Date(fecha);
+  if(isNaN(d.getTime()))return null;
+  var ms=Date.now() - d.getTime();
+  return Math.max(0, Math.floor(ms/86400000));
+}
+// Promedio ponderado: sum(v*w)/sum(w)
+function promPond(lineas, fnVal, fnPeso){
+  var num=0, den=0;
+  lineas.forEach(function(l){
+    var v=fnVal(l), w=fnPeso(l)||0;
+    if(v!=null && w>0){ num+=v*w; den+=w; }
+  });
+  return den>0 ? num/den : null;
+}
+// Formato del promedio: "85 d" o "—"
+function fmtDias(d){ return (d==null||isNaN(d))?'<span class="tm">&#8212;</span>':Math.round(d)+' d'; }
+
+function sortByP2(col){
+  if(sortColP2===col)sortAscP2=!sortAscP2; else{sortColP2=col;sortAscP2=true;}
+  document.querySelectorAll('#tbl-prov thead th').forEach(function(th){th.classList.remove('asc','desc');});
+  var th=document.getElementById('thp2-'+col); if(th)th.classList.add(sortAscP2?'asc':'desc');
+  applyFilterProv();
+}
+function toggleProvRow(pid){
+  expandedProvPid = (expandedProvPid===pid) ? null : pid;
+  applyFilterProv();
+}
+function applyFilterProv(){
+  var q=(document.getElementById('fp2-buscar').value||'').toLowerCase();
+  var cat=document.getElementById('fp2-categoria').value;
+  var prov=document.getElementById('fp2-proveedor').value;
+  var est=document.getElementById('fp2-estado').value;
+  var ov=document.getElementById('fp2-ov').value;
+  // 1) Filtrar lineas individuales con los criterios de la toolbar
+  var lineas=PROV.filter(function(r){
+    if(q){
+      var c=((r.nro_oc||'')+' '+(r.producto||'')+' '+(r.nro_serie_prev||'')+' '+(r.proveedor||'')+' '+(r.nro_ov_vinculada||'')+' '+(r.cliente_ov||'')+' '+(r.nro_factura_compra||'')+' '+(r.ref_interna||'')).toLowerCase();
+      if(c.indexOf(q)<0)return false;
+    }
+    if(cat==='maquinaria' && !((r.categoria||'').toLowerCase().includes('maquinaria')))return false;
+    if(cat==='motores'    && !((r.categoria||'').toLowerCase().includes('motores')))return false;
+    if(cat==='anticipos'  && !((r.producto||'').toLowerCase().includes('anticipo')))return false;
+    if(prov && (r.proveedor||'')!==prov)return false;
+    if(est  && (r.estado_recepcion||'')!==est)return false;
+    if(ov==='si' && !r.nro_ov_vinculada)return false;
+    if(ov==='no' && r.nro_ov_vinculada)return false;
+    return true;
+  });
+  // 2) Agrupar por product_id
+  var grupos=new Map();
+  lineas.forEach(function(l){
+    var pid=l.product_id;
+    if(!grupos.has(pid)){
+      grupos.set(pid,{
+        product_id:pid, ref_interna:l.ref_interna||'', producto:l.producto||'',
+        categoria:l.categoria||'',
+        total_lineas:0, con_ov:0, sin_ov:0, partial:0,
+        proveedores:new Set(), ultima_fecha_oc:null,
+        lineas:[]
+      });
+    }
+    var g=grupos.get(pid);
+    g.total_lineas++;
+    if(l.nro_ov_vinculada)g.con_ov++; else g.sin_ov++;
+    if(l.estado_recepcion==='partial')g.partial++;
+    if(l.proveedor)g.proveedores.add(l.proveedor);
+    if(l.fecha_oc && (!g.ultima_fecha_oc || l.fecha_oc>g.ultima_fecha_oc))g.ultima_fecha_oc=l.fecha_oc;
+    g.lineas.push(l);
+  });
+  // Mapa product_id -> count de demanda sin cobertura (OVs sin stock ni OC vinculada)
+  var demandaPorProd = new Map();
+  SOL.forEach(function(s){
+    if(!s.product_id || s.asignada || (s.oc_vinculada && s.oc_vinculada!=='' && s.oc_vinculada!==false))return;
+    var pid = Number(s.product_id);
+    demandaPorProd.set(pid, (demandaPorProd.get(pid)||0) + 1);
+  });
+  var data=[...grupos.values()].map(function(g){
+    g.proveedores=[...g.proveedores].join(', ');
+    // Promedio ponderado por cantidad pedida
+    g.dias_prom = promPond(g.lineas,
+      function(l){return diasDesde(l.fecha_oc);},
+      function(l){return l.qty_pedida||0;});
+    // Demanda sin cobertura del mismo producto
+    g.demanda_sc = demandaPorProd.get(Number(g.product_id)) || 0;
+    return g;
+  });
+  // Promedio global del proveedor (si hay filtro de proveedor)
+  var promGlobal = (prov && lineas.length) ? promPond(lineas,
+      function(l){return diasDesde(l.fecha_oc);},
+      function(l){return l.qty_pedida||0;}) : null;
+  window.__prov_filtro_actual = prov || null;
+  window.__prov_prom_global   = promGlobal;
+  // 3) Ordenar
+  data.sort(function(a,b){
+    var va=a[sortColP2], vb=b[sortColP2];
+    if(va==null)va=''; if(vb==null)vb='';
+    if(typeof va==='string')va=va.toLowerCase();
+    if(typeof vb==='string')vb=vb.toLowerCase();
+    if(va<vb)return sortAscP2?-1:1;
+    if(va>vb)return sortAscP2?1:-1;
+    return 0;
+  });
+  renderProv(data, lineas.length);
+}
+function renderProv(grupos, totalLineas){
+  var lbl=document.getElementById('cnt-lbl-p2');
+  if(lbl){
+    var txt=grupos.length+' productos · '+totalLineas+' líneas';
+    if(window.__prov_filtro_actual && window.__prov_prom_global!=null){
+      txt += ' · prom. ponderado '+window.__prov_filtro_actual+': '+Math.round(window.__prov_prom_global)+' días';
+    }
+    lbl.textContent=txt;
+  }
+  var estBadge=function(e){
+    if(e==='pending')return '<span class="badge bo">Pending</span>';
+    if(e==='partial')return '<span class="badge by">Parcial</span>';
+    return '<span class="tm">&#8212;</span>';
+  };
+  var html=grupos.map(function(g){
+    var isExp=(expandedProvPid===g.product_id);
+    var headerRow='<tr class="prov-group'+(isExp?' expanded':'')+'" onclick="toggleProvRow('+g.product_id+')" style="cursor:pointer">'+
+      '<td class="tm">'+(g.ref_interna||'&#8212;')+'</td>'+
+      '<td>'+(isExp?'&#9660; ':'&#9654; ')+(g.producto||'')+'</td>'+
+      '<td style="font-size:9px">'+(g.categoria||'').replace(/^Bienes de Cambio \/ Productos Terminados \/ /,'')+'</td>'+
+      '<td class="nm"><span class="n-badge nb-blue">'+g.total_lineas+'</span></td>'+
+      '<td class="nm">'+(g.con_ov?'<span class="n-badge nb-yellow">'+g.con_ov+'</span>':'<span class="n-badge nb-muted">0</span>')+'</td>'+
+      '<td class="nm">'+(g.sin_ov?'<span class="n-badge nb-orange">'+g.sin_ov+'</span>':'<span class="n-badge nb-muted">0</span>')+'</td>'+
+      '<td class="nm">'+(g.partial?'<span class="n-badge nb-yellow">'+g.partial+'</span>':'<span class="n-badge nb-muted">0</span>')+'</td>'+
+      '<td class="nm">'+(g.demanda_sc?'<span class="n-badge nb-red" title="'+g.demanda_sc+' OV(s) sin stock ni OC asignada para este producto">'+g.demanda_sc+'</span>':'<span class="n-badge nb-muted">0</span>')+'</td>'+
+      '<td style="font-size:9px">'+(g.proveedores||'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td>'+(g.ultima_fecha_oc?fd(g.ultima_fecha_oc):'&#8212;')+'</td>'+
+      '<td class="nm">'+fmtDias(g.dias_prom)+'</td>'+
+      '</tr>';
+    var detRow='';
+    if(isExp){
+      var lineasHtml=g.lineas.map(function(r){
+        var dias=diasDesde(r.fecha_oc);
+        return '<tr>'+
+          '<td class="tb">'+(r.nro_oc||'')+'</td>'+
+          '<td class="tm nm">'+(r.fila_oc||'')+'</td>'+
+          '<td>'+fd(r.fecha_oc)+'</td>'+
+          '<td class="nm">'+fmtDias(dias)+'</td>'+
+          '<td style="font-size:9px">'+(r.proveedor||'<span class="tm">&#8212;</span>')+'</td>'+
+          '<td class="tg">'+(r.nro_serie_prev||'<span class="tm">&#8212;</span>')+'</td>'+
+          '<td class="nm">'+(r.qty_pedida!=null?r.qty_pedida:'')+'</td>'+
+          '<td class="nm">'+(r.qty_received!=null?r.qty_received:0)+'</td>'+
+          '<td>'+estBadge(r.estado_recepcion)+'</td>'+
+          '<td class="tb">'+(r.nro_ov_vinculada?r.nro_ov_vinculada+(r.fila_ov_vinculada?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov_vinculada+'</span>':''):'<span class="tm">&#8212;</span>')+'</td>'+
+          '<td>'+(r.cliente_ov||'<span class="tm">&#8212;</span>')+'</td>'+
+          '<td class="tm" style="font-size:9px">'+(r.nro_factura_compra||'<span class="tr">Sin FC</span>')+'</td>'+
+          '</tr>';
+      }).join('');
+      detRow='<tr class="det-row open"><td colspan="11"><div class="det-inner"><div class="dsec"><div class="dsec-head"><span class="dot" style="background:var(--accent)"></span>'+g.total_lineas+' línea(s) de '+(g.producto||'')+' &middot; promedio ponderado: '+fmtDias(g.dias_prom)+'</div><div class="dsec-body"><table><thead><tr><th>OC</th><th>Fila</th><th>Fecha OC</th><th>Días</th><th>Proveedor</th><th>N° Serie Prov.</th><th>Pedido</th><th>Recibido</th><th>Estado</th><th>OV vinculada</th><th>Cliente</th><th>FC Compra</th></tr></thead><tbody>'+lineasHtml+'</tbody></table></div></div></div></td></tr>';
+    }
+    return headerRow+detRow;
+  }).join('');
+  document.getElementById('tbl-body-p2').innerHTML=html||'<tr><td colspan="11" class="np">Sin resultados</td></tr>';
+}
+
+// ================== EXPORTAR CSV / PDF ==================
+function fechaArchivo(){
+  var d=new Date();
+  var p=function(n){return String(n).padStart(2,'0');};
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+}
+function csvEscape(v){
+  if(v==null)return '';
+  var s=String(v).replace(/"/g,'""');
+  // Cuotea si tiene ; , " o salto de linea
+  if(s.indexOf(';')>=0||s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0||s.indexOf('\r')>=0)s='"'+s+'"';
+  return s;
+}
+function descargarCSV(filename, headers, rows){
+  // BOM UTF-8 + 'sep=;' para forzar a Excel a usar punto y coma como separador
+  var bom='﻿';
+  var prefijo='sep=;\r\n';
+  var SEP=';';
+  var lineas=[headers.map(csvEscape).join(SEP)];
+  rows.forEach(function(r){lineas.push(r.map(csvEscape).join(SEP));});
+  var blob=new Blob([bom+prefijo+lineas.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){document.body.removeChild(a); URL.revokeObjectURL(a.href);}, 100);
+}
+function filaInv(r){
+  return [r.numero_serie||'', r.condition||'', r.tipo_operacion||'', r.dueno||'', r.deposito||'',
+          r.ref_interna||'', r.producto||'', r.marca||'', r.modelo||'', r.chasis||'', r.motor||'', r.nro_ov||'',
+          r.fila_ov||'', r.cliente||''];
+}
+function filaProv(r){
+  var dias=diasDesde(r.fecha_oc);
+  return [r.nro_oc||'', r.fila_oc||'', r.fecha_oc?fd(r.fecha_oc):'',
+          dias!=null?dias:'',
+          r.proveedor||'', r.ref_interna||'', r.producto||'', r.nro_serie_prev||'',
+          r.qty_pedida!=null?r.qty_pedida:'', r.qty_received!=null?r.qty_received:0,
+          r.estado_recepcion||'', r.nro_ov_vinculada||'', r.fila_ov_vinculada||'',
+          r.cliente_ov||'', r.nro_factura_compra||''];
+}
+function exportInv(formato){
+  // Reaprovecha los filtros actuales
+  var q=(document.getElementById('fi-buscar').value||'').toLowerCase();
+  var cat=document.getElementById('fi-categoria').value;
+  var cond=document.getElementById('fi-condition').value;
+  var tipo=document.getElementById('fi-tipo').value;
+  var dep=document.getElementById('fi-deposito').value;
+  var data=INV.filter(function(r){
+    if(q){
+      var c=((r.numero_serie||'')+' '+(r.chasis||'')+' '+(r.motor||'')+' '+(r.producto||'')+' '+(r.marca||'')+' '+(r.modelo||'')+' '+(r.ref_interna||'')+' '+(r.dueno||'')+' '+(r.deposito||'')+' '+(r.nro_ov||'')+' '+(r.cliente||'')+' '+(r.sim_real||'')).toLowerCase();
+      if(c.indexOf(q)<0)return false;
+    }
+    if(cat==='maquinaria' && !((r.categoria||'').toLowerCase().includes('maquinaria')))return false;
+    if(cat==='motores'    && !((r.categoria||'').toLowerCase().includes('motores')))return false;
+    if(cond && (r.condition||'')!==cond)return false;
+    if(tipo && (r.tipo_operacion||'')!==tipo)return false;
+    if(dep  && (r.deposito||'')!==dep)return false;
+    return true;
+  });
+  if(formato==='csv'){
+    var headers=['N° Serie','N/U','Tipo','Dueño','Depósito','Ref. Int.','Producto','Marca','Modelo','Chasis','Motor','OV asignada','Fila OV','Cliente'];
+    descargarCSV('inventario_'+fechaArchivo()+'.csv', headers, data.map(filaInv));
+  } else {
+    // PDF: aseguramos que esta solapa esté activa y llamamos print()
+    switchTab('inv'); setTimeout(function(){window.print();}, 200);
+  }
+}
+function exportProv(formato){
+  var q=(document.getElementById('fp2-buscar').value||'').toLowerCase();
+  var cat=document.getElementById('fp2-categoria').value;
+  var prov=document.getElementById('fp2-proveedor').value;
+  var est=document.getElementById('fp2-estado').value;
+  var ov=document.getElementById('fp2-ov').value;
+  var data=PROV.filter(function(r){
+    if(q){
+      var c=((r.nro_oc||'')+' '+(r.producto||'')+' '+(r.nro_serie_prev||'')+' '+(r.proveedor||'')+' '+(r.nro_ov_vinculada||'')+' '+(r.cliente_ov||'')+' '+(r.nro_factura_compra||'')+' '+(r.ref_interna||'')).toLowerCase();
+      if(c.indexOf(q)<0)return false;
+    }
+    if(cat==='maquinaria' && !((r.categoria||'').toLowerCase().includes('maquinaria')))return false;
+    if(cat==='motores'    && !((r.categoria||'').toLowerCase().includes('motores')))return false;
+    if(cat==='anticipos'  && !((r.producto||'').toLowerCase().includes('anticipo')))return false;
+    if(prov && (r.proveedor||'')!==prov)return false;
+    if(est  && (r.estado_recepcion||'')!==est)return false;
+    if(ov==='si' && !r.nro_ov_vinculada)return false;
+    if(ov==='no' && r.nro_ov_vinculada)return false;
+    return true;
+  });
+  if(formato==='csv'){
+    var headers=['OC','Fila OC','Fecha OC','Días desde OC','Proveedor','Ref. Int.','Producto','N° Serie Prov.','Pedido','Recibido','Estado','OV vinculada','Fila OV','Cliente OV','FC Compra'];
+    descargarCSV('pendiente_recibir_'+fechaArchivo()+'.csv', headers, data.map(filaProv));
+  } else {
+    switchTab('prov'); setTimeout(function(){window.print();}, 200);
+  }
 }
 
 function applyFilterPend(){
