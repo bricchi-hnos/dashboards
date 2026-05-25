@@ -659,7 +659,7 @@ async function init(){
   EXQ=await get(`${U}/rest/v1/v_existencia_con_ov?select=*&order=nro_ov.asc`,90,'Cargando existencia con OV...');
   PAID=await get(`${U}/rest/v1/v_ov_paid?select=*`,93,'Cargando estado de cobro...');
   LOT=await get(`${U}/rest/v1/v_lot_detalle?select=*`,99,'Cargando detalle de series...');
-  ANTV=await get(`${U}/rest/v1/v_anticipos_venta?select=*&order=fecha_factura.desc`,99,'Cargando anticipos de venta...');
+  ANTV=await get(`${U}/rest/v1/v_anticipos_venta?select=*&order=nro_ov.asc,fecha_factura.asc`,99,'Cargando anticipos de venta...');
 
   // condition (NUEVO/USADO) ahora viene incluida en v_lot_detalle (campo `condition`).
   // Construimos el mismo COND_BY_LOT_ID que antes para no tocar el resto del JS.
@@ -842,6 +842,12 @@ async function init(){
   setTimeout(()=>document.getElementById('loader').classList.add('out'),300);
 }
 
+function fmtMoney(n){
+  var v=Number(n);
+  if(!isFinite(v))return '0,00';
+  return v.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
 function buildResumen(){
   // Set de series que estan en EXQ (stock con OV) - usado para reconciliar FLAT
   // Bug conocido en vista_maquinaria_flat: a veces no detecta la OV asignada.
@@ -922,29 +928,50 @@ function buildResumen(){
     if(pmap.has(r.product_id))pmap.get(r.product_id).demanda_sin_cobertura++;
   });
 
-  // Anticipos de venta (facturas) - una fila por factura, no un producto virtual agrupado.
-  // No tienen stock_quant ni OC: viven en account_move. Cada factura aparece como su propia
-  // "linea de producto" en el listado para que se pueda buscar por cliente, OV o factura.
+  // Anticipos de venta - AGRUPADOS por OV y NETEADOS (la vista v_anticipos_venta ya excluye
+  // los anticipos cancelados: saldo_neto = sum(FC anticipo) - sum(NC anticipo) de la MISMA OV > 0).
+  // Importante: "cobrado" (le imputaron el recibo) != "cancelado". Solo la NC de la misma OV
+  // cancela el anticipo. El estado de cobro se muestra como dato informativo, no filtra.
   if(ANTV&&ANTV.length){
-    ANTV.forEach(function(f,idx){
-      var k='antv_'+f.account_move_id;
+    var antByOv=new Map();
+    ANTV.forEach(function(f){
+      var ov=f.nro_ov||'s/OV';
+      if(!antByOv.has(ov)){
+        antByOv.set(ov,{
+          nro_ov:ov, cliente:f.cliente||'', cuit:f.cuit_cliente||'',
+          saldo_neto:Number(f.saldo_neto)||0,
+          total_fc:Number(f.total_fc)||0, total_nc:Number(f.total_nc)||0,
+          cant_fc:f.cant_fc||0, cant_nc:f.cant_nc||0,
+          cobrado:false, fecha:f.fecha_factura||null, comprobantes:[]
+        });
+      }
+      var g=antByOv.get(ov);
+      g.comprobantes.push(f);
+      if(f.tipo==='out_invoice'&&f.fc_cobrada)g.cobrado=true;
+      if(f.fecha_factura&&(!g.fecha||f.fecha_factura>g.fecha))g.fecha=f.fecha_factura;
+    });
+    antByOv.forEach(function(g,ov){
+      var k='antv_'+ov;
       pmap.set(k,{
         product_id:k,
-        producto:'Anticipo de Venta: '+(f.nro_factura||'s/n')+' ['+(f.nro_ov||'s/OV')+']',
-        ref_interna:f.nro_factura||'',
+        producto:'Anticipo de Venta ['+ov+']'+(g.cliente?' · '+g.cliente:''),
+        ref_interna:'Saldo $'+fmtMoney(g.saldo_neto),
         marca:'',
-        categoria:f.categoria||'',
+        categoria:'Anticipo de Venta',
         es_anticipo_venta:true,
-        anticipo_factura:f.nro_factura,
-        anticipo_fecha:f.fecha_factura,
-        anticipo_importe:f.importe_total,
-        anticipo_saldo:f.saldo_pendiente,
-        anticipo_ov:f.nro_ov,
-        anticipo_cliente:f.cliente,
-        anticipo_cuit:f.cuit_cliente,
+        anticipo_ov:ov,
+        anticipo_cliente:g.cliente,
+        anticipo_cuit:g.cuit,
+        anticipo_saldo_neto:g.saldo_neto,
+        anticipo_total_fc:g.total_fc,
+        anticipo_total_nc:g.total_nc,
+        anticipo_cant_fc:g.cant_fc,
+        anticipo_cant_nc:g.cant_nc,
+        anticipo_cobrado:g.cobrado,
+        anticipo_comprobantes:g.comprobantes,
         existencia_libre:0,existencia_con_ov:0,existencia_total:0,
         en_proveedor_libre:0,en_proveedor_con_ov:0,en_proveedor_total:0,
-        demanda_sin_cobertura:0,fecha_oc_mas_reciente:null
+        demanda_sin_cobertura:0,fecha_oc_mas_reciente:g.fecha
       });
     });
   }
@@ -1009,7 +1036,7 @@ function applyFilter(){
 function renderTabla(data){
   const tbody=document.getElementById('tbl-body');
   tbody.innerHTML=data.map(p=>`
-    <tr onclick="toggleDet(${p.product_id})" class="${expandedPid===p.product_id?'expanded row-mark':''}">
+    <tr onclick="toggleDet('${p.product_id}')" class="${String(expandedPid)===String(p.product_id)?'expanded row-mark':''}">
       <td>${p.producto}</td>
       <td class="tb">${p.ref_interna||'&#8212;'}</td>
       <td class="tm">${p.marca||'&#8212;'}</td>
@@ -1020,13 +1047,15 @@ function renderTabla(data){
       <td class="nm">${nb(p.demanda_sin_cobertura,'nb-red')}</td>
       <td class="tm">${fd(p.fecha_oc_mas_reciente)}</td>
     </tr>
-    <tr class="det-row ${expandedPid===p.product_id?'open':''}" id="det-${p.product_id}">
+    <tr class="det-row ${String(expandedPid)===String(p.product_id)?'open':''}" id="det-${p.product_id}">
       <td colspan="9"><div class="det-inner" id="det-inner-${p.product_id}"></div></td>
     </tr>
   `).join('');
 }
 
 function toggleDet(pid){
+  // Los product_id numericos llegan como string desde el onclick; los anticipos son 'antv_<OV>'.
+  if(typeof pid==='string'&&/^\d+$/.test(pid))pid=Number(pid);
   if(expandedPid===pid){expandedPid=null;applyFilter();return;}
   expandedPid=pid;
   applyFilter();
@@ -1040,8 +1069,41 @@ function esPendienteRecibir(r){
 }
 
 function buildDet(pid){
-  const p=RESUMEN.find(x=>x.product_id===pid);
+  const p=RESUMEN.find(x=>String(x.product_id)===String(pid));
   if(!p)return '';
+
+  // Detalle especial para anticipos de venta (agrupado por OV, neteado FC - NC).
+  if(p.es_anticipo_venta){
+    var comps=(p.anticipo_comprobantes||[]).slice().sort(function(a,b){
+      return (a.fecha_factura||'')<(b.fecha_factura||'')?-1:1;
+    });
+    var filas=comps.map(function(c){
+      var esNC=c.tipo==='out_refund';
+      var signo=esNC?'-':'+';
+      var tipoTxt=esNC?'<span class="tr">NC anticipo</span>':'<span class="tg">FC anticipo</span>';
+      var cobro=c.tipo==='out_invoice'
+        ? (c.fc_cobrada?'<span class="pay-yes">&#10003; Cobrada</span>':'<span class="pay-no">&#10007; Sin cobrar</span>')
+        : '<span class="tm">&#8212;</span>';
+      return '<tr>'+
+        '<td>'+tipoTxt+'</td>'+
+        '<td class="tb">'+(c.nro_factura||'&#8212;')+'</td>'+
+        '<td class="tm">'+fd(c.fecha_factura)+'</td>'+
+        '<td class="nm">'+signo+'$'+fmtMoney(c.importe_total)+'</td>'+
+        '<td>'+cobro+'</td>'+
+        '</tr>';
+    }).join('');
+    return '<div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px">'+
+        '&#9654; Anticipo de Venta &mdash; OV '+(p.anticipo_ov||'')+(p.anticipo_cliente?' &middot; '+p.anticipo_cliente:'')+(p.anticipo_cuit?' (CUIT '+p.anticipo_cuit+')':'')+
+      '</div>'+
+      '<div class="det-grid"><div class="dsec">'+
+        '<div class="dsec-head"><span class="dot" style="background:var(--green)"></span>Comprobantes del anticipo &mdash; saldo neto $'+fmtMoney(p.anticipo_saldo_neto)+(p.anticipo_cobrado?' &middot; <span class="pay-yes">anticipo cobrado</span>':' &middot; <span class="pay-no">anticipo sin cobrar</span>')+'</div>'+
+        '<div class="dsec-body"><table>'+
+          '<thead><tr><th>Tipo</th><th>Comprobante</th><th>Fecha</th><th>Importe</th><th>Cobro</th></tr></thead>'+
+          '<tbody>'+filas+'</tbody>'+
+          '<tfoot><tr><td colspan="3" style="text-align:right"><b>Saldo neto (FC '+fmtMoney(p.anticipo_total_fc)+' &minus; NC '+fmtMoney(p.anticipo_total_nc)+')</b></td><td class="nm"><b>$'+fmtMoney(p.anticipo_saldo_neto)+'</b></td><td></td></tr></tfoot>'+
+        '</table></div>'+
+      '</div></div>';
+  }
 
   // Series en stock
   const enStock=FLAT.filter(r=>r.product_id===pid&&r.cantidad_stock>0&&!r.en_customer);
