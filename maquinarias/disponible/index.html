@@ -607,6 +607,20 @@ function nuBadge(condition){
   return '<span class="serie-badge" style="background:rgba(148,163,184,.1);color:var(--muted);border:1px solid rgba(148,163,184,.25)">'+c.toUpperCase()+'</span>';
 }
 
+// Badge de inconsistencia en el vínculo nativo OC<->OV de Odoo.
+// El link OV->OC (sale_order_line.purchase_order_line_id) y OC->OV
+// (purchase_order_line.related_sale_order_id) deberían ser recíprocos.
+// Cuando solo existe en una dirección, lo marcamos: el dato es real, el problema está en Odoo.
+function incLinkBadge(val){
+  if(!val)return '';
+  var txt,tip;
+  if(val==='solo_lado_ov'){txt='&#9888; Inc. OV&rarr;OC';tip='La OV apunta a esta OC, pero la línea de compra NO apunta de vuelta a la OV (vínculo unidireccional en Odoo). Revisar related_sale_order_id / machine_assigned en la línea de la OC.';}
+  else if(val==='solo_lado_oc'){txt='&#9888; Inc. OC&rarr;OV';tip='La OC apunta a esta OV, pero ninguna línea de la OV apunta de vuelta a la OC (vínculo unidireccional en Odoo). Revisar el campo OC en la línea de la OV.';}
+  else if(val==='discrepancia'){txt='&#9888; Inc. cruce';tip='La OC y la OV se vinculan a órdenes distintas entre sí (discrepancia en Odoo).';}
+  else {txt='&#9888; Inc.';tip='Inconsistencia de vínculo OC&harr;OV en Odoo.';}
+  return ' <span class="serie-badge" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.4)" title="'+tip+'">'+txt+'</span>';
+}
+
 async function init(){
   // Funcion con paginacion para superar limite de 1000 filas del REST API
   const get=async(base,p,m)=>{
@@ -1094,7 +1108,7 @@ function buildDet(pid){
           <tbody>${exqPid.map(r=>`<tr>
             <td class="tg">${r.numero_serie}${serieBadges(r.numero_serie,r.product_id)}</td>
             <td>${nuBadge(r.condition||getCondition(r.numero_serie,r.product_id))}</td>
-            <td><span class="tb">${r.nro_ov||'&#8212;'}</span></td>
+            <td><span class="tb">${r.nro_ov||'&#8212;'}</span>${incLinkBadge(r.inconsistencia_link)}</td>
             <td>${r.cliente||'&#8212;'}</td>
             <td style="font-size:9px">${(r.vendedor||'').replace(' (Bricchi Hnos SA)','')||'<span class="tm">&#8212;</span>'}</td>
             <td style="font-size:9px">${r.ubicacion||'<span class="tm">&#8212;</span>'}</td>
@@ -1122,7 +1136,7 @@ function buildDet(pid){
               <td style="font-size:9px">${r.proveedor||'<span class="tm">&#8212;</span>'}</td>
               <td class="tb">${r.nro_ov_vinculada}${r.fila_ov_vinculada?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov_vinculada+'</span>':''}</td>
               <td>${r.cliente_ov||'&#8212;'}</td>
-              <td>${ovDuplicada?'<span class="badge br" title="Esta OV esta vinculada a mas de una OC pendiente. Verificar y desasignar la incorrecta en Odoo.">&#9888; OV en N OCs</span>':serieRepetida?'<span class="badge br" title="Serie provisoria duplicada en otra OC">&#9888; Serie dup</span>':'<span class="tm">&#8212;</span>'}</td>
+              <td>${ovDuplicada?'<span class="badge br" title="Esta OV esta vinculada a mas de una OC pendiente. Verificar y desasignar la incorrecta en Odoo.">&#9888; OV en N OCs</span>':serieRepetida?'<span class="badge br" title="Serie provisoria duplicada en otra OC">&#9888; Serie dup</span>':''}${incLinkBadge(r.inconsistencia_link)}${!ovDuplicada&&!serieRepetida&&!r.inconsistencia_link?'<span class="tm">&#8212;</span>':''}</td>
             </tr>`;
           }).join('')}</tbody>
         </table></div>`:'<div class="np">Sin OC con OV vinculada</div>'}
@@ -1245,6 +1259,14 @@ function buildOvc(){
   var pmap=new Map();
   PAID.forEach(function(r){if(r.nro_ov)pmap.set(r.nro_ov,r);});
 
+  // Inconsistencia de vínculo OC<->OV por OV (recolectada de las 4 fuentes)
+  var incOv=new Map();
+  var marcaInc=function(ov,val){if(ov&&val&&!incOv.has(ov))incOv.set(ov,val);};
+  OC.forEach(function(r){marcaInc(r.nro_ov_vinculada,r.inconsistencia_link);});
+  EXQ.forEach(function(r){marcaInc(r.nro_ov,r.inconsistencia_link);});
+  SOL.forEach(function(r){marcaInc(r.nro_ov,r.inconsistencia_link);});
+  FLAT.forEach(function(r){marcaInc(r.nro_ov,r.inconsistencia_link);});
+
   var out=[];
   byOv.forEach(function(counts,nro_ov){
     var p=pmap.get(nro_ov)||{};
@@ -1274,7 +1296,8 @@ function buildOvc(){
       sin_cobertura:sin_cobertura,
       total_maquinas:total,
       ov_partida:ov_partida,
-      criticidad:criticidad
+      criticidad:criticidad,
+      inconsistencia_link:incOv.get(nro_ov)||null
     });
   });
   OVC=out;
@@ -1300,6 +1323,7 @@ function buildPendiente(){
       row.en_proveedor=c.en_proveedor||0;
       row.sin_cobertura=c.sin_cobertura||0;
       row.total_maquinas=c.total_maquinas||0;
+      row.inconsistencia_link=c.inconsistencia_link||null;
     }else{
       row.ov_partida=false;
       row.criticidad='ok';
@@ -1494,7 +1518,7 @@ function renderInv(data){
       '<td>'+(r.modelo||'<span class="tm">&#8212;</span>')+'</td>'+
       '<td class="tm">'+(r.chasis||'&#8212;')+'</td>'+
       '<td class="tm">'+(r.motor||'&#8212;')+'</td>'+
-      '<td class="tb">'+(r.nro_ov?r.nro_ov+(r.fila_ov?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov+'</span>':''):'<span class="tm">&#8212;</span>')+'</td>'+
+      '<td class="tb">'+(r.nro_ov?r.nro_ov+(r.fila_ov?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov+'</span>':''):'<span class="tm">&#8212;</span>')+incLinkBadge(r.inconsistencia_link)+'</td>'+
       '</tr>';
   }).join('');
   document.getElementById('tbl-body-i').innerHTML=html||'<tr><td colspan="12" class="np">Sin resultados</td></tr>';
@@ -1672,7 +1696,7 @@ function renderProv(grupos, totalLineas){
           '<td class="nm">'+(r.qty_pedida!=null?r.qty_pedida:'')+'</td>'+
           '<td class="nm">'+(r.qty_received!=null?r.qty_received:0)+'</td>'+
           '<td>'+estBadge(r.estado_recepcion)+'</td>'+
-          '<td class="tb">'+(r.nro_ov_vinculada?r.nro_ov_vinculada+(r.fila_ov_vinculada?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov_vinculada+'</span>':''):'<span class="tm">&#8212;</span>')+'</td>'+
+          '<td class="tb">'+(r.nro_ov_vinculada?r.nro_ov_vinculada+(r.fila_ov_vinculada?'<span class="tm" style="font-size:9px"> &middot; fila '+r.fila_ov_vinculada+'</span>':''):'<span class="tm">&#8212;</span>')+incLinkBadge(r.inconsistencia_link)+'</td>'+
           '<td>'+(r.cliente_ov||'<span class="tm">&#8212;</span>')+'</td>'+
           '<td class="tm" style="font-size:9px">'+(r.nro_factura_compra||'<span class="tr">Sin FC</span>')+'</td>'+
           '</tr>';
@@ -1868,7 +1892,7 @@ function renderTablaPend(data){
     else if(r.ov_partida)rowClass=' class="row-partida"';
     else if(r.ov_ok_alvaro&&r.estado_entrega==='lista'&&r.estado_cobro!=='cobrada')rowClass=' class="row-entregable"';
     return '<tr'+rowClass+'>'+
-      '<td class="tb">'+(r.nro_ov||'&#8212;')+'</td>'+
+      '<td class="tb">'+(r.nro_ov||'&#8212;')+incLinkBadge(r.inconsistencia_link)+'</td>'+
       '<td>'+(r.cliente||'&#8212;')+'</td>'+
       '<td class="tm" style="font-size:10px">'+(r.cuit||'&#8212;')+'</td>'+
       '<td style="font-size:10px">'+(r.vendedor||'&#8212;')+'</td>'+
@@ -2000,7 +2024,7 @@ function renderTablaOv(data){
     else if(r.criticidad==='entregable')rowClass=' class="row-entregable"';
     return '<tr'+rowClass+'>'+
       '<td><span class="completa-badge '+cb.cls+'">'+cb.txt+'</span></td>'+
-      '<td class="tb">'+(r.nro_ov||'&#8212;')+'</td>'+
+      '<td class="tb">'+(r.nro_ov||'&#8212;')+incLinkBadge(r.inconsistencia_link)+'</td>'+
       '<td>'+(r.cliente||'&#8212;')+'</td>'+
       '<td class="tm" style="font-size:10px">'+(r.cuit_cliente||'&#8212;')+'</td>'+
       '<td style="font-size:10px">'+((r.vendedor||'').replace(' (Bricchi Hnos SA)','')||'&#8212;')+'</td>'+
