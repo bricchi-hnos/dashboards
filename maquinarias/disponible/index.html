@@ -178,7 +178,7 @@ tbody td{padding:7px 12px;font-family:var(--mono);font-size:11px;white-space:now
 </div>
 <header>
   <div class="h-logo">BRICCHI HNOS SA &middot; <b>Disponibilidad de Maquinaria</b></div>
-  <div class="h-meta"><span><span class="h-dot"></span><span id="h-ts">--:--</span></span><span id="h-tot"></span></div>
+  <div class="h-meta"><span><span class="h-dot"></span><span id="h-ts">--:--</span></span><span id="h-tot"></span><span id="h-ultima-sync-odoo" title="Última sincronización Odoo → Supabase">Odoo: …</span><button id="btn-actualizar" onclick="solicitarActualizacion()" title="Re-sincroniza las facturas (account.move) desde Odoo. Máx. 1 cada 30 min." style="margin-left:8px;padding:4px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:inherit;cursor:pointer">🔄 Actualizar facturas</button><span id="msg-actualizar" style="font-size:11px;margin-left:6px"></span></div>
 </header>
 <div class="tabs">
   <button class="tab-btn active" id="tab-btn-disp" onclick="switchTab('disp')">Disponibilidad <span class="tb-count" id="cnt-disp">0</span></button>
@@ -828,6 +828,8 @@ async function init(){
   buildInv();
   buildProv();
   document.getElementById('h-ts').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  // Banner última sync Odoo→Supabase
+  refrescarBannerSync();
   // Poblar marcas
   const sel=document.getElementById('f-marca');
   sel.innerHTML='<option value="">Todas</option>';
@@ -840,6 +842,48 @@ async function init(){
   applyFilterProv();
   setL(100,'Listo');
   setTimeout(()=>document.getElementById('loader').classList.add('out'),300);
+}
+
+async function refrescarBannerSync(){
+  try {
+    const r = await fetch(U+'/rest/v1/v_ultima_sync_odoo?select=*', { headers: { apikey: K, Authorization: 'Bearer '+K } });
+    if (!r.ok) return;
+    const arr = await r.json();
+    if (!arr[0]||!arr[0].sync_mas_reciente) return;
+    const dt = new Date(arr[0].sync_mas_reciente);
+    const horas = (Date.now()-dt.getTime())/3600000;
+    const txt = dt.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const ultFc = arr[0].ultima_fc_date ? new Date(arr[0].ultima_fc_date).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) : '—';
+    const el = document.getElementById('h-ultima-sync-odoo');
+    el.textContent = `Odoo: ${txt} · últ FC ${ultFc}` + (horas>12 ? ` ⚠+${horas.toFixed(0)}h` : '');
+    el.style.color = horas>12 ? '#c62828' : '';
+  } catch(e){ console.warn(e);}
+}
+
+// Botón "Actualizar facturas": pide al server una re-sync de account.move on-demand.
+// El cooldown de 30 min lo enforcea la función SQL public.fn_solicitar_actualizacion;
+// el server (tarea BricchiDatalake-OnDemand) atiende el pedido en <=5 min.
+async function solicitarActualizacion(){
+  var btn=document.getElementById('btn-actualizar');
+  var msg=document.getElementById('msg-actualizar');
+  if(!btn) return;
+  btn.disabled=true; btn.style.opacity=0.6; btn.textContent='Solicitando…';
+  try{
+    var r=await fetch(U+'/rest/v1/rpc/fn_solicitar_actualizacion',{
+      method:'POST',
+      headers:{apikey:K,'Authorization':'Bearer '+K,'Content-Type':'application/json'},
+      body:JSON.stringify({p_source:'maquinaria'})
+    });
+    var res=await r.json(); if(Array.isArray(res)) res=res[0];
+    if(res&&res.mensaje){ msg.textContent=res.mensaje; msg.style.color=res.ok?'#2e7d32':'#e65100'; }
+    else { msg.textContent='Respuesta inesperada del servidor.'; msg.style.color='#c62828'; }
+    if(res&&res.ok){
+      // refresco el banner de última sync para reflejar cuándo entran los datos nuevos
+      setTimeout(refrescarBannerSync, 90000);
+      setTimeout(refrescarBannerSync, 240000);
+    }
+  }catch(e){ msg.textContent='No se pudo solicitar la actualización.'; msg.style.color='#c62828'; }
+  finally{ btn.disabled=false; btn.style.opacity=1; btn.innerHTML='🔄 Actualizar facturas'; }
 }
 
 function fmtMoney(n){
