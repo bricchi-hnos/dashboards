@@ -42,7 +42,7 @@
       </select>
     </label>
     <a class="wa-btn" href="https://wa.me/543513159888?text=Hola%2C%20necesito%20el%20dashboard%20de%20Bricchi%20actualizado." target="_blank" rel="noopener" title="Pedir actualización por WhatsApp">⟳ Pedir actualización</a>
-    <div class="meta">Snapshot: 2026-06-24 20:50:31</div>
+    <div class="meta">Snapshot: 2026-06-24 22:18:04</div>
   </div>
 </header>
 <nav><button class="tab-btn" onclick="showTab('libro_iva')" id="btn-libro_iva">Libro IVA Ventas (por comprobante)</button>
@@ -146,7 +146,14 @@ function buildRemoteTable(key) {
     ajaxURL: SUPA_URL + "/rest/v1/" + cfg.resource,
     ajaxConfig: { method: "GET", headers: { apikey: SUPA_KEY, "Authorization": "Bearer " + SUPA_KEY, "Accept-Profile": PROFILE } },
     ajaxURLGenerator: pgURLGenerator(cfg),
-    ajaxResponse: function (url, params, response) { return response; },
+    ajaxResponse: function (url, params, response) {
+      // PostgREST devuelve un array pelado; Tabulator (progressiveLoad scroll) necesita {data, last_page}.
+      // Scroll infinito sin contar: pagina llena => hay otra; pagina corta => es la ultima.
+      var size = (params && params.size) || 200;
+      var page = (params && params.page) || 1;
+      var rows = Array.isArray(response) ? response : [];
+      return { data: rows, last_page: rows.length === size ? page + 1 : page };
+    },
     progressiveLoad: "scroll",
     progressiveLoadScrollMargin: 300,
     paginationSize: 200,
